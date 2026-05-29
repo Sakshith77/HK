@@ -4,406 +4,1046 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hare Krishna 🪷</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;600&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-<script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.0/umd/index.js"></script>
-<script src="https://threejs.org/examples/js/loaders/FBXLoader.js"></script>
-<script src="https://threejs.org/examples/js/loaders/OBJLoader.js"></script>
 <style>
-:root{--gold:#C9A84C;--gold-light:#E8D5A3;--gold-dark:#A0822D;--cream:#FFF9F0;--cream-dark:#F5EDE0;--saffron:#F4A460;--saffron-light:#FDE8D0;--deep-blue:#1A1A2E;--navy:#16213E;--text:#2D2D2D;--text-light:#6B6B6B;--white:#FFFFFF;--shadow-card:0 8px 32px rgba(0,0,0,0.08);--shadow-hover:0 12px 40px rgba(0,0,0,0.12);--radius-sm:12px;--radius-md:16px;--radius-lg:24px;--radius-xl:32px;--radius-full:9999px}
-*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);line-height:1.6;overflow-x:hidden}
-.loading-screen{position:fixed;inset:0;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;transition:opacity .6s ease,visibility .6s ease}
-.loading-screen.hidden{opacity:0;visibility:hidden}
-.loading-sticker{width:120px;height:120px;border-radius:var(--radius-full);background:var(--saffron-light);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;animation:sp 2s ease-in-out infinite;position:relative}
-.loading-sticker::before{content:'';position:absolute;inset:-8px;border-radius:var(--radius-full);border:2px solid var(--saffron);animation:sr 2s ease-in-out infinite}
-.loading-sticker .lotus-icon{font-size:56px;animation:sf 2s ease-in-out infinite}
-.loading-text{margin-top:24px;font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--gold-dark);letter-spacing:2px}
-@keyframes sp{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-@keyframes sr{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.4}}
-@keyframes sf{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.sidebar{position:fixed;left:0;top:0;width:260px;height:100vh;background:var(--deep-blue);z-index:1000;padding:24px 0;display:flex;flex-direction:column;transition:transform .35s ease}
-.sidebar-brand{padding:0 24px 28px;text-align:center;border-bottom:1px solid rgba(255,255,255,.08)}
-.sidebar-brand h2{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--gold-light);letter-spacing:1px}
-.sidebar-brand span{display:block;font-size:.7rem;color:rgba(255,255,255,.5);margin-top:4px;font-weight:400;letter-spacing:1.5px;text-transform:uppercase}
-.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:4px 0;border-radius:var(--radius-md);cursor:pointer;transition:all .25s ease;color:rgba(255,255,255,.65);text-decoration:none;font-size:.9rem;font-weight:500}
-.nav-item:hover,.nav-item.active{background:rgba(255,255,255,.08);color:var(--gold-light)}
-.nav-item .icon{font-size:1.2rem;width:28px;text-align:center}
-.sidebar-footer{padding:16px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.06)}
-.sidebar-footer p{font-size:.7rem;color:rgba(255,255,255,.35);letter-spacing:1px}
-.menu-toggle{display:none;position:fixed;top:16px;left:16px;z-index:1001;width:44px;height:44px;border-radius:var(--radius-full);background:var(--deep-blue);border:none;color:var(--gold-light);font-size:1.3rem;cursor:pointer;box-shadow:var(--shadow-card);align-items:center;justify-content:center}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;backdrop-filter:blur(2px)}
-.main-content{margin-left:260px;min-height:100vh;transition:margin-left .35s ease}
-.hero{position:relative;min-height:460px;display:flex;align-items:center;justify-content:center;text-align:center;background:var(--deep-blue);overflow:hidden}
-.hero-bg-gradient{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(201,168,76,.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(244,164,96,.1) 0%,transparent 50%),radial-gradient(ellipse at 50% 100%,rgba(26,26,46,1) 0%,transparent 60%)}
-.hero-content{position:relative;z-index:2;padding:60px 24px}
-.hero-profile{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap}
-.hero-profile-img{width:140px;height:140px;border-radius:var(--radius-full);object-fit:cover;border:3px solid var(--gold);box-shadow:0 8px 32px rgba(201,168,76,.3),0 0 0 6px rgba(201,168,76,.1);transition:transform .4s ease,box-shadow .4s ease}
-.hero-profile-img:hover{transform:scale(1.03);box-shadow:0 12px 40px rgba(201,168,76,.4),0 0 0 8px rgba(201,168,76,.15)}
-.hero-text{text-align:left}
-.hero-title{font-family:'Cormorant Garamond',serif;font-size:3.2rem;font-weight:700;color:var(--gold-light);line-height:1.1;margin-bottom:12px;letter-spacing:1px}
-.hero-subtitle{font-size:.95rem;color:rgba(255,255,255,.6);font-weight:400;letter-spacing:.5px;line-height:1.5}
-.hero-deco-line{width:60px;height:2px;background:var(--gold);margin:20px auto;border-radius:var(--radius-full)}
-.section{padding:48px 32px;max-width:1200px;margin:0 auto}
-.section-header{text-align:center;margin-bottom:36px}
-.section-title{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:700;color:var(--deep-blue);margin-bottom:8px}
-.section-subtitle{font-size:.9rem;color:var(--text-light);font-weight:400}
-.section-deco{width:40px;height:2px;background:var(--gold);margin:12px auto 0;border-radius:var(--radius-full)}
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
-.card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);overflow:hidden;transition:all .35s ease;cursor:pointer;border:1px solid rgba(0,0,0,.03)}
-.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
-.card-img{width:100%;height:200px;object-fit:cover;transition:transform .5s ease}
-.card:hover .card-img{transform:scale(1.03)}
-.card-body{padding:20px}
-.card-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--deep-blue);margin-bottom:8px}
-.card-desc{font-size:.85rem;color:var(--text-light);line-height:1.5;margin-bottom:16px}
-.card-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--gold);color:var(--white);border:none;border-radius:var(--radius-sm);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .25s ease;text-decoration:none}
-.card-btn:hover{background:var(--gold-dark);transform:translateX(2px)}
-.player-section{background:var(--white);border-radius:var(--radius-xl);box-shadow:var(--shadow-card);padding:32px;margin-bottom:24px;border:1px solid rgba(0,0,0,.03)}
-.player-section h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:var(--deep-blue);margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.player-section h3 .icon{font-size:1.3rem}
-.input-group{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.input-group input[type="text"]{flex:1;min-width:200px;padding:12px 16px;border:1px solid rgba(0,0,0,.08);border-radius:var(--radius-md);font-size:.9rem;font-family:'Inter',sans-serif;background:var(--cream);transition:all .2s ease}
-.input-group input[type="text"]:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.1)}
-.file-input-wrap{position:relative;display:inline-flex;align-items:center}
-.file-input-wrap input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.file-label{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:var(--cream-dark);color:var(--deep-blue);border:1px dashed var(--gold);border-radius:var(--radius-md);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s ease;white-space:nowrap}
-.file-label:hover{background:var(--saffron-light);border-style:solid}
-.file-name{font-size:.8rem;color:var(--text-light);margin-left:8px}
-.btn-primary{padding:12px 24px;background:var(--deep-blue);color:var(--gold-light);border:none;border-radius:var(--radius-md);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .25s ease;white-space:nowrap}
-.btn-primary:hover{background:var(--navy);transform:translateY(-1px)}
-.media-player{width:100%;border-radius:var(--radius-md);margin-top:12px;display:none;max-height:500px}
-.media-player.active{display:block}
-.player-hint{font-size:.75rem;color:var(--text-light);margin-top:8px;font-style:italic}
-.local-files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:16px}
-.local-file-card{background:var(--cream);border-radius:var(--radius-md);padding:16px;text-align:center;border:2px dashed rgba(201,168,76,.3);cursor:pointer;transition:all .25s ease}
-.local-file-card:hover{background:var(--saffron-light);border-style:solid;border-color:var(--gold)}
-.local-file-card .lf-icon{font-size:2rem;margin-bottom:8px}
-.local-file-card .lf-name{font-size:.85rem;font-weight:600;color:var(--deep-blue);margin-bottom:4px}
-.local-file-card .lf-type{font-size:.7rem;color:var(--text-light)}
-.canvas-container{background:var(--cream-dark);border-radius:var(--radius-lg);border:1px solid rgba(0,0,0,.05);overflow:hidden;position:relative;aspect-ratio:16/9;max-height:520px;width:100%}
-.canvas-container canvas{display:block;width:100%!important;height:100%!important}
-.canvas-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-light);pointer-events:none}
-.canvas-placeholder .ph-icon{font-size:3rem;margin-bottom:12px;opacity:.5}
-.canvas-placeholder p{font-size:.9rem}
-.canvas-controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
-.mode-btn{padding:8px 16px;border-radius:var(--radius-sm);border:1px solid rgba(0,0,0,.08);background:var(--white);color:var(--text);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s ease;font-family:'Inter',sans-serif}
-.mode-btn:hover{background:var(--cream-dark)}
-.mode-btn.active{background:var(--deep-blue);color:var(--gold-light);border-color:var(--deep-blue)}
-.upload-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
-.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
-.game-card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:28px 20px;text-align:center;transition:all .35s ease;cursor:pointer;border:1px solid rgba(0,0,0,.03)}
-.game-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
-.game-icon{font-size:3rem;margin-bottom:12px}
-.game-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;color:var(--deep-blue);margin-bottom:6px}
-.game-desc{font-size:.8rem;color:var(--text-light)}
-.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
-.tool-card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:24px;transition:all .35s ease;border:1px solid rgba(0,0,0,.03)}
-.tool-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover)}
-.tool-icon{font-size:2rem;margin-bottom:12px}
-.tool-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;color:var(--deep-blue);margin-bottom:6px}
-.tool-desc{font-size:.85rem;color:var(--text-light);margin-bottom:16px}
-.tool-action{padding:8px 16px;background:var(--saffron-light);color:var(--deep-blue);border:none;border-radius:var(--radius-sm);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s ease}
-.tool-action:hover{background:var(--saffron);color:var(--white)}
-.other-placeholder{background:var(--white);border-radius:var(--radius-xl);box-shadow:var(--shadow-card);padding:48px 32px;text-align:center;border:2px dashed rgba(201,168,76,.3)}
-.other-placeholder .icon{font-size:3rem;margin-bottom:16px;opacity:.6}
-.other-placeholder h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:var(--deep-blue);margin-bottom:8px}
-.other-placeholder p{font-size:.9rem;color:var(--text-light)}
-.story-reader{display:none;position:fixed;inset:0;z-index:2000;background:var(--cream);overflow-y:auto}
-.story-reader.active{display:block}
-.reader-header{position:sticky;top:0;background:var(--cream);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,.06);z-index:10}
-.reader-back{display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--deep-blue);color:var(--gold-light);border:none;border-radius:var(--radius-md);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .25s ease}
-.reader-back:hover{background:var(--navy)}
-.reader-content{max-width:720px;margin:0 auto;padding:40px 32px 60px}
-.reader-cover{width:100%;max-width:500px;height:300px;object-fit:cover;border-radius:var(--radius-xl);margin:0 auto 32px;display:block;box-shadow:var(--shadow-card)}
-.reader-title{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:700;color:var(--deep-blue);text-align:center;margin-bottom:8px}
-.reader-meta{text-align:center;color:var(--text-light);font-size:.85rem;margin-bottom:32px}
-.reader-body{font-size:1.05rem;line-height:1.85;color:var(--text)}
-.reader-body p{margin-bottom:20px}
-.reader-body h3{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;color:var(--deep-blue);margin:32px 0 16px}
-.footer{text-align:center;padding:32px;color:var(--text-light);font-size:.8rem;border-top:1px solid rgba(0,0,0,.05)}
-.footer .chant{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold-dark);margin-bottom:8px}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.fade-in{animation:fadeInUp .6s ease forwards}
-.delay-1{animation-delay:.1s}
-.delay-2{animation-delay:.2s}
-.delay-3{animation-delay:.3s}
-@media(max-width:900px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}.menu-toggle{display:flex}.sidebar-overlay.show{display:block}.hero-title{font-size:2.2rem}.hero-profile{flex-direction:column;text-align:center}.hero-text{text-align:center}.hero-profile-img{width:120px;height:120px}.section{padding:32px 20px}.reader-content{padding:24px 20px 40px}.reader-title{font-size:1.8rem}.canvas-container{aspect-ratio:4/3}}
-@media(max-width:500px){.hero-title{font-size:1.8rem}.cards-grid,.games-grid,.tools-grid,.local-files-grid{grid-template-columns:1fr}.input-group{flex-direction:column;align-items:stretch}.upload-row{flex-direction:column;align-items:stretch}.canvas-controls{justify-content:center}}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
+:root {
+  --saffron: #E8821A;
+  --deep-saffron: #C96B0A;
+  --gold: #D4AF37;
+  --cream: #FDF6E3;
+  --warm-white: #FFFEF9;
+  --text: #2C1A00;
+  --text-muted: #7A5C30;
+  --shadow: 0 8px 32px rgba(180,100,20,0.13);
+  --nav-h: 60px;
+  --radius: 18px;
+  --radius-sm: 10px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Nunito',sans-serif; background:#FDF3E0; color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+/* LOADER */
+#loader {
+  position:fixed; inset:0; z-index:9999;
+  background:linear-gradient(135deg,#FFF8E7,#FFE5B4,#FFD580);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transition:opacity 0.7s ease;
+}
+#loader.hide { opacity:0; pointer-events:none; }
+.loader-lotus { width:88px; height:88px; animation:lotusFloat 2s ease-in-out infinite; }
+@keyframes lotusFloat {
+  0%,100%{ transform:translateY(0) scale(1); filter:drop-shadow(0 8px 16px rgba(212,107,138,.4)); }
+  50%{ transform:translateY(-14px) scale(1.06); filter:drop-shadow(0 22px 28px rgba(212,107,138,.22)); }
+}
+.loader-text { margin-top:22px; font-family:'Cinzel',serif; font-size:1.25rem; color:var(--deep-saffron); letter-spacing:.12em; animation:pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+/* NAV */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  height:var(--nav-h);
+  background:rgba(255,248,230,.94);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(212,175,55,.22);
+  display:flex; align-items:center; padding:0 18px; gap:8px;
+}
+.nav-logo { font-family:'Cinzel',serif; font-size:1.05rem; color:var(--deep-saffron); letter-spacing:.05em; white-space:nowrap; margin-right:auto; }
+.nav-links { display:flex; gap:3px; list-style:none; overflow-x:auto; scrollbar-width:none; }
+.nav-links::-webkit-scrollbar { display:none; }
+.nav-links a {
+  display:block; padding:5px 11px; font-size:.75rem; font-weight:600;
+  color:var(--text-muted); text-decoration:none; border-radius:20px; transition:all .2s; white-space:nowrap;
+}
+.nav-links a:hover,.nav-links a.active { background:var(--saffron); color:#fff; }
+
+/* LAYOUT */
+main { padding-top:var(--nav-h); }
+section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px 60px; max-width:1080px; margin:0 auto; }
+#sec-home { flex-direction:column; align-items:center; padding-top:24px; }
+
+/* HERO */
+.hero-banner {
+  width:100%; max-width:880px; border-radius:28px; overflow:hidden; position:relative;
+  background:linear-gradient(155deg,#3D1F00 0%,#7B3A10 45%,#C96B0A 80%,#E8821A 100%);
+  min-height:360px; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 24px 64px rgba(180,80,0,.38); margin-bottom:36px;
+}
+.hero-banner::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 30% 60%,rgba(212,175,55,.18) 0%,transparent 60%),
+             radial-gradient(ellipse at 72% 28%,rgba(232,130,26,.14) 0%,transparent 52%);
+}
+.hero-inner { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:18px; padding:40px 28px; text-align:center; }
+.hero-deity-img {
+  width:190px; height:250px; border-radius:22px; overflow:hidden;
+  border:3px solid rgba(212,175,55,.55);
+  box-shadow:0 0 44px rgba(212,175,55,.38),0 22px 44px rgba(0,0,0,.42);
+}
+.hero-deity-img img { width:100%; height:100%; object-fit:cover; display:block; }
+.hero-title { font-family:'Cinzel',serif; font-size:clamp(1.9rem,5.5vw,3rem); color:#FFE88A; letter-spacing:.08em; text-shadow:0 2px 22px rgba(0,0,0,.5); line-height:1.1; }
+.hero-sub { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1rem; color:rgba(255,230,160,.88); max-width:460px; line-height:1.6; }
+.prabhupada-badge {
+  display:flex; align-items:center; gap:13px;
+  background:rgba(255,255,255,.09); border:1px solid rgba(212,175,55,.32);
+  border-radius:50px; padding:9px 18px 9px 9px;
+}
+.prabhu-avatar {
+  width:50px; height:50px; border-radius:50%; overflow:hidden; flex-shrink:0;
+  border:2px solid rgba(212,175,55,.55);
+  box-shadow:0 4px 12px rgba(0,0,0,.38);
+}
+.prabhu-avatar img { width:100%; height:100%; object-fit:cover; }
+.prabhu-name { font-family:'Cormorant Garamond',serif; font-size:.86rem; color:rgba(255,230,160,.95); line-height:1.4; text-align:left; }
+.prabhu-name span { display:block; font-size:.74rem; color:rgba(255,200,100,.68); font-style:italic; }
+
+/* SECTION HEADING */
+.sec-heading { font-family:'Cinzel',serif; font-size:1.5rem; color:var(--deep-saffron); margin-bottom:6px; letter-spacing:.04em; }
+.sec-sub { color:var(--text-muted); font-size:.85rem; margin-bottom:26px; }
+
+/* QUICK LAUNCH */
+.ql-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:13px; width:100%; max-width:840px; margin-top:8px; }
+.ql-card {
+  background:rgba(255,250,240,.88); border:1px solid rgba(212,175,55,.22); border-radius:var(--radius);
+  padding:20px 12px 16px; text-align:center; cursor:pointer;
+  transition:all .22s cubic-bezier(.4,0,.2,1); box-shadow:var(--shadow);
+  display:flex; flex-direction:column; align-items:center; gap:9px;
+}
+.ql-card:hover { transform:translateY(-4px); box-shadow:0 18px 44px rgba(180,100,20,.2); border-color:var(--saffron); background:#fff; }
+.ql-icon { font-size:1.9rem; width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:14px; background:linear-gradient(135deg,#FFF0D0,#FFE0A0); }
+.ql-label { font-size:.76rem; font-weight:700; color:var(--text); }
+
+/* STORY CARDS */
+.card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:18px; }
+.story-card { background:#fff; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); transition:all .22s; cursor:pointer; }
+.story-card:hover { transform:translateY(-4px); box-shadow:0 22px 50px rgba(180,100,20,.18); }
+.story-img { width:100%; height:175px; object-fit:cover; display:block; background:#e8c87a; }
+.story-body { padding:16px; }
+.story-tag { display:inline-block; font-size:.67rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--deep-saffron); background:rgba(232,130,26,.1); border-radius:6px; padding:3px 8px; margin-bottom:7px; }
+.story-title { font-family:'Cormorant Garamond',serif; font-size:1.22rem; font-weight:600; color:var(--text); margin-bottom:7px; line-height:1.3; }
+.story-desc { font-size:.8rem; color:var(--text-muted); line-height:1.58; margin-bottom:13px; }
+.btn { display:inline-flex; align-items:center; gap:5px; padding:8px 18px; border-radius:24px; font-size:.79rem; font-weight:700; cursor:pointer; border:none; transition:all .2s; font-family:'Nunito',sans-serif; }
+.btn-primary { background:linear-gradient(90deg,var(--saffron),var(--gold)); color:#fff; box-shadow:0 4px 12px rgba(232,130,26,.28); }
+.btn-primary:hover { box-shadow:0 8px 22px rgba(232,130,26,.44); transform:translateY(-1px); }
+.btn-outline { background:transparent; border:1.5px solid var(--saffron); color:var(--saffron); }
+.btn-outline:hover { background:var(--saffron); color:#fff; }
+
+/* READER */
+#reader-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(26,14,0,.68); backdrop-filter:blur(5px); align-items:center; justify-content:center; }
+#reader-overlay.open { display:flex; }
+.reader-box { background:var(--warm-white); border-radius:24px; width:min(680px,95vw); max-height:90vh; overflow-y:auto; padding:44px 44px 38px; position:relative; box-shadow:0 32px 80px rgba(0,0,0,.42); scrollbar-width:thin; scrollbar-color:var(--gold) transparent; }
+.reader-close { position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:50%; border:none; background:rgba(212,175,55,.14); font-size:1rem; cursor:pointer; color:var(--text-muted); transition:all .2s; }
+.reader-close:hover { background:var(--saffron); color:#fff; }
+.reader-img { width:100%; height:210px; object-fit:cover; border-radius:14px; margin-bottom:26px; display:block; background:#e8c87a; }
+.reader-tag { font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--saffron); margin-bottom:9px; }
+.reader-title { font-family:'Cinzel',serif; font-size:1.6rem; color:var(--text); margin-bottom:18px; line-height:1.2; }
+.reader-body { font-family:'Cormorant Garamond',serif; font-size:1.13rem; line-height:1.86; color:var(--text); }
+.reader-body p { margin-bottom:1.15em; }
+
+/* VIDEO PLAYER */
+.video-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px; }
+.vid-card { background:#fff; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); }
+.vid-thumb { width:100%; aspect-ratio:16/9; background:#111827; position:relative; cursor:pointer; overflow:hidden; }
+.vid-thumb img { width:100%; height:100%; object-fit:cover; }
+.vid-play-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.32); transition:background .2s; }
+.vid-play-overlay:hover { background:rgba(0,0,0,.12); }
+.play-circle { width:54px; height:54px; border-radius:50%; background:rgba(232,130,26,.92); display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:#fff; }
+.vid-info { padding:13px 15px; }
+.vid-name { font-weight:700; font-size:.88rem; color:var(--text); margin-bottom:3px; }
+.vid-meta { font-size:.72rem; color:var(--text-muted); }
+
+/* VIDEO MODAL */
+#vid-modal { display:none; position:fixed; inset:0; z-index:300; background:rgba(0,0,0,.9); align-items:center; justify-content:center; flex-direction:column; }
+#vid-modal.open { display:flex; }
+#vid-modal-close { align-self:flex-end; margin:14px 22px; background:rgba(255,255,255,.14); border:none; color:#fff; font-size:.88rem; padding:7px 18px; border-radius:24px; cursor:pointer; }
+#vid-modal-close:hover { background:rgba(255,255,255,.28); }
+#vid-modal video, #vid-modal iframe { border-radius:14px; max-width:95vw; max-height:80vh; background:#000; border:none; }
+
+/* AUDIO PLAYER */
+.audio-list { display:flex; flex-direction:column; gap:11px; }
+.audio-item {
+  background:#fff; border-radius:var(--radius-sm); padding:15px 18px;
+  display:flex; align-items:center; gap:15px;
+  box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); transition:border-color .2s;
+}
+.audio-item:hover { border-color:var(--saffron); }
+.aud-play { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--saffron),var(--gold)); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; color:#fff; flex-shrink:0; box-shadow:0 4px 12px rgba(232,130,26,.28); transition:transform .15s; }
+.aud-play:hover { transform:scale(1.08); }
+.aud-info { flex:1; min-width:0; }
+.aud-name { font-weight:700; font-size:.87rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.aud-time { font-size:.72rem; color:var(--text-muted); }
+.aud-bar { flex:1; height:4px; background:rgba(212,175,55,.2); border-radius:4px; cursor:pointer; overflow:hidden; }
+.aud-progress { height:100%; background:linear-gradient(90deg,var(--saffron),var(--gold)); width:0%; border-radius:4px; transition:width .1s linear; }
+
+/* GAMES */
+.game-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:15px; }
+.game-card { background:#fff; border-radius:var(--radius); padding:22px 14px; text-align:center; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); cursor:pointer; transition:all .22s; display:flex; flex-direction:column; align-items:center; gap:10px; }
+.game-card:hover { transform:translateY(-4px); border-color:var(--saffron); }
+.game-icon { font-size:2.8rem; }
+.game-name { font-weight:700; font-size:.88rem; }
+.game-desc { font-size:.74rem; color:var(--text-muted); }
+#game-overlay { display:none; position:fixed; inset:0; z-index:300; background:rgba(0,0,0,.88); align-items:center; justify-content:center; flex-direction:column; }
+#game-overlay.open { display:flex; }
+.game-close { align-self:flex-end; margin:14px 22px; background:rgba(255,255,255,.14); border:none; color:#fff; font-size:.88rem; padding:7px 18px; border-radius:24px; cursor:pointer; }
+.game-close:hover { background:rgba(255,255,255,.28); }
+#game-frame { border:none; border-radius:14px; background:#fff; }
+
+/* TOOLS */
+.tools-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:17px; }
+.tool-card { background:#fff; border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); transition:all .22s; }
+.tool-card:hover { transform:translateY(-3px); border-color:var(--saffron); }
+.tool-head { display:flex; align-items:center; gap:11px; margin-bottom:13px; }
+.tool-icon { font-size:1.7rem; }
+.tool-title { font-weight:700; font-size:.93rem; }
+.tool-sub { font-size:.77rem; color:var(--text-muted); margin-bottom:13px; }
+.tool-output { background:var(--cream); border-radius:8px; padding:11px; font-size:.83rem; min-height:38px; color:var(--text); word-break:break-all; line-height:1.6; border:1px solid rgba(212,175,55,.14); font-family:monospace; }
+.tools-row { display:flex; gap:7px; margin-bottom:9px; flex-wrap:wrap; }
+.inp { flex:1; padding:9px 14px; border:1.5px solid rgba(212,175,55,.28); border-radius:9px; font-size:.86rem; font-family:'Nunito',sans-serif; color:var(--text); background:#FFFEF9; outline:none; transition:border-color .2s; }
+.inp:focus { border-color:var(--saffron); }
+
+/* 3D VIEWER */
+.drop-zone { border:2px dashed rgba(212,175,55,.38); border-radius:var(--radius); padding:44px 22px; text-align:center; background:rgba(255,250,240,.5); margin-bottom:18px; }
+.drop-icon { font-size:2.8rem; margin-bottom:11px; }
+.drop-label { font-size:.88rem; color:var(--text-muted); line-height:1.6; }
+.viewer-controls { display:flex; gap:9px; flex-wrap:wrap; margin:14px 0; align-items:center; }
+.mode-btn { padding:6px 15px; border-radius:24px; border:1.5px solid var(--saffron); background:transparent; color:var(--saffron); font-size:.78rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:'Nunito',sans-serif; }
+.mode-btn.active,.mode-btn:hover { background:var(--saffron); color:#fff; }
+
+/* OTHER */
+.other-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:18px; }
+.other-card { background:#fff; border-radius:var(--radius); padding:26px 22px; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); text-align:center; }
+.other-icon { font-size:2.4rem; margin-bottom:13px; }
+.other-title { font-family:'Cinzel',serif; font-size:.98rem; color:var(--text); margin-bottom:7px; }
+.other-desc { font-size:.8rem; color:var(--text-muted); line-height:1.6; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-thumb { background:rgba(212,175,55,.38); border-radius:4px; }
+
+@media(max-width:600px){
+  .reader-box { padding:28px 18px 24px; }
+  .hero-deity-img { width:145px; height:195px; }
+  .hero-title { font-size:1.75rem; }
+  nav { padding:0 9px; }
+}
 </style>
 </head>
 <body>
-<div class="loading-screen" id="loadingScreen">
-<div class="loading-sticker"><span class="lotus-icon">🪷</span></div>
-<div class="loading-text">Hare Krishna</div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-lotus">
+    <svg viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="45" cy="73" rx="20" ry="6" fill="rgba(212,107,138,.16)"/>
+      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F7A8C0" opacity=".9" transform="rotate(0 45 52)"/>
+      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F48FB1" opacity=".85" transform="rotate(45 45 52)"/>
+      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F7A8C0" opacity=".9" transform="rotate(90 45 52)"/>
+      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F48FB1" opacity=".85" transform="rotate(135 45 52)"/>
+      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F7A8C0" opacity=".9" transform="rotate(180 45 52)"/>
+      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F48FB1" opacity=".85" transform="rotate(225 45 52)"/>
+      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F7A8C0" opacity=".9" transform="rotate(270 45 52)"/>
+      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F48FB1" opacity=".85" transform="rotate(315 45 52)"/>
+      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#E91E8C" opacity=".9" transform="rotate(0 45 52)"/>
+      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#C2185B" opacity=".85" transform="rotate(60 45 52)"/>
+      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#E91E8C" opacity=".9" transform="rotate(120 45 52)"/>
+      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#C2185B" opacity=".85" transform="rotate(180 45 52)"/>
+      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#E91E8C" opacity=".9" transform="rotate(240 45 52)"/>
+      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#C2185B" opacity=".85" transform="rotate(300 45 52)"/>
+      <circle cx="45" cy="52" r="10" fill="#FFD700"/>
+      <circle cx="45" cy="52" r="6" fill="#FFA000"/>
+      <circle cx="45" cy="52" r="3" fill="#FF6F00"/>
+    </svg>
+  </div>
+  <div class="loader-text">Hare Krishna 🪷</div>
 </div>
-<button class="menu-toggle" id="menuToggle">☰</button>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-<aside class="sidebar" id="sidebar">
-<div class="sidebar-brand">
-<h2>Hare Krishna 🪷</h2>
-<span>Devotional Portal</span>
-</div>
-<nav class="sidebar-nav">
-<a href="#hero" class="nav-item active" data-section="hero"><span class="icon">🏠</span> Home</a>
-<a href="#stories" class="nav-item" data-section="stories"><span class="icon">📖</span> Reading Stories</a>
-<a href="#video" class="nav-item" data-section="video"><span class="icon">🎬</span> Video Player</a>
-<a href="#audio" class="nav-item" data-section="audio"><span class="icon">🎵</span> Audio Player</a>
-<a href="#showcase3d" class="nav-item" data-section="showcase3d"><span class="icon">🧊</span> 3D Showcase</a>
-<a href="#animated3d" class="nav-item" data-section="animated3d"><span class="icon">🎞️</span> Animated 3D</a>
-<a href="#games" class="nav-item" data-section="games"><span class="icon">🎮</span> HTML Games</a>
-<a href="#tools" class="nav-item" data-section="tools"><span class="icon">🛠️</span> Free Tools</a>
-<a href="#other" class="nav-item" data-section="other"><span class="icon">✨</span> Other</a>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🪷 Hare Krishna</div>
+  <ul class="nav-links">
+    <li><a href="#" onclick="show('home');return false" id="nav-home" class="active">Home</a></li>
+    <li><a href="#" onclick="show('stories');return false" id="nav-stories">Stories</a></li>
+    <li><a href="#" onclick="show('video');return false" id="nav-video">Video</a></li>
+    <li><a href="#" onclick="show('audio');return false" id="nav-audio">Audio</a></li>
+    <li><a href="#" onclick="show('games');return false" id="nav-games">Games</a></li>
+    <li><a href="#" onclick="show('tools');return false" id="nav-tools">Tools</a></li>
+    <li><a href="#" onclick="show('model3d');return false" id="nav-model3d">3D</a></li>
+    <li><a href="#" onclick="show('other');return false" id="nav-other">Other</a></li>
+  </ul>
 </nav>
-<div class="sidebar-footer">
-<p>Hare Krishna Hare Krishna<br>Krishna Krishna Hare Hare</p>
-</div>
-</aside>
-<main class="main-content">
-<section class="hero" id="hero">
-<div class="hero-bg-gradient"></div>
-<div class="hero-content">
-<div class="hero-profile">
-<img src="https://kimi-web-img.moonshot.cn/img/cdn.iskconvrindavan.com/20778c56cc76feae29f9d102d61de8c24d250585.jpg" alt="Sri Sri Radha Shyamsundar" class="hero-profile-img" loading="eager">
-<div class="hero-text">
-<h1 class="hero-title">Hare Krishna 🪷</h1>
-<p class="hero-subtitle">His Divine Grace A.C. Bhaktivedanta Swami Srila Prabhupada</p>
-</div>
-</div>
-<div class="hero-deco-line"></div>
-</div>
+
+<main>
+
+<!-- ══════════ HOME ══════════ -->
+<section id="sec-home" class="active">
+  <div class="hero-banner">
+    <div class="hero-inner">
+      <!-- ISKCON Vrindavan Radha Shyamsundar deity image -->
+      <div class="hero-deity-img">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Radha_Shyamsundar_ISKCON_Vrindavan.jpg/400px-Radha_Shyamsundar_ISKCON_Vrindavan.jpg"
+          alt="Radha Shyamsundar — ISKCON Vrindavan"
+          onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Radha_Krishna.jpg/400px-Radha_Krishna.jpg'"
+        >
+      </div>
+      <div class="hero-title">Hare Krishna 🪷</div>
+      <div class="hero-sub">All glories to Sri Sri Radha Shyamsundar — the divine couple of Vrindavan</div>
+      <div class="prabhupada-badge">
+        <div class="prabhu-avatar">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Srila_Prabhupada_in_1974.jpg/200px-Srila_Prabhupada_in_1974.jpg" alt="Srila Prabhupada" onerror="this.parentElement.textContent='🙏'">
+        </div>
+        <div class="prabhu-name">
+          His Divine Grace A.C. Bhaktivedanta Swami Srila Prabhupada
+          <span>Founder-Acharya, ISKCON</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec-heading">Explore</h2>
+  <p class="sec-sub">Your devotional companion — stories, music, games & more</p>
+  <div class="ql-grid">
+    <div class="ql-card" onclick="show('stories')"><div class="ql-icon">📖</div><div class="ql-label">Krishna Leelas</div></div>
+    <div class="ql-card" onclick="show('video')"><div class="ql-icon">🎬</div><div class="ql-label">Videos</div></div>
+    <div class="ql-card" onclick="show('audio')"><div class="ql-icon">🎵</div><div class="ql-label">Bhajans</div></div>
+    <div class="ql-card" onclick="show('games')"><div class="ql-icon">🎮</div><div class="ql-label">Games</div></div>
+    <div class="ql-card" onclick="show('tools')"><div class="ql-icon">🛠️</div><div class="ql-label">Tools</div></div>
+    <div class="ql-card" onclick="show('model3d')"><div class="ql-icon">🗿</div><div class="ql-label">3D Models</div></div>
+    <div class="ql-card" onclick="show('other')"><div class="ql-icon">✨</div><div class="ql-label">More</div></div>
+  </div>
 </section>
-<section class="section" id="stories">
-<div class="section-header">
-<h2 class="section-title">Reading Stories</h2>
-<p class="section-subtitle">Divine pastimes of Lord Krishna in Braj Mandal</p>
-<div class="section-deco"></div>
-</div>
-<div class="cards-grid" id="storiesGrid"></div>
+
+<!-- ══════════ STORIES ══════════ -->
+<section id="sec-stories">
+  <h2 class="sec-heading">Krishna Leelas</h2>
+  <p class="sec-sub">Sacred stories from Vrindavan & Braj Mandal — with real spots</p>
+  <div class="card-grid" id="stories-grid"></div>
 </section>
-<section class="section" id="video">
-<div class="section-header">
-<h2 class="section-title">Video Player</h2>
-<p class="section-subtitle">Watch videos from URL, device, or your repo files</p>
-<div class="section-deco"></div>
-</div>
-<div class="player-section fade-in">
-<h3><span class="icon">🎬</span> Play Video</h3>
-<div class="input-group">
-<input type="text" id="videoUrl" placeholder="Paste video URL here (MP4, YouTube, etc.)...">
-<button class="btn-primary" onclick="loadVideo()">▶ Play URL</button>
-</div>
-<div class="upload-row">
-<div class="file-input-wrap">
-<input type="file" id="videoFile" accept="video/*" onchange="loadVideoFile(this)">
-<span class="file-label">📁 Upload from Device</span>
-</div>
-<span class="file-name" id="videoFileName"></span>
-</div>
-<div class="local-files-grid" id="localVideoFiles"></div>
-<video class="media-player" id="videoPlayer" controls playsinline></video>
-<iframe class="media-player" id="videoFrame" frameborder="0" allowfullscreen></iframe>
-<p class="player-hint">Files are played locally in your browser — nothing is uploaded to any server.</p>
-</div>
+
+<!-- ══════════ VIDEO ══════════ -->
+<section id="sec-video">
+  <h2 class="sec-heading">Videos</h2>
+  <p class="sec-sub">Your personal video library</p>
+
+  <!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  HOW TO ADD YOUR VIDEOS                                      ║
+  ║  ─────────────────────────────────────────────────────────   ║
+  ║  1. Put your .mp4 files in a folder called  videos/          ║
+  ║     next to index.html in your GitHub repo.                  ║
+  ║                                                              ║
+  ║  2. Add each video below inside the MY_VIDEOS array:         ║
+  ║     { title:"Your Title", src:"videos/filename.mp4" }        ║
+  ║                                                              ║
+  ║  For YouTube links use the full URL:                         ║
+  ║     { title:"Title", src:"https://youtu.be/XXXXXXXXX" }      ║
+  ╚══════════════════════════════════════════════════════════════╝
+  -->
+
+  <div class="video-grid" id="video-grid"></div>
 </section>
-<section class="section" id="audio">
-<div class="section-header">
-<h2 class="section-title">Audio Player</h2>
-<p class="section-subtitle">Listen to kirtans and lectures from URL, device, or your repo files</p>
-<div class="section-deco"></div>
-</div>
-<div class="player-section fade-in">
-<h3><span class="icon">🎵</span> Play Audio</h3>
-<div class="input-group">
-<input type="text" id="audioUrl" placeholder="Paste audio URL here (MP3, etc.)...">
-<button class="btn-primary" onclick="loadAudio()">▶ Play URL</button>
-</div>
-<div class="upload-row">
-<div class="file-input-wrap">
-<input type="file" id="audioFile" accept="audio/*" onchange="loadAudioFile(this)">
-<span class="file-label">📁 Upload from Device</span>
-</div>
-<span class="file-name" id="audioFileName"></span>
-</div>
-<div class="local-files-grid" id="localAudioFiles"></div>
-<audio class="media-player" id="audioPlayer" controls></audio>
-<p class="player-hint">Files are played locally in your browser — nothing is uploaded to any server.</p>
-</div>
+
+<!-- ══════════ AUDIO ══════════ -->
+<section id="sec-audio">
+  <h2 class="sec-heading">Bhajans & Kirtans</h2>
+  <p class="sec-sub">Your personal audio library</p>
+
+  <!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  HOW TO ADD YOUR AUDIO                                       ║
+  ║  ─────────────────────────────────────────────────────────   ║
+  ║  1. Put your .mp3 / .m4a files in a folder called  audio/   ║
+  ║     next to index.html in your GitHub repo.                  ║
+  ║                                                              ║
+  ║  2. Add each track below inside the MY_AUDIO array:          ║
+  ║     { title:"Song Name", src:"audio/filename.mp3" }          ║
+  ╚══════════════════════════════════════════════════════════════╝
+  -->
+
+  <div class="audio-list" id="audio-list"></div>
 </section>
-<section class="section" id="showcase3d">
-<div class="section-header">
-<h2 class="section-title">3D Model Showcase</h2>
-<p class="section-subtitle">Upload & inspect your Blender models (.glb .gltf .fbx .obj)</p>
-<div class="section-deco"></div>
-</div>
-<div class="player-section fade-in">
-<h3><span class="icon">🧊</span> 3D Viewer</h3>
-<div class="upload-row">
-<div class="file-input-wrap">
-<input type="file" id="modelFile" accept=".glb,.gltf,.fbx,.obj" onchange="loadShowcaseModel(this)">
-<span class="file-label">📁 Upload 3D Model</span>
-</div>
-<span class="file-name" id="modelFileName">No file selected</span>
-<button class="btn-primary" onclick="resetShowcaseCamera()" style="margin-left:auto">⟲ Reset View</button>
-</div>
-<div class="canvas-container" id="showcaseContainer">
-<canvas id="showcaseCanvas"></canvas>
-<div class="canvas-placeholder" id="showcasePlaceholder">
-<span class="ph-icon">🧊</span>
-<p>Upload a .glb, .gltf, .fbx, or .obj file to view</p>
-</div>
-</div>
-<div class="canvas-controls">
-<button class="mode-btn active" id="btnTex" onclick="setShowcaseMode('texture')">🎨 Texture</button>
-<button class="mode-btn" id="btnWire" onclick="setShowcaseMode('wireframe')">🔲 Wireframe</button>
-<button class="mode-btn" id="btnObj" onclick="setShowcaseMode('object')">📦 Object</button>
-</div>
-<p class="player-hint">Drag to rotate · Scroll to zoom · Right-click to pan</p>
-</div>
+
+<!-- ══════════ GAMES ══════════ -->
+<section id="sec-games">
+  <h2 class="sec-heading">Games</h2>
+  <p class="sec-sub">Play or launch HTML games</p>
+  <div class="game-grid" id="game-grid"></div>
 </section>
-<section class="section" id="animated3d">
-<div class="section-header">
-<h2 class="section-title">Animated 3D Objects</h2>
-<p class="section-subtitle">Upload & play animated models (.glb .gltf)</p>
-<div class="section-deco"></div>
-</div>
-<div class="player-section fade-in">
-<h3><span class="icon">🎞️</span> Animation Player</h3>
-<div class="upload-row">
-<div class="file-input-wrap">
-<input type="file" id="animFile" accept=".glb,.gltf" onchange="loadAnimModel(this)">
-<span class="file-label">📁 Upload Animated Model</span>
-</div>
-<span class="file-name" id="animFileName">No file selected</span>
-<button class="btn-primary" onclick="toggleAnimation()" id="animToggleBtn" style="margin-left:auto" disabled>⏯ Play</button>
-<button class="btn-primary" onclick="resetAnimCamera()">⟲ Reset</button>
-</div>
-<div class="canvas-container" id="animContainer">
-<canvas id="animCanvas"></canvas>
-<div class="canvas-placeholder" id="animPlaceholder">
-<span class="ph-icon">🎞️</span>
-<p>Upload an animated .glb or .gltf file</p>
-</div>
-</div>
-<div class="canvas-controls">
-<button class="mode-btn active" id="btnAnimTex" onclick="setAnimMode('texture')">🎨 Texture</button>
-<button class="mode-btn" id="btnAnimWire" onclick="setAnimMode('wireframe')">🔲 Wireframe</button>
-<button class="mode-btn" id="btnAnimObj" onclick="setAnimMode('object')">📦 Object</button>
-</div>
-<p class="player-hint">Drag to rotate · Scroll to zoom · Use Play button to control animation</p>
-</div>
+
+<!-- ══════════ TOOLS ══════════ -->
+<section id="sec-tools">
+  <h2 class="sec-heading">Free Tools</h2>
+  <p class="sec-sub">Handy utilities — always expanding</p>
+  <div class="tools-grid">
+    <div class="tool-card">
+      <div class="tool-head"><div class="tool-icon">📝</div><div class="tool-title">Word Counter</div></div>
+      <div class="tool-sub">Words, characters, lines</div>
+      <textarea class="inp" id="wc-text" rows="4" placeholder="Paste text here..." style="width:100%;resize:vertical;margin-bottom:9px" oninput="countWords()"></textarea>
+      <div class="tool-output" id="wc-out">—</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-head"><div class="tool-icon">🎨</div><div class="tool-title">Color Picker</div></div>
+      <div class="tool-sub">HEX · RGB · HSL values</div>
+      <input type="color" id="cp-color" value="#E8821A" style="width:100%;height:46px;border:none;border-radius:8px;cursor:pointer;margin-bottom:9px" oninput="updateColor()">
+      <div class="tool-output" id="cp-out">Pick a color above</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-head"><div class="tool-icon">⏱️</div><div class="tool-title">Meditation Timer</div></div>
+      <div class="tool-sub">Japa or meditation countdown</div>
+      <div class="tools-row">
+        <input class="inp" id="timer-min" type="number" min="1" max="120" value="16" style="max-width:80px">
+        <button class="btn btn-primary" onclick="startTimer()" id="timer-btn">Start</button>
+        <button class="btn btn-outline" onclick="resetTimer()">Reset</button>
+      </div>
+      <div class="tool-output" id="timer-out" style="font-size:1.55rem;text-align:center;font-family:'Cinzel',serif">—</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-head"><div class="tool-icon">🕉️</div><div class="tool-title">Gita Verse</div></div>
+      <div class="tool-sub">Random Bhagavad Gita wisdom</div>
+      <button class="btn btn-primary" onclick="randomVerse()" style="margin-bottom:9px">Get verse 🙏</button>
+      <div class="tool-output" id="verse-out" style="font-size:.82rem;line-height:1.7">Click to receive wisdom</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-head"><div class="tool-icon">📿</div><div class="tool-title">Japa Counter</div></div>
+      <div class="tool-sub">Count beads — 108 per mala</div>
+      <div style="text-align:center;margin-bottom:11px">
+        <div style="font-size:2.8rem;font-family:'Cinzel',serif;color:var(--saffron)" id="japa-count">0</div>
+        <div style="font-size:.74rem;color:var(--text-muted)" id="japa-malas">0 malas</div>
+      </div>
+      <div class="tools-row">
+        <button class="btn btn-primary" onclick="japaClick()" style="flex:1">+1 Hare Krishna</button>
+        <button class="btn btn-outline" onclick="resetJapa()">Reset</button>
+      </div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-head"><div class="tool-icon">🔗</div><div class="tool-title">URL Encoder</div></div>
+      <div class="tool-sub">Encode / decode URLs instantly</div>
+      <input class="inp" id="url-in" placeholder="Paste URL or text..." style="width:100%;margin-bottom:7px">
+      <div class="tools-row">
+        <button class="btn btn-outline" onclick="encodeUrl()">Encode</button>
+        <button class="btn btn-outline" onclick="decodeUrl()">Decode</button>
+      </div>
+      <div class="tool-output" id="url-out" style="margin-top:7px">—</div>
+    </div>
+  </div>
 </section>
-<section class="section" id="games">
-<div class="section-header">
-<h2 class="section-title">HTML Games</h2>
-<p class="section-subtitle">Play devotional games</p>
-<div class="section-deco"></div>
-</div>
-<div class="games-grid" id="gamesGrid"></div>
+
+<!-- ══════════ 3D MODELS ══════════ -->
+<section id="sec-model3d">
+  <h2 class="sec-heading">3D Model Showcase</h2>
+  <p class="sec-sub">Your Blender models — rotate, inspect, switch modes</p>
+
+  <!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  HOW TO ADD YOUR 3D MODELS                                   ║
+  ║  ─────────────────────────────────────────────────────────   ║
+  ║  1. Put your model files in a folder called  models/         ║
+  ║     next to index.html in your GitHub repo.                  ║
+  ║                                                              ║
+  ║  2. Add each model below inside the MY_MODELS array:         ║
+  ║     { title:"Model Name", src:"models/file.glb" }            ║
+  ║                                                              ║
+  ║  Supported: .glb  .gltf  .obj                                ║
+  ║  (Export from Blender as glTF 2.0 .glb for best results)    ║
+  ╚══════════════════════════════════════════════════════════════╝
+  -->
+
+  <div class="drop-zone">
+    <div class="drop-icon">🗿</div>
+    <div class="drop-label">
+      Add your model paths in the <strong>MY_MODELS</strong> array in the code<br>
+      <small style="color:var(--text-muted)">Put files in <code>models/</code> folder · Supports .glb .gltf .obj</small>
+    </div>
+  </div>
+
+  <div id="model-picker" style="display:none;margin-bottom:18px">
+    <h3 style="font-family:'Cinzel',serif;font-size:1rem;color:var(--text);margin-bottom:11px">Your Models</h3>
+    <div class="card-grid" id="model-list"></div>
+  </div>
+
+  <div id="model-viewer-wrap" style="display:none">
+    <div class="viewer-controls">
+      <button class="mode-btn active" onclick="setMode('solid')" id="mode-solid">● Solid</button>
+      <button class="mode-btn" onclick="setMode('wireframe')" id="mode-wire">⬡ Wireframe</button>
+      <button class="mode-btn" onclick="setMode('texture')" id="mode-tex">🎨 Texture</button>
+      <span id="model-name-label" style="margin-left:8px;font-size:.8rem;color:var(--text-muted)"></span>
+      <button class="btn btn-outline" onclick="resetCam()" style="margin-left:auto">Reset view</button>
+    </div>
+    <canvas id="model-canvas" style="width:100%;height:480px;background:#1a1a2e;border-radius:var(--radius);display:block"></canvas>
+    <p style="font-size:.76rem;color:var(--text-muted);margin-top:9px;text-align:center">🖱 Drag to rotate · Scroll to zoom · Right-drag to pan</p>
+  </div>
+
+  <!-- ANIMATED MODEL -->
+  <div style="margin-top:38px">
+    <h3 style="font-family:'Cinzel',serif;font-size:1.1rem;color:var(--text);margin-bottom:5px">Animated Models</h3>
+    <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:13px">Rigged / animated .glb files with skeleton animation playback</p>
+
+    <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  HOW TO ADD ANIMATED MODELS                                  ║
+    ║  Add to the MY_ANIM_MODELS array below in the same way.     ║
+    ║  { title:"Animated Model", src:"models/animated.glb" }      ║
+    ╚══════════════════════════════════════════════════════════════╝
+    -->
+
+    <div id="anim-picker" style="display:none;margin-bottom:14px">
+      <div class="card-grid" id="anim-list"></div>
+    </div>
+    <div id="anim-controls" style="display:none;margin-bottom:12px;display:none;gap:9px;align-items:center">
+      <button class="btn btn-primary" onclick="toggleAnim()" id="anim-btn">▶ Play</button>
+      <button class="btn btn-outline" onclick="stopAnim()">■ Stop</button>
+      <span id="anim-status" style="font-size:.78rem;color:var(--text-muted)">Ready</span>
+    </div>
+    <canvas id="anim-canvas" style="display:none;width:100%;height:420px;background:#1a1a2e;border-radius:var(--radius)"></canvas>
+  </div>
 </section>
-<section class="section" id="tools">
-<div class="section-header">
-<h2 class="section-title">Free Tools</h2>
-<p class="section-subtitle">Utility tools for your spiritual journey</p>
-<div class="section-deco"></div>
-</div>
-<div class="tools-grid" id="toolsGrid"></div>
+
+<!-- ══════════ OTHER ══════════ -->
+<section id="sec-other">
+  <h2 class="sec-heading">Other</h2>
+  <p class="sec-sub">Future modules — expand anytime</p>
+  <div class="other-grid">
+    <div class="other-card"><div class="other-icon">📌</div><div class="other-title">Notes</div><div class="other-desc">Scripture references and personal study notes. Coming soon.</div></div>
+    <div class="other-card"><div class="other-icon">📥</div><div class="other-title">Downloads</div><div class="other-desc">E-books, PDFs and wallpapers to download. Coming soon.</div></div>
+    <div class="other-card"><div class="other-icon">🔗</div><div class="other-title">Links</div><div class="other-desc">Curated links to ISKCON temples and resources. Coming soon.</div></div>
+    <div class="other-card"><div class="other-icon">🗓️</div><div class="other-title">Vaishnava Calendar</div><div class="other-desc">Festival dates and Ekadashi schedule. Coming soon.</div></div>
+    <div class="other-card"><div class="other-icon">🌐</div><div class="other-title">Virtual Temple Tour</div><div class="other-desc">360° tour of ISKCON Vrindavan. Coming soon.</div></div>
+    <div class="other-card" style="border:2px dashed rgba(212,175,55,.32);background:rgba(255,250,240,.4)"><div class="other-icon">➕</div><div class="other-title">Your Module</div><div class="other-desc">Reserved for your next idea. Edit index.html to add it.</div></div>
+  </div>
 </section>
-<section class="section" id="other">
-<div class="section-header">
-<h2 class="section-title">Other</h2>
-<p class="section-subtitle">Space for future modules</p>
-<div class="section-deco"></div>
-</div>
-<div class="other-placeholder">
-<div class="icon">✨</div>
-<h3>Future Modules</h3>
-<p>This space is reserved for notes, downloads, links, and custom content.<br>Add your own sections here as needed.</p>
-</div>
-</section>
-<footer class="footer">
-<p class="chant">Hare Krishna Hare Krishna · Krishna Krishna Hare Hare</p>
-<p>Hare Rama Hare Rama · Rama Rama Hare Hare</p>
-<p style="margin-top:8px;opacity:.6">Made with devotion 🪷</p>
-</footer>
 </main>
-<div class="story-reader" id="storyReader">
-<div class="reader-header">
-<button class="reader-back" onclick="closeReader()">← Back to Stories</button>
+
+<!-- READER OVERLAY -->
+<div id="reader-overlay">
+  <div class="reader-box">
+    <button class="reader-close" onclick="closeReader()">✕</button>
+    <img class="reader-img" id="reader-img" src="" alt="">
+    <div class="reader-tag" id="reader-tag"></div>
+    <div class="reader-title" id="reader-title"></div>
+    <div class="reader-body" id="reader-body"></div>
+  </div>
 </div>
-<div class="reader-content" id="readerContent"></div>
+
+<!-- VIDEO MODAL -->
+<div id="vid-modal">
+  <button id="vid-modal-close" onclick="closeVidModal()">✕ Close</button>
+  <div id="vid-modal-inner"></div>
 </div>
+
+<!-- GAME OVERLAY -->
+<div id="game-overlay">
+  <button class="game-close" onclick="closeGame()">✕ Close Game</button>
+  <iframe id="game-frame" width="860" height="600"></iframe>
+</div>
+
 <script>
-// === LOCAL FILES CONFIG === EDIT THESE PATHS ===
-const LOCAL_VIDEOS=[{name:"Om Namo Bhagavate Vasudevaya",path:"assets/videos/Om Namo Bhagavate Vasudevaya.mp4",icon:"🎬"}];
-const LOCAL_AUDIOS=[{name:"Flute Melody",path:"assets/audio/flute.mp3",icon:"🎵"}];
+/* ════════════════════════════════════════════════
+   ██╗   ██╗██╗██████╗ ███████╗ ██████╗ ███████╗
+   ██║   ██║██║██╔══██╗██╔════╝██╔═══██╗██╔════╝
+   ██║   ██║██║██║  ██║█████╗  ██║   ██║███████╗
+   ╚██╗ ██╔╝██║██║  ██║██╔══╝  ██║   ██║╚════██║
+    ╚████╔╝ ██║██████╔╝███████╗╚██████╔╝███████║
+     ╚═══╝  ╚═╝╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝
 
-// === STORIES DATA ===
-const stories=[{id:1,title:"The Birth of Lord Krishna",image:"https://kimi-web-img.moonshot.cn/img/www.namasteindiatrip.com/a369fc68034d2e13324eaec662583df2f4d23b0a.jpg",desc:"The divine appearance of Lord Krishna in the prison of Kamsa in Mathura, the heart of Braj Mandal.",content:'<img src="https://kimi-web-img.moonshot.cn/img/www.namasteindiatrip.com/a369fc68034d2e13324eaec662583df2f4d23b0a.jpg" class="reader-cover" alt="Vrindavan Ghat"><h1 class="reader-title">The Birth of Lord Krishna</h1><p class="reader-meta">From Srimad Bhagavatam · Canto 10, Chapter 3 · Braj Mandal</p><div class="reader-body"><p>In the prison of Kamsa, at the stroke of midnight in Mathura — the gateway to Braj Mandal — the Supreme Personality of Godhead appeared as the most beautiful child. Devaki and Vasudeva were overwhelmed with joy and wonder as they beheld the divine form of their son.</p><h3>The Divine Appearance</h3><p>The Lord appeared with four arms, holding the conchshell, disc, club, and lotus flower. His complexion was dark like a monsoon cloud, and His eyes were like lotus petals. Devaki and Vasudeva offered their prayers, recognizing the Supreme Lord in their son.</p><p>"My dear Lord, You are the Supreme Person, the original source of everything. You have appeared in this world to protect the devotees and annihilate the demons. We are most fortunate to have You as our son."</p><h3>The Miraculous Escape to Gokula</h3><p>At that very moment, all the guards fell into a deep sleep, and the prison doors opened automatically. Vasudeva carried the newborn child across the flooded Yamuna river to Gokula — a village nestled in the sacred Braj Mandal — where he exchanged Krishna with the daughter of Nanda and Yashoda.</p><p>When Kamsa came to kill the child, it slipped from his hands and transformed into the Goddess Durga, who warned him: "Your enemy has already been born and is growing elsewhere in Braj. You cannot stop destiny."</p><h3>The Celebration in Braj</h3><p>In Gokula, Nanda Maharaja celebrated the birth of his son with great joy. The entire Braj Mandal was filled with happiness. The gopis sang beautiful songs, and the cows produced abundant milk. The demigods showered flowers from the sky, and the celestial drums resounded throughout the universe.</p><p>This was the beginning of the most wonderful pastimes that would ever manifest in this world — the lilas of Lord Krishna in the sacred land of Braj Mandal.</p></div>'},{id:2,title:"Krishna Lifts Govardhan Hill",image:"https://kimi-web-img.moonshot.cn/img/mathuravrindavancity.com/9b13a57774fbcf39ba96cc490819dffac6b94f3f.webp",desc:"Lord Krishna lifts the entire Govardhan Hill to protect the residents of Braj from Indra's wrath.",content:'<img src="https://kimi-web-img.moonshot.cn/img/mathuravrindavancity.com/9b13a57774fbcf39ba96cc490819dffac6b94f3f.webp" class="reader-cover" alt="Govardhan Hill"><h1 class="reader-title">Krishna Lifts Govardhan Hill</h1><p class="reader-meta">From Srimad Bhagavatam · Canto 10, Chapters 24-25 · Govardhan, Braj</p><div class="reader-body"><p>Every year, the residents of Braj Mandal would perform a great sacrifice to please Lord Indra, the demigod of rain. They believed this would ensure good rainfall and abundant crops. However, young Krishna had a different plan.</p><h3>Krishna's Wisdom</h3><p>"My dear father," Krishna said to Nanda Maharaja, "We are not farmers or merchants who depend on rain. We are cowherds who live in the forest. Our real wealth is the cows and the Govardhan Hill, which provides everything we need. Why should we worship Indra when Govardhan gives us all that we require?"</p><p>Nanda Maharaja and the elders were initially hesitant, but Krishna's words were so convincing that they agreed to worship Govardhan Hill instead. They prepared a grand feast and offered it to the hill with great devotion.</p><h3>Indra's Wrath</h3><p>When Indra learned that the residents of Braj had stopped worshipping him, he became furious. He summoned the Samvartaka clouds, which are used at the time of universal destruction, and ordered them to unleash torrential rains upon Braj Mandal.</p><p>The rains were so fierce that the entire land was flooded. The cows and residents were terrified. The water rose higher and higher, threatening to wash everything away.</p><h3>The Miracle of Govardhan</h3><p>Seeing the distress of His devotees, Krishna smiled and lifted the entire Govardhan Hill with the little finger of His left hand, just as a child picks up a mushroom. He held the hill like a giant umbrella, and all the residents of Braj, along with their cows, took shelter underneath.</p><p>For seven days and seven nights, Indra rained down destruction, but Krishna stood firm, holding the hill effortlessly. The residents were amazed and filled with love for their beloved Krishna. They forgot all their fears and simply gazed at His beautiful form.</p><p>Finally, Indra realized his mistake and came down to beg forgiveness. Krishna, being the most merciful, forgave him immediately. From that day, Govardhan Hill became the most sacred place in all of Braj Mandal.</p></div>'},{id:3,title:"The Rasa Lila — Dance of Divine Love",image:"https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/79c11a5c183edb98c4f753f7df0606314384544f.jpg",desc:"The most enchanting pastime where Krishna dances with the gopis on the banks of the Yamuna in Braj.",content:'<img src="https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/79c11a5c183edb98c4f753f7df0606314384544f.jpg" class="reader-cover" alt="Yamuna Ghat"><h1 class="reader-title">The Rasa Lila — Dance of Divine Love</h1><p class="reader-meta">From Srimad Bhagavatam · Canto 10, Chapters 29-33 · Yamuna, Braj Mandal</p><div class="reader-body"><p>On a beautiful autumn night, when the full moon was rising over the Yamuna river in Braj Mandal, Krishna began to play His enchanting flute on the banks near Vrindavan. The sound was so captivating that all the gopis left everything behind and ran to meet Him.</p><h3>The Call of the Flute</h3><p>Some gopis were milking cows, some were cooking, some were serving their husbands — but when they heard the sweet sound of Krishna's flute echoing across the Yamuna ghats of Braj, they could not resist. They left everything as it was and ran toward the forest, their hearts filled with intense longing to see Krishna.</p><p>When they reached the forest, Krishna was waiting for them. He looked more beautiful than ever, dressed in yellow garments, with a peacock feather in His hair and a garland of forest flowers around His neck.</p><h3>The Expansion of Krishna</h3><p>There were thousands of gopis, but Krishna expanded Himself into thousands of forms. Each gopi felt that Krishna was dancing with her alone. The demigods from the higher planets came to witness this most wonderful pastime, showering flowers from the sky.</p><p>The gopis danced with Krishna throughout the night, which seemed to pass in a moment. Their love for Krishna was pure, selfless, and all-encompassing. They did not desire anything from Krishna except His association.</p><h3>The Essence of Bhakti</h3><p>The Rasa Lila represents the highest form of devotion — where the soul completely surrenders to the Supreme Lord out of pure love. The gopis are considered the topmost devotees because their love for Krishna was without any material motivation.</p><p>Lord Chaitanya Mahaprabhu said that the gopis' love for Krishna is the perfect example of prema-bhakti, or pure devotional service. Their hearts were always absorbed in thoughts of Krishna, and they could not live for a moment without Him.</p></div>'},{id:4,title:"The Butter Thief of Braj",image:"https://kimi-web-img.moonshot.cn/img/www.originaltulsimala.com/98b60dcf328306406b785f05b6d04f0ba2ca56e7.jpg",desc:"The charming pastimes of baby Krishna stealing butter from the gopis' homes in Barsana and Braj.",content:'<img src="https://kimi-web-img.moonshot.cn/img/www.originaltulsimala.com/98b60dcf328306406b785f05b6d04f0ba2ca56e7.jpg" class="reader-cover" alt="Barsana Radha Rani"><h1 class="reader-title">The Butter Thief of Braj</h1><p class="reader-meta">From Srimad Bhagavatam · Canto 10, Chapter 8 · Barsana & Braj Mandal</p><div class="reader-body"><p>In the early days of His childhood in Braj Mandal, Krishna was known as the "butter thief" of Vrindavan and Barsana. The gopis would hang pots of fresh butter and yogurt high up on the ceiling to keep them away from the mischievous child. But Krishna had His own ways.</p><h3>The Mischievous Child</h3><p>Krishna would gather His friends, and together they would form a human pyramid to reach the hanging pots. Sometimes, Krishna would simply break the pots with a stone and enjoy the butter with His friends, leaving a trail of butter all over the floor of the Braj homes.</p><p>The gopis would pretend to be angry, but their hearts were filled with love. They would complain to Mother Yashoda: "Your son has broken all our pots and stolen our butter!" But Yashoda knew that no one could be angry with Krishna for long.</p><h3>The Gopis' Love</h3><p>One day, a gopi caught Krishna red-handed. She tied Him to a grinding mortar as punishment. But Krishna, being the Supreme Lord, simply dragged the heavy mortar between two trees and liberated the sons of Kuvera who had been cursed to stand there for ages.</p><p>The gopis' complaints were actually an expression of their deep love. They wanted Krishna to come to their homes and steal their butter because that meant He was thinking of them. In the spiritual realm of Braj, there is no difference between punishment and reward — everything is an expression of love.</p><h3>The Lesson</h3><p>The butter stealing pastimes teach us that the Lord enjoys the loving exchanges with His devotees more than any formal worship. The gopis' love was so spontaneous and natural that Krishna could not resist their call. Even today, devotees throughout Braj Mandal remember these pastimes with great joy and offer butter to Krishna with the same loving spirit.</p></div>'}];
-const games=[{title:"Snake Game",desc:"Classic snake game",icon:"🐍",url:"https://playsnake.org/"},{title:"Tetris",desc:"Block stacking puzzle",icon:"🧱",url:"https://tetris.com/play-tetris"},{title:"Sudoku",desc:"Number puzzle game",icon:"🔢",url:"https://sudoku.com/"},{title:"Chess",desc:"Strategy board game",icon:"♟️",url:"https://www.chess.com/play/computer"},{title:"2048",desc:"Number merge puzzle",icon:"🔲",url:"https://play2048.co/"},{title:"Pac-Man",desc:"Classic arcade game",icon:"👻",url:"https://www.google.com/logos/2010/pacman10-i.html"}];
-const tools=[{title:"Mantra Counter",desc:"Count your rounds of japa meditation",icon:"📿",action:"Coming Soon"},{title:"Panchang Calendar",desc:"Daily tithi, nakshatra & festivals",icon:"📅",action:"Coming Soon"},{title:"Bhagavad Gita Search",desc:"Search verses from the Gita",icon:"🔍",action:"Coming Soon"},{title:"Prasadam Timer",desc:"Timer for cooking prasadam",icon:"⏱️",action:"Coming Soon"},{title:"Japa Beads",desc:"Digital japa mala for chanting",icon:"🧘",action:"Coming Soon"},{title:"Kirtan Lyrics",desc:"Collection of kirtan lyrics",icon:"🎤",action:"Coming Soon"}];
+  ADD YOUR FILES BELOW — nothing else needs changing
+═══════════════════════════════════════════════ */
 
-// === RENDER ===
-function renderStories(){const grid=document.getElementById('storiesGrid');grid.innerHTML=stories.map((story,i)=>`<div class="card fade-in delay-${(i%3)+1}" onclick="openStory(${story.id})"><img src="${story.image}" alt="${story.title}" class="card-img" loading="lazy"><div class="card-body"><h3 class="card-title">${story.title}</h3><p class="card-desc">${story.desc}</p><button class="card-btn">Read Story →</button></div></div>`).join('')}
-function renderGames(){const grid=document.getElementById('gamesGrid');grid.innerHTML=games.map((game,i)=>`<div class="game-card fade-in delay-${(i%3)+1}" onclick="launchGame('${game.url}','${game.title}')"><div class="game-icon">${game.icon}</div><h3 class="game-title">${game.title}</h3><p class="game-desc">${game.desc}</p></div>`).join('')}
-function renderTools(){const grid=document.getElementById('toolsGrid');grid.innerHTML=tools.map((tool,i)=>`<div class="tool-card fade-in delay-${(i%3)+1}"><div class="tool-icon">${tool.icon}</div><h3 class="tool-title">${tool.title}</h3><p class="tool-desc">${tool.desc}</p><button class="tool-action">${tool.action}</button></div>`).join('')}
-function renderLocalVideos(){const grid=document.getElementById('localVideoFiles');if(!LOCAL_VIDEOS.length){grid.style.display='none';return}grid.innerHTML=LOCAL_VIDEOS.map(v=>`<div class="local-file-card" onclick="playLocalVideo('${v.path}')"><div class="lf-icon">${v.icon}</div><div class="lf-name">${v.name}</div><div class="lf-type">Local File</div></div>`).join('')}
-function renderLocalAudios(){const grid=document.getElementById('localAudioFiles');if(!LOCAL_AUDIOS.length){grid.style.display='none';return}grid.innerHTML=LOCAL_AUDIOS.map(a=>`<div class="local-file-card" onclick="playLocalAudio('${a.path}')"><div class="lf-icon">${a.icon}</div><div class="lf-name">${a.name}</div><div class="lf-type">Local File</div></div>`).join('')}
+/* ──────────────────────────────────────────────
+   🎬  YOUR VIDEOS
+   Put .mp4 files in  videos/  folder in your repo
+   YouTube links also work — paste full URL in src
+────────────────────────────────────────────── */
+const MY_VIDEOS = [
+  { title: "Om Namo Bhagavate Vasudevaya", src: "videos/Om Namo Bhagavate Vasudevaya.mp4" },
+  // { title: "Hare Krishna Kirtan", src: "videos/kirtan.mp4" },
+  // { title: "Lecture by Prabhupada", src: "https://youtu.be/YOUR_YOUTUBE_ID" },
+];
 
-// === STORY READER ===
-function openStory(id){const story=stories.find(s=>s.id===id);if(!story)return;document.getElementById('readerContent').innerHTML=story.content;document.getElementById('storyReader').classList.add('active');document.body.style.overflow='hidden'}
-function closeReader(){document.getElementById('storyReader').classList.remove('active');document.body.style.overflow=''}
+/* ──────────────────────────────────────────────
+   🎵  YOUR AUDIO
+   Put .mp3 / .m4a files in  audio/  folder
+────────────────────────────────────────────── */
+const MY_AUDIO = [
+  // { title: "Om Namo Bhagavate Vasudevaya", src: "audio/Om Namo Bhagavate Vasudevaya.mp3" },
+  // { title: "Hare Krishna Mahamantra", src: "audio/mahamantra.mp3" },
+  // { title: "Govinda Jaya Jaya", src: "audio/govinda.mp3" },
+];
 
-// === VIDEO / AUDIO ===
-function playLocalVideo(path){const videoPlayer=document.getElementById('videoPlayer');const videoFrame=document.getElementById('videoFrame');videoFrame.classList.remove('active');videoPlayer.src=path;videoPlayer.classList.add('active');videoPlayer.play().catch(()=>{})}
-function playLocalAudio(path){const audioPlayer=document.getElementById('audioPlayer');audioPlayer.src=path;audioPlayer.classList.add('active');audioPlayer.play().catch(()=>{})}
-function loadVideo(){const url=document.getElementById('videoUrl').value.trim();if(!url)return;const videoPlayer=document.getElementById('videoPlayer');const videoFrame=document.getElementById('videoFrame');videoPlayer.classList.remove('active');videoFrame.classList.remove('active');if(url.includes('youtube.com')||url.includes('youtu.be')){let videoId='';if(url.includes('v='))videoId=url.split('v=')[1].split('&')[0];else if(url.includes('youtu.be/'))videoId=url.split('youtu.be/')[1].split('?')[0];if(videoId){videoFrame.src=`https://www.youtube.com/embed/${videoId}`;videoFrame.classList.add('active')}}else{videoPlayer.src=url;videoPlayer.classList.add('active')}}
-function loadVideoFile(input){const file=input.files[0];if(!file)return;document.getElementById('videoFileName').textContent=file.name;const url=URL.createObjectURL(file);const videoPlayer=document.getElementById('videoPlayer');const videoFrame=document.getElementById('videoFrame');videoFrame.classList.remove('active');videoPlayer.src=url;videoPlayer.classList.add('active')}
-function loadAudio(){const url=document.getElementById('audioUrl').value.trim();if(!url)return;const audioPlayer=document.getElementById('audioPlayer');audioPlayer.src=url;audioPlayer.classList.add('active');audioPlayer.play().catch(()=>{})}
-function loadAudioFile(input){const file=input.files[0];if(!file)return;document.getElementById('audioFileName').textContent=file.name;const url=URL.createObjectURL(file);const audioPlayer=document.getElementById('audioPlayer');audioPlayer.src=url;audioPlayer.classList.add('active');audioPlayer.play().catch(()=>{})}
-function launchGame(url,title){const w=window.open(url,'_blank','width=1024,height=768,scrollbars=yes');if(!w)alert('Please allow popups to open '+title)}
+/* ──────────────────────────────────────────────
+   🗿  YOUR 3D MODELS
+   Put files in  models/  folder
+   Export from Blender as glTF 2.0 (.glb) — best
+────────────────────────────────────────────── */
+const MY_MODELS = [
+   { title: "My Blender Model", src: "models/showcase.glb" },
+  // { title: "Krishna Murti", src: "models/krishna.obj" },
+];
 
-// === 3D SHOWCASE ===
-let scScene,scCamera,scRenderer,scControls,scModel=null,scOriginalMaterials=[],scAnimId=null,scClock=new THREE.Clock();
-function initShowcase(){if(scRenderer)return;const canvas=document.getElementById('showcaseCanvas');const container=document.getElementById('showcaseContainer');scScene=new THREE.Scene();scScene.background=new THREE.Color(0xf5ede0);scCamera=new THREE.PerspectiveCamera(50,container.clientWidth/container.clientHeight,0.01,1000);scCamera.position.set(2,1.5,3);scRenderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});scRenderer.setSize(container.clientWidth,container.clientHeight);scRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));scRenderer.outputEncoding=THREE.sRGBEncoding;const hemi=new THREE.HemisphereLight(0xffffff,0x444444,0.6);scScene.add(hemi);const dir=new THREE.DirectionalLight(0xffffff,0.8);dir.position.set(5,10,7);scScene.add(dir);const fill=new THREE.DirectionalLight(0xffd1a3,0.4);fill.position.set(-5,2,-5);scScene.add(fill);const ground=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.ShadowMaterial({opacity:0.1}));ground.rotation.x=-Math.PI/2;ground.position.y=-1;ground.receiveShadow=true;scScene.add(ground);const grid=new THREE.GridHelper(10,20,0xc9a84c,0xe0d5c0);grid.position.y=-0.99;scScene.add(grid);scControls=new THREE.OrbitControls(scCamera,scRenderer.domElement);scControls.enableDamping=true;scControls.dampingFactor=0.05;scControls.minDistance=0.5;scControls.maxDistance=15;scControls.target.set(0,0,0);window.addEventListener('resize',()=>{if(!scRenderer)return;const w=container.clientWidth,h=container.clientHeight;scCamera.aspect=w/h;scCamera.updateProjectionMatrix();scRenderer.setSize(w,h)});scAnimate()}
-function scAnimate(){scAnimId=requestAnimationFrame(scAnimate);scControls.update();scRenderer.render(scScene,scCamera)}
-function clearShowcaseModel(){if(!scModel)return;scScene.remove(scModel);scModel.traverse(child=>{if(child.isMesh){if(child.geometry)child.geometry.dispose();if(Array.isArray(child.material))child.material.forEach(m=>m.dispose());else if(child.material)child.material.dispose()}});scModel=null;scOriginalMaterials=[]}
-function normalizeModel(model,scene,matStore){const box=new THREE.Box3().setFromObject(model);const center=box.getCenter(new THREE.Vector3());const size=box.getSize(new THREE.Vector3());const maxDim=Math.max(size.x,size.y,size.z);const scale=maxDim>0?2/maxDim:1;model.scale.setScalar(scale);model.position.sub(center.clone().multiplyScalar(scale));model.position.y+=0.3;model.traverse(child=>{if(child.isMesh){const clone=Array.isArray(child.material)?child.material.map(m=>m.clone()):child.material.clone();matStore.push({mesh:child,material:clone})}});scene.add(model)}
-function loadShowcaseModel(input){const file=input.files[0];if(!file)return;document.getElementById('modelFileName').textContent=file.name;document.getElementById('showcasePlaceholder').style.display='none';initShowcase();clearShowcaseModel();const url=URL.createObjectURL(file);const ext=file.name.split('.').pop().toLowerCase();const onLoad=(obj)=>{scModel=obj.scene||obj;normalizeModel(scModel,scScene,scOriginalMaterials)};const onErr=(err)=>{console.error(err);alert('Failed to load model. Try another format.')};if(ext==='glb'||ext==='gltf')new THREE.GLTFLoader().load(url,onLoad,undefined,onErr);else if(ext==='fbx')new THREE.FBXLoader().load(url,onLoad,undefined,onErr);else if(ext==='obj')new THREE.OBJLoader().load(url,onLoad,undefined,onErr)}
-function setShowcaseMode(mode){document.querySelectorAll('#showcase3d .mode-btn').forEach(b=>b.classList.remove('active'));document.getElementById(mode==='texture'?'btnTex':mode==='wireframe'?'btnWire':'btnObj').classList.add('active');if(!scModel)return;scModel.traverse(child=>{if(child.isMesh){if(mode==='wireframe')child.material.wireframe=true;else if(mode==='texture'){const orig=scOriginalMaterials.find(o=>o.mesh===child);if(orig)child.material=Array.isArray(orig.material)?orig.material.map(m=>m.clone()):orig.material.clone()}else if(mode==='object')child.material=new THREE.MeshStandardMaterial({color:0xc9a84c,roughness:0.6,metalness:0.1,wireframe:false})}})}
-function resetShowcaseCamera(){if(!scCamera||!scControls)return;scCamera.position.set(2,1.5,3);scControls.target.set(0,0,0);scControls.update()}
+/* ──────────────────────────────────────────────
+   🎬  YOUR ANIMATED MODELS
+   Rigged .glb files with skeletal animation
+────────────────────────────────────────────── */
+const MY_ANIM_MODELS = [
+  // { title: "Animated Figure", src: "models/animated.glb" },
+];
 
-// === ANIMATED 3D ===
-let animScene,animCamera,animRenderer,animControls,animModel=null,animMixer=null,animAction=null,animPlaying=false,animOriginalMaterials=[],animAnimId=null,animClock=new THREE.Clock();
-function initAnim(){if(animRenderer)return;const canvas=document.getElementById('animCanvas');const container=document.getElementById('animContainer');animScene=new THREE.Scene();animScene.background=new THREE.Color(0xf5ede0);animCamera=new THREE.PerspectiveCamera(50,container.clientWidth/container.clientHeight,0.01,1000);animCamera.position.set(2,1.5,3);animRenderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});animRenderer.setSize(container.clientWidth,container.clientHeight);animRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));animRenderer.outputEncoding=THREE.sRGBEncoding;const hemi=new THREE.HemisphereLight(0xffffff,0x444444,0.6);animScene.add(hemi);const dir=new THREE.DirectionalLight(0xffffff,0.8);dir.position.set(5,10,7);animScene.add(dir);const fill=new THREE.DirectionalLight(0xffd1a3,0.4);fill.position.set(-5,2,-5);animScene.add(fill);const ground=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.ShadowMaterial({opacity:0.1}));ground.rotation.x=-Math.PI/2;ground.position.y=-1;animScene.add(ground);const grid=new THREE.GridHelper(10,20,0xc9a84c,0xe0d5c0);grid.position.y=-0.99;animScene.add(grid);animControls=new THREE.OrbitControls(animCamera,animRenderer.domElement);animControls.enableDamping=true;animControls.dampingFactor=0.05;animControls.minDistance=0.5;animControls.maxDistance=15;window.addEventListener('resize',()=>{if(!animRenderer)return;const w=container.clientWidth,h=container.clientHeight;animCamera.aspect=w/h;animCamera.updateProjectionMatrix();animRenderer.setSize(w,h)});animAnimate()}
-function animAnimate(){animAnimId=requestAnimationFrame(animAnimate);const delta=animClock.getDelta();if(animMixer&&animPlaying)animMixer.update(delta);animControls.update();animRenderer.render(animScene,animCamera)}
-function clearAnimModel(){if(!animModel)return;animScene.remove(animModel);animModel.traverse(child=>{if(child.isMesh){if(child.geometry)child.geometry.dispose();if(Array.isArray(child.material))child.material.forEach(m=>m.dispose());else if(child.material)child.material.dispose()}});animModel=null;animOriginalMaterials=[];animMixer=null;animAction=null;animPlaying=false;const btn=document.getElementById('animToggleBtn');btn.textContent='⏯ Play';btn.disabled=true}
-function loadAnimModel(input){const file=input.files[0];if(!file)return;document.getElementById('animFileName').textContent=file.name;document.getElementById('animPlaceholder').style.display='none';initAnim();clearAnimModel();const url=URL.createObjectURL(file);new THREE.GLTFLoader().load(url,(gltf)=>{animModel=gltf.scene;normalizeModel(animModel,animScene,animOriginalMaterials);if(gltf.animations&&gltf.animations.length>0){animMixer=new THREE.AnimationMixer(animModel);animAction=animMixer.clipAction(gltf.animations[0]);animAction.play();animPlaying=true;const btn=document.getElementById('animToggleBtn');btn.textContent='⏸ Pause';btn.disabled=false}},undefined,(err)=>{console.error(err);alert('Failed to load animated model.')})}
-function toggleAnimation(){if(!animAction)return;if(animPlaying){animAction.paused=true;animPlaying=false;document.getElementById('animToggleBtn').textContent='▶ Play'}else{animAction.paused=false;animPlaying=true;document.getElementById('animToggleBtn').textContent='⏸ Pause'}}
-function setAnimMode(mode){document.querySelectorAll('#animated3d .mode-btn').forEach(b=>b.classList.remove('active'));document.getElementById(mode==='texture'?'btnAnimTex':mode==='wireframe'?'btnAnimWire':'btnAnimObj').classList.add('active');if(!animModel)return;animModel.traverse(child=>{if(child.isMesh){if(mode==='wireframe')child.material.wireframe=true;else if(mode==='texture'){const orig=animOriginalMaterials.find(o=>o.mesh===child);if(orig)child.material=Array.isArray(orig.material)?orig.material.map(m=>m.clone()):orig.material.clone()}else if(mode==='object')child.material=new THREE.MeshStandardMaterial({color:0xc9a84c,roughness:0.6,metalness:0.1,wireframe:false})}})}
-function resetAnimCamera(){if(!animCamera||!animControls)return;animCamera.position.set(2,1.5,3);animControls.target.set(0,0,0);animControls.update()}
+/* ════════════════════════════════════════════════
+   ENGINE — do not edit below unless you know JS
+═══════════════════════════════════════════════ */
 
-// === SIDEBAR & NAV ===
-const sidebar=document.getElementById('sidebar');const menuToggle=document.getElementById('menuToggle');const sidebarOverlay=document.getElementById('sidebarOverlay');const navItems=document.querySelectorAll('.nav-item');
-menuToggle.addEventListener('click',()=>{sidebar.classList.toggle('open');sidebarOverlay.classList.toggle('show')});
-sidebarOverlay.addEventListener('click',()=>{sidebar.classList.remove('open');sidebarOverlay.classList.remove('show')});
-navItems.forEach(item=>{item.addEventListener('click',()=>{navItems.forEach(n=>n.classList.remove('active'));item.classList.add('active');sidebar.classList.remove('open');sidebarOverlay.classList.remove('show')})});
+// Nav - defined first so show('home') below can call it
+function show(id) {
+  document.querySelectorAll('section').forEach(s => {
+    s.style.display = 'none';
+  });
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  const sec = document.getElementById('sec-' + id);
+  if (!sec) return;
+  sec.style.display = (id === 'home') ? 'flex' : 'block';
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  if (id === 'model3d' && !window._threeReady) initThree();
+}
 
-// === LOADING SCREEN ===
-window.addEventListener('load',()=>{setTimeout(()=>document.getElementById('loadingScreen').classList.add('hidden'),1500)});
+// Show home immediately — do NOT wait for load event
+show('home');
 
-// === SCROLL SPY ===
-const sections=document.querySelectorAll('section[id]');
-window.addEventListener('scroll',()=>{let current='';sections.forEach(section=>{if(scrollY>=section.offsetTop-100)current=section.getAttribute('id')});navItems.forEach(item=>{item.classList.remove('active');if(item.dataset.section===current)item.classList.add('active')})});
+// Hide loader after 1.6s no matter what
+function hideLoader() {
+  const el = document.getElementById('loader');
+  if (!el) return;
+  el.style.opacity = '0';
+  el.style.pointerEvents = 'none';
+  setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 700);
+}
+setTimeout(hideLoader, 1600);
 
-// === INIT ===
-renderStories();renderGames();renderTools();renderLocalVideos();renderLocalAudios();
+// ── STORIES ──
+const stories = [
+  {
+    tag: 'Govardhan Hill · Braj Mandal',
+    title: 'Govardhan Puja',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Govardhan_Hill.jpg/600px-Govardhan_Hill.jpg',
+    desc: 'Krishna lifts mighty Govardhan Hill on His little finger to shelter Vrindavan from Indra\'s fury.',
+    body: `<p>Long ago the residents of Vrindavan prepared offerings for Lord Indra, keeper of rains. Young Krishna smiled and asked Nanda Maharaj why they worshipped Indra when Govardhan Hill — right before them — gave grass for cows, fresh water, and shelter from storms.</p><p>Trusting Krishna completely, the villagers redirected every offering to Govardhan Hill. Enraged, Indra unleashed torrential rains and howling winds upon Vrindavan. Cows shivered, children trembled, and the village was threatened with destruction.</p><p>Then little Krishna walked to Govardhan Hill and lifted it upon the little finger of His left hand — as easily as a child lifts a mushroom. For seven days and nights all of Vrindavan sheltered beneath the hill while Indra's fury spent itself in vain.</p><p>Finally Indra's pride was humbled. He descended, bowed before Krishna, and begged forgiveness. Krishna embraced him with divine compassion and gently lowered the hill. From that day this festival is celebrated as Govardhan Puja — a reminder that true shelter rests only in the Lord.</p>`
+  },
+  {
+    tag: 'Seva Kunj · Vrindavan',
+    title: 'Rasa Lila — The Divine Dance',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Vrindavan_-_the_holy_land.jpg/600px-Vrindavan_-_the_holy_land.jpg',
+    desc: 'Under the full moon of Sharad Purnima, Krishna dances the eternal Rasa with the gopis of Vrindavan.',
+    body: `<p>On the night of Sharad Purnima the forest of Vrindavan became a paradise unlike any in the three worlds. The moon bathed every leaf in silver light. Jasmine filled the air. The Yamuna flowed in gentle ripples.</p><p>Krishna lifted His flute and played. The notes carried the call of the eternal — the divine heart longing for reunion. Every gopi heard her name in that melody and came running to the forest.</p><p>What followed was the Maha Rasa — the great circle dance. Krishna multiplied Himself between each gopi so that every devotee experienced the Lord's presence beside her alone. For one celestial night they danced and sang in divine ecstasy.</p><p>The sages declare: there is no activity more pure than this. The gopis had no worldly motive, only love — pure, unmixed, unconditional devotion. The Rasa Lila is the summit of bhakti, the perfection of the soul's journey home.</p>`
+  },
+  {
+    tag: 'Kaliya Ghat · Yamuna, Vrindavan',
+    title: 'Kaliya Mardana',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Yamuna_River_at_Vrindavan.jpg/600px-Yamuna_River_at_Vrindavan.jpg',
+    desc: 'Krishna subdues the fearsome serpent Kaliya in the Yamuna and dances upon his hoods.',
+    body: `<p>In the sacred Yamuna near Vrindavan lived the terrible serpent Kaliya with a hundred and ten hoods, each dripping with venom so powerful that birds fell dead above the water and no child dared approach its banks.</p><p>One day the cowherd boys' ball rolled into the water. Krishna, with a mischievous smile, climbed the tallest kadamba tree and jumped into Kaliya's pool with a mighty splash.</p><p>Kaliya rose in fury, his coils wrapping around Krishna, his hoods spitting venom. Devotees on the bank fell to the ground in grief. Then Krishna expanded within the coils until Kaliya could not hold Him. He climbed atop Kaliya's central hood and began to dance — a cosmic dance of liberation.</p><p>Kaliya's wives, the Nagapatnis, prayed to Krishna on behalf of their husband. Moved by their devotion, Krishna spared Kaliya and ordered him to return to his island in the ocean. From that day the Yamuna's waters flowed pure and sweet.</p>`
+  },
+  {
+    tag: 'Nanda Bhavan · Gokul',
+    title: 'Damodara Lila',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Gokul_ghats.jpg/600px-Gokul_ghats.jpg',
+    desc: 'Mother Yashoda ties little Krishna with a rope — and the Lord of the universe allows Himself to be bound by love.',
+    body: `<p>Little Krishna had a habit that drove Vrindavan's butter-merchants to despair. Every morning while Yashoda milked the cows He would steal into the dairy, break the pots of butter and yogurt, distribute the contents to His friends and the monkeys, and run away with a butter-smeared face.</p><p>One morning Yashoda caught Him. She chased the little butter thief and finally caught Him by His arm. His lotus eyes filled with tears of mock-fear, kajal running in dark lines down His cheeks.</p><p>Yashoda decided to tie Him to a mortar. She took a rope — always two finger-widths too short. She tied more rope — still two fingers short. Every rope in the house fell short. Then Krishna allowed Himself to be bound — not because the rope was sufficient, but because of the love in Yashoda's heart.</p><p>The Lord of all creation, whom Brahma cannot find with his greatest wisdom, submitted completely to a mother's love. This is why He is called Damodara — "He who was bound by a rope around the belly."</p>`
+  },
+  {
+    tag: 'Radha Kund · Braj Mandal',
+    title: 'Radha Kund — The Holy Lake',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Radha_Kund%2C_Vrindavan.jpg/600px-Radha_Kund%2C_Vrindavan.jpg',
+    desc: 'How Radharani created Her sacred lake — the most holy tirtha in all of Braj Mandal.',
+    body: `<p>On the auspicious day of Ashtami in Kartik, Krishna killed the demon Arishta who had come as a bull and terrorized Vrindavan. Radharani chided Krishna with loving reproach: "You have sinned by killing a bull — bathe in all holy rivers to purify yourself."</p><p>Krishna smiled and struck the earth with His heel. From that spot sprang a divine lake. Every tirtha, every holy river, came in their divine forms to fill it. Krishna bathed and was purified, naming the lake Shyama Kund.</p><p>Then Radharani with Her companions began digging with their bangles. All the tirthas flowed into Her lake as well — but through Shyama Kund, honoring Krishna first. Sri Chaitanya Mahaprabhu rediscovered Radha Kund in the 16th century when it had been lost beneath fields and brush.</p><p>The great Goswamis declared: to bathe in Radha Kund even once is to receive the highest devotional treasure in all the three worlds.</p>`
+  },
+  {
+    tag: 'Mathura · Janmabhoomi',
+    title: 'Nandotsava — The Birth of Krishna',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Krishna_Janmabhoomi_Mathura.jpg/600px-Krishna_Janmabhoomi_Mathura.jpg',
+    desc: 'The whole of Braj erupts in celebration as the Lord appears in the house of Nanda Maharaj.',
+    body: `<p>The night was extraordinary from the beginning. Stars aligned in configurations that made sages weep with joy. Flowers bloomed out of season. Something the world had been waiting for since before memory was coming.</p><p>In the prison of Mathura, at the darkest hour, the divine child was born to Devaki and Vasudeva. Prison guards fell into deep sleep. Chains fell open. Doors swung wide. Vasudeva carried the baby across the flood-swollen Yamuna — the river parted, and a great serpent spread its hoods as an umbrella over the holy child.</p><p>In Gokul, Nanda Maharaj awoke to find a beautiful boy at Yashoda's side and wept with joy. He distributed gold, cows, and garments to every Brahmin who came to bless the child. The whole of Braj Mandal — the sacred land of 84 krosas — erupted in celebration.</p><p>Even today on Janmashtami night, devotees recreate this joy — fasting through the dark hours and breaking their fast at midnight when the Lord appears once more in the world's heart.</p>`
+  }
+];
+
+function renderStories() {
+  document.getElementById('stories-grid').innerHTML = stories.map((s, i) => `
+    <div class="story-card" onclick="openReader(${i})">
+      <img class="story-img" src="${s.img}" alt="${s.title}" onerror="this.style.background='linear-gradient(135deg,#FFE0A0,#FFB347)'">
+      <div class="story-body">
+        <div class="story-tag">${s.tag}</div>
+        <div class="story-title">${s.title}</div>
+        <div class="story-desc">${s.desc}</div>
+        <button class="btn btn-primary">Read Story →</button>
+      </div>
+    </div>`).join('');
+}
+renderStories();
+
+function openReader(i) {
+  const s = stories[i];
+  document.getElementById('reader-img').src = s.img;
+  document.getElementById('reader-img').onerror = function(){ this.style.display='none'; };
+  document.getElementById('reader-tag').textContent = s.tag;
+  document.getElementById('reader-title').textContent = s.title;
+  document.getElementById('reader-body').innerHTML = s.body;
+  document.getElementById('reader-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeReader() {
+  document.getElementById('reader-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('reader-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('reader-overlay')) closeReader();
+});
+
+// ── VIDEO ──
+function getYtId(url) {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([^&?/\s]{11})/);
+  return m ? m[1] : null;
+}
+function renderVideos() {
+  const grid = document.getElementById('video-grid');
+  if (!MY_VIDEOS.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:60px 0;font-size:.9rem">No videos yet — add paths to the <strong>MY_VIDEOS</strong> array in the code 🎬</div>';
+    return;
+  }
+  grid.innerHTML = MY_VIDEOS.map((v, i) => {
+    const ytId = getYtId(v.src);
+    const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
+    return `<div class="vid-card">
+      <div class="vid-thumb" onclick="playVideo(${i})">
+        ${thumb ? `<img src="${thumb}" alt="${v.title}">` : '<div style="width:100%;height:100%;background:#2a1a00;display:flex;align-items:center;justify-content:center;font-size:3rem">🎬</div>'}
+        <div class="vid-play-overlay"><div class="play-circle">▶</div></div>
+      </div>
+      <div class="vid-info">
+        <div class="vid-name">${v.title}</div>
+        <div class="vid-meta">${ytId ? 'YouTube' : 'Local file'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function playVideo(i) {
+  const v = MY_VIDEOS[i];
+  const ytId = getYtId(v.src);
+  const inner = document.getElementById('vid-modal-inner');
+  if (ytId) {
+    inner.innerHTML = `<iframe width="854" height="480" src="https://www.youtube.com/embed/${ytId}?autoplay=1" allow="autoplay;fullscreen" allowfullscreen style="border-radius:14px;max-width:95vw;max-height:78vh;border:none"></iframe>`;
+  } else {
+    inner.innerHTML = `<video src="${v.src}" controls autoplay style="max-width:95vw;max-height:78vh;border-radius:14px;background:#000"></video>`;
+  }
+  document.getElementById('vid-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeVidModal() {
+  document.getElementById('vid-modal').classList.remove('open');
+  document.getElementById('vid-modal-inner').innerHTML = '';
+  document.body.style.overflow = '';
+}
+document.getElementById('vid-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('vid-modal')) closeVidModal();
+});
+renderVideos();
+
+// ── AUDIO ──
+let currentAudioEl = null;
+function renderAudio() {
+  const list = document.getElementById('audio-list');
+  if (!MY_AUDIO.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:60px 0;font-size:.9rem">No audio yet — add paths to the <strong>MY_AUDIO</strong> array in the code 🎵</div>';
+    return;
+  }
+  list.innerHTML = MY_AUDIO.map((t, i) => `
+    <div class="audio-item">
+      <button class="aud-play" onclick="toggleAudio(${i})" id="abtn-${i}">▶</button>
+      <div class="aud-info">
+        <div class="aud-name">${t.title}</div>
+        <div class="aud-time" id="atime-${i}">—</div>
+      </div>
+      <div class="aud-bar" onclick="seekAudio(event,${i})">
+        <div class="aud-progress" id="aprog-${i}"></div>
+      </div>
+      <audio id="ael-${i}" src="${t.src}" preload="metadata"
+        ontimeupdate="updateAudioProgress(${i})"
+        onloadedmetadata="updateAudioDuration(${i})"
+        onended="audioEnded(${i})">
+      </audio>
+    </div>`).join('');
+}
+function toggleAudio(i) {
+  const el = document.getElementById('ael-' + i);
+  const btn = document.getElementById('abtn-' + i);
+  if (currentAudioEl && currentAudioEl !== el) {
+    currentAudioEl.pause();
+    document.querySelectorAll('.aud-play').forEach(b => b.textContent = '▶');
+  }
+  if (el.paused) { el.play(); btn.textContent = '⏸'; currentAudioEl = el; }
+  else { el.pause(); btn.textContent = '▶'; }
+}
+function updateAudioProgress(i) {
+  const el = document.getElementById('ael-' + i);
+  const bar = document.getElementById('aprog-' + i);
+  const t = document.getElementById('atime-' + i);
+  if (el.duration) {
+    bar.style.width = (el.currentTime / el.duration * 100) + '%';
+    const cur = fmtTime(el.currentTime), dur = fmtTime(el.duration);
+    t.textContent = cur + ' / ' + dur;
+  }
+}
+function updateAudioDuration(i) {
+  const el = document.getElementById('ael-' + i);
+  document.getElementById('atime-' + i).textContent = '0:00 / ' + fmtTime(el.duration);
+}
+function audioEnded(i) { document.getElementById('abtn-' + i).textContent = '▶'; }
+function seekAudio(e, i) {
+  const el = document.getElementById('ael-' + i);
+  const bar = e.currentTarget;
+  const pct = e.offsetX / bar.offsetWidth;
+  el.currentTime = pct * el.duration;
+}
+function fmtTime(s) { const m = Math.floor(s/60); return m + ':' + Math.floor(s%60).toString().padStart(2,'0'); }
+renderAudio();
+
+// ── GAMES ──
+const GAMES = [
+  { name:'Snake',       desc:'Classic snake game',      icon:'🐍', url:'https://playsnake.org' },
+  { name:'Tetris',      desc:'Block puzzle classic',     icon:'🟦', url:'https://tetris.com/play-tetris' },
+  { name:'Chess',       desc:'Play vs computer',         icon:'♟️', url:'https://www.chess.com/play/computer' },
+  { name:'2048',        desc:'Merge tiles to win',       icon:'🔢', url:'https://2048game.com' },
+  { name:'Minesweeper', desc:'Clear the minefield',      icon:'💣', url:'https://minesweeperonline.com' },
+  { name:'Flappy Bird', desc:'Dodge the pipes',          icon:'🐦', url:'https://flappybird.io' },
+];
+document.getElementById('game-grid').innerHTML = GAMES.map(g => `
+  <div class="game-card" onclick="openGame('${g.url}')">
+    <div class="game-icon">${g.icon}</div>
+    <div class="game-name">${g.name}</div>
+    <div class="game-desc">${g.desc}</div>
+    <button class="btn btn-primary">Play ▶</button>
+  </div>`).join('');
+function openGame(url) {
+  const f = document.getElementById('game-frame');
+  const w = Math.min(900, window.innerWidth - 40);
+  const h = Math.min(620, window.innerHeight - 100);
+  f.width = w; f.height = h; f.src = url;
+  document.getElementById('game-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeGame() {
+  document.getElementById('game-overlay').classList.remove('open');
+  document.getElementById('game-frame').src = '';
+  document.body.style.overflow = '';
+}
+
+// ── TOOLS ──
+function countWords() {
+  const t = document.getElementById('wc-text').value;
+  const w = t.trim() ? t.trim().split(/\s+/).length : 0;
+  document.getElementById('wc-out').textContent = `Words: ${w}  |  Characters: ${t.length}  |  Lines: ${t.split('\n').length}`;
+}
+function updateColor() {
+  const hex = document.getElementById('cp-color').value;
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  const hsl = rgbToHsl(r,g,b);
+  document.getElementById('cp-out').textContent = `HEX: ${hex.toUpperCase()}   RGB: rgb(${r},${g},${b})   HSL: hsl(${hsl[0]}°,${hsl[1]}%,${hsl[2]}%)`;
+}
+function rgbToHsl(r,g,b){r/=255;g/=255;b/=255;const max=Math.max(r,g,b),min=Math.min(r,g,b);let h,s,l=(max+min)/2;if(max===min){h=s=0}else{const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;}h/=6;}return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];}
+
+let timerIv=null, timerS=0;
+function startTimer(){
+  if(timerIv){clearInterval(timerIv);timerIv=null;document.getElementById('timer-btn').textContent='Start';return;}
+  timerS=(parseInt(document.getElementById('timer-min').value)||16)*60;
+  document.getElementById('timer-btn').textContent='Pause';
+  timerIv=setInterval(()=>{
+    timerS--;
+    const m=Math.floor(timerS/60),s=timerS%60;
+    document.getElementById('timer-out').textContent=m+':'+s.toString().padStart(2,'0');
+    if(timerS<=0){clearInterval(timerIv);timerIv=null;document.getElementById('timer-out').textContent='🙏 Done!';document.getElementById('timer-btn').textContent='Start';}
+  },1000);
+}
+function resetTimer(){if(timerIv){clearInterval(timerIv);timerIv=null;}document.getElementById('timer-out').textContent='—';document.getElementById('timer-btn').textContent='Start';}
+
+const VERSES=[
+  {ref:'BG 9.22',text:'For those who worship Me with devotion, meditating on My transcendental form, I carry what they lack and preserve what they have.'},
+  {ref:'BG 4.7',text:'Whenever and wherever there is a decline in religious practice and a rise of irreligion — at that time I descend Myself.'},
+  {ref:'BG 18.65',text:'Always think of Me, become My devotee, worship Me and offer your homage unto Me. Thus you will come to Me without fail.'},
+  {ref:'BG 6.47',text:'The yogi who always abides in Me with great faith, rendering transcendental service — he is the most intimately united with Me and the highest of all.'},
+  {ref:'BG 2.47',text:'You have a right to perform your duty, but you are not entitled to the fruits of your actions. Never consider yourself the cause of results, nor be attached to inaction.'},
+];
+function randomVerse(){const v=VERSES[Math.floor(Math.random()*VERSES.length)];document.getElementById('verse-out').innerHTML=`<em>"${v.text}"</em><br><br><strong>${v.ref}</strong>`;}
+
+let japaTotal=0;
+function japaClick(){japaTotal++;document.getElementById('japa-count').textContent=japaTotal;document.getElementById('japa-malas').textContent=(japaTotal/108).toFixed(2)+' malas';}
+function resetJapa(){japaTotal=0;document.getElementById('japa-count').textContent=0;document.getElementById('japa-malas').textContent='0 malas';}
+
+function encodeUrl(){document.getElementById('url-out').textContent=encodeURIComponent(document.getElementById('url-in').value)||'—';}
+function decodeUrl(){try{document.getElementById('url-out').textContent=decodeURIComponent(document.getElementById('url-in').value)||'—';}catch{document.getElementById('url-out').textContent='Invalid encoded URL';}}
+
+// ── 3D VIEWER ──
+let scene,camera,renderer,modelObj,modelMode='solid';
+let animScene,animCamera,animRenderer,animMixer,animClock,animPlaying=false;
+
+function initThree(){
+  window._threeReady=true;
+  const canvas=document.getElementById('model-canvas');
+  canvas.width=canvas.offsetWidth; canvas.height=480;
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x1a1a2e);
+  camera=new THREE.PerspectiveCamera(50,canvas.width/480,0.01,1000);
+  camera.position.set(0,1.5,4);
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(canvas.width,480);
+  scene.add(new THREE.AmbientLight(0xffffff,.65));
+  const d=new THREE.DirectionalLight(0xffd9a0,1.2); d.position.set(5,10,7); scene.add(d);
+  orbitControls(canvas,camera,()=>renderer.render(scene,camera));
+  renderer.setAnimationLoop(()=>renderer.render(scene,camera));
+
+  // render model list
+  if(MY_MODELS.length){
+    document.getElementById('model-picker').style.display='block';
+    document.getElementById('model-list').innerHTML=MY_MODELS.map((m,i)=>`
+      <div class="story-card" onclick="loadModel(${i})" style="cursor:pointer">
+        <div style="padding:20px 16px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:2rem">🗿</div>
+          <div>
+            <div class="story-title" style="font-size:1rem">${m.title}</div>
+            <div class="story-desc" style="margin:0;font-size:.76rem">${m.src.split('/').pop()}</div>
+          </div>
+        </div>
+      </div>`).join('');
+    if(MY_MODELS.length===1) loadModel(0);
+  }
+  if(MY_ANIM_MODELS.length){
+    document.getElementById('anim-picker').style.display='block';
+    document.getElementById('anim-list').innerHTML=MY_ANIM_MODELS.map((m,i)=>`
+      <div class="story-card" onclick="loadAnimModel(${i})" style="cursor:pointer">
+        <div style="padding:20px 16px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:2rem">🎬</div>
+          <div>
+            <div class="story-title" style="font-size:1rem">${m.title}</div>
+            <div class="story-desc" style="margin:0;font-size:.76rem">${m.src.split('/').pop()}</div>
+          </div>
+        </div>
+      </div>`).join('');
+    if(MY_ANIM_MODELS.length===1) loadAnimModel(0);
+  }
+}
+
+function orbitControls(canvas,cam,onRender){
+  let drag=false,right=false,prev={x:0,y:0},theta=0,phi=Math.PI/3,r=4;
+  canvas.addEventListener('mousedown',e=>{drag=true;right=e.button===2;prev={x:e.clientX,y:e.clientY};});
+  canvas.addEventListener('contextmenu',e=>e.preventDefault());
+  window.addEventListener('mouseup',()=>drag=false);
+  window.addEventListener('mousemove',e=>{
+    if(!drag)return;
+    const dx=(e.clientX-prev.x)*.01,dy=(e.clientY-prev.y)*.01;
+    if(right){cam.position.x-=dx;cam.position.y+=dy;}
+    else{theta-=dx;phi=Math.max(.1,Math.min(Math.PI-.1,phi-dy));cam.position.set(r*Math.sin(phi)*Math.sin(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.cos(theta));cam.lookAt(0,0,0);}
+    prev={x:e.clientX,y:e.clientY};
+    if(onRender)onRender();
+  });
+  canvas.addEventListener('wheel',e=>{r=Math.max(.5,Math.min(30,r+e.deltaY*.015));cam.position.setLength(r);cam.lookAt(0,0,0);if(onRender)onRender();});
+  // touch
+  let touches=[];
+  canvas.addEventListener('touchstart',e=>{touches=[...e.touches];});
+  canvas.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      const dx=(e.touches[0].clientX-touches[0].clientX)*.01;
+      const dy=(e.touches[0].clientY-touches[0].clientY)*.01;
+      theta-=dx;phi=Math.max(.1,Math.min(Math.PI-.1,phi-dy));
+      cam.position.set(r*Math.sin(phi)*Math.sin(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.cos(theta));cam.lookAt(0,0,0);
+      touches=[...e.touches];
+      if(onRender)onRender();
+    }
+  },{passive:false});
+}
+
+function loadGLTFLoader(cb){
+  if(window.THREE.GLTFLoader){cb();return;}
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+  s.onload=cb; document.head.appendChild(s);
+}
+function loadOBJLoader(cb){
+  if(window.THREE.OBJLoader){cb();return;}
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js';
+  s.onload=cb; document.head.appendChild(s);
+}
+
+function loadModel(i){
+  const m=MY_MODELS[i];
+  document.getElementById('model-viewer-wrap').style.display='block';
+  document.getElementById('model-name-label').textContent=m.title;
+  const ext=m.src.split('.').pop().toLowerCase();
+  if(ext==='glb'||ext==='gltf'){
+    loadGLTFLoader(()=>new THREE.GLTFLoader().load(m.src,gltf=>placeModel(gltf.scene),null,e=>alert('Error: '+e.message)));
+  } else if(ext==='obj'){
+    loadOBJLoader(()=>new THREE.OBJLoader().load(m.src,obj=>placeModel(obj),null,e=>alert('Error: '+e.message)));
+  }
+}
+function placeModel(obj){
+  if(modelObj)scene.remove(modelObj);
+  modelObj=obj;
+  const box=new THREE.Box3().setFromObject(obj);
+  obj.position.sub(box.getCenter(new THREE.Vector3()));
+  const size=box.getSize(new THREE.Vector3()).length();
+  camera.position.setLength(size*1.8); camera.lookAt(0,0,0);
+  scene.add(obj); setMode(modelMode);
+}
+function setMode(mode){
+  modelMode=mode;
+  ['solid','wire','tex'].forEach(k=>document.getElementById('mode-'+k).classList.remove('active'));
+  const map={solid:'solid',wireframe:'wire',texture:'tex'};
+  document.getElementById('mode-'+map[mode]).classList.add('active');
+  if(!modelObj)return;
+  modelObj.traverse(c=>{
+    if(c.isMesh){
+      if(mode==='wireframe'){c.material.wireframe=true;}
+      else if(mode==='solid'){c.material.wireframe=false;if(!c.userData._origMap)c.userData._origMap=c.material.map;c.material.map=null;c.material.color=new THREE.Color(0xE8821A);c.material.needsUpdate=true;}
+      else{c.material.wireframe=false;if(c.userData._origMap)c.material.map=c.userData._origMap;c.material.needsUpdate=true;}
+    }
+  });
+}
+function resetCam(){camera.position.set(0,1.5,4);camera.lookAt(0,0,0);}
+
+function loadAnimModel(i){
+  const m=MY_ANIM_MODELS[i];
+  const canvas=document.getElementById('anim-canvas');
+  canvas.style.display='block'; canvas.width=canvas.offsetWidth||800; canvas.height=420;
+  document.getElementById('anim-controls').style.display='flex';
+  if(!animScene){
+    animScene=new THREE.Scene(); animScene.background=new THREE.Color(0x1a1a2e);
+    animCamera=new THREE.PerspectiveCamera(50,canvas.width/420,0.01,1000);
+    animCamera.position.set(0,1.5,4);
+    animRenderer=new THREE.WebGLRenderer({canvas,antialias:true});
+    animRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    animRenderer.setSize(canvas.width,420);
+    animScene.add(new THREE.AmbientLight(0xffffff,.65));
+    const d=new THREE.DirectionalLight(0xffd9a0,1.2); d.position.set(5,10,7); animScene.add(d);
+    animClock=new THREE.Clock();
+    orbitControls(canvas,animCamera);
+  }
+  loadGLTFLoader(()=>new THREE.GLTFLoader().load(m.src,gltf=>{
+    if(animScene._model)animScene.remove(animScene._model);
+    animScene._model=gltf.scene;
+    const box=new THREE.Box3().setFromObject(gltf.scene);
+    gltf.scene.position.sub(box.getCenter(new THREE.Vector3()));
+    animCamera.position.setLength(box.getSize(new THREE.Vector3()).length()*2);
+    animCamera.lookAt(0,0,0);
+    animScene.add(gltf.scene);
+    animMixer=gltf.animations.length?new THREE.AnimationMixer(gltf.scene):null;
+    if(animMixer){animMixer.clipAction(gltf.animations[0]).play();document.getElementById('anim-status').textContent=gltf.animations.length+' animation(s)';}
+    else document.getElementById('anim-status').textContent='No animations in file';
+    function loop(){requestAnimationFrame(loop);if(animMixer&&animPlaying)animMixer.update(animClock.getDelta());animRenderer.render(animScene,animCamera);}
+    loop();
+  },null,e=>alert('Error: '+e.message)));
+}
+function toggleAnim(){
+  animPlaying=!animPlaying;
+  document.getElementById('anim-btn').textContent=animPlaying?'⏸ Pause':'▶ Play';
+  if(animPlaying)animClock.start(); else animClock.stop();
+}
+function stopAnim(){animPlaying=false;if(animMixer)animMixer.stopAllAction();document.getElementById('anim-btn').textContent='▶ Play';}
 </script>
 </body>
 </html>
