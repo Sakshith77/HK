@@ -281,16 +281,16 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
       <!-- ISKCON Vrindavan Radha Shyamsundar deity image -->
       <div class="hero-deity-img">
         <img
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Radha_Shyamsundar_ISKCON_Vrindavan.jpg/400px-Radha_Shyamsundar_ISKCON_Vrindavan.jpg"
+          src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Radha_Krishna.jpg"
           alt="Radha Shyamsundar — ISKCON Vrindavan"
-          onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Radha_Krishna.jpg/400px-Radha_Krishna.jpg'"
+          onerror="this.style.opacity='0'"
         >
       </div>
       <div class="hero-title">Hare Krishna 🪷</div>
       <div class="hero-sub">All glories to Sri Sri Radha Shyamsundar — the divine couple of Vrindavan</div>
       <div class="prabhupada-badge">
         <div class="prabhu-avatar">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Srila_Prabhupada_in_1974.jpg/200px-Srila_Prabhupada_in_1974.jpg" alt="Srila Prabhupada" onerror="this.parentElement.textContent='🙏'">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Srila_Prabhupada_in_1974.jpg" alt="Srila Prabhupada" onerror="this.parentElement.textContent='🙏'">
         </div>
         <div class="prabhu-name">
           His Divine Grace A.C. Bhaktivedanta Swami Srila Prabhupada
@@ -605,10 +605,7 @@ function show(id) {
   if (id === 'model3d' && !window._threeReady) initThree();
 }
 
-// Show home immediately — do NOT wait for load event
-show('home');
-
-// Hide loader after 1.6s no matter what
+// Hide loader
 function hideLoader() {
   const el = document.getElementById('loader');
   if (!el) return;
@@ -616,49 +613,59 @@ function hideLoader() {
   el.style.pointerEvents = 'none';
   setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 700);
 }
-setTimeout(hideLoader, 1600);
+
+// Wait for DOM then show home
+document.addEventListener('DOMContentLoaded', function() {
+  show('home');
+  setTimeout(hideLoader, 1200);
+});
+// Fallback if DOMContentLoaded already fired
+if (document.readyState !== 'loading') {
+  show('home');
+  setTimeout(hideLoader, 400);
+}
 
 // ── STORIES ──
 const stories = [
   {
     tag: 'Govardhan Hill · Braj Mandal',
     title: 'Govardhan Puja',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Govardhan_Hill.jpg/600px-Govardhan_Hill.jpg',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/8/87/Govardhan_Hill.jpg',
     desc: 'Krishna lifts mighty Govardhan Hill on His little finger to shelter Vrindavan from Indra\'s fury.',
     body: `<p>Long ago the residents of Vrindavan prepared offerings for Lord Indra, keeper of rains. Young Krishna smiled and asked Nanda Maharaj why they worshipped Indra when Govardhan Hill — right before them — gave grass for cows, fresh water, and shelter from storms.</p><p>Trusting Krishna completely, the villagers redirected every offering to Govardhan Hill. Enraged, Indra unleashed torrential rains and howling winds upon Vrindavan. Cows shivered, children trembled, and the village was threatened with destruction.</p><p>Then little Krishna walked to Govardhan Hill and lifted it upon the little finger of His left hand — as easily as a child lifts a mushroom. For seven days and nights all of Vrindavan sheltered beneath the hill while Indra's fury spent itself in vain.</p><p>Finally Indra's pride was humbled. He descended, bowed before Krishna, and begged forgiveness. Krishna embraced him with divine compassion and gently lowered the hill. From that day this festival is celebrated as Govardhan Puja — a reminder that true shelter rests only in the Lord.</p>`
   },
   {
     tag: 'Seva Kunj · Vrindavan',
     title: 'Rasa Lila — The Divine Dance',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Vrindavan_-_the_holy_land.jpg/600px-Vrindavan_-_the_holy_land.jpg',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/Vrindavan_-_the_holy_land.jpg',
     desc: 'Under the full moon of Sharad Purnima, Krishna dances the eternal Rasa with the gopis of Vrindavan.',
     body: `<p>On the night of Sharad Purnima the forest of Vrindavan became a paradise unlike any in the three worlds. The moon bathed every leaf in silver light. Jasmine filled the air. The Yamuna flowed in gentle ripples.</p><p>Krishna lifted His flute and played. The notes carried the call of the eternal — the divine heart longing for reunion. Every gopi heard her name in that melody and came running to the forest.</p><p>What followed was the Maha Rasa — the great circle dance. Krishna multiplied Himself between each gopi so that every devotee experienced the Lord's presence beside her alone. For one celestial night they danced and sang in divine ecstasy.</p><p>The sages declare: there is no activity more pure than this. The gopis had no worldly motive, only love — pure, unmixed, unconditional devotion. The Rasa Lila is the summit of bhakti, the perfection of the soul's journey home.</p>`
   },
   {
     tag: 'Kaliya Ghat · Yamuna, Vrindavan',
     title: 'Kaliya Mardana',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Yamuna_River_at_Vrindavan.jpg/600px-Yamuna_River_at_Vrindavan.jpg',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Yamuna_River_at_Vrindavan.jpg',
     desc: 'Krishna subdues the fearsome serpent Kaliya in the Yamuna and dances upon his hoods.',
     body: `<p>In the sacred Yamuna near Vrindavan lived the terrible serpent Kaliya with a hundred and ten hoods, each dripping with venom so powerful that birds fell dead above the water and no child dared approach its banks.</p><p>One day the cowherd boys' ball rolled into the water. Krishna, with a mischievous smile, climbed the tallest kadamba tree and jumped into Kaliya's pool with a mighty splash.</p><p>Kaliya rose in fury, his coils wrapping around Krishna, his hoods spitting venom. Devotees on the bank fell to the ground in grief. Then Krishna expanded within the coils until Kaliya could not hold Him. He climbed atop Kaliya's central hood and began to dance — a cosmic dance of liberation.</p><p>Kaliya's wives, the Nagapatnis, prayed to Krishna on behalf of their husband. Moved by their devotion, Krishna spared Kaliya and ordered him to return to his island in the ocean. From that day the Yamuna's waters flowed pure and sweet.</p>`
   },
   {
     tag: 'Nanda Bhavan · Gokul',
     title: 'Damodara Lila',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Gokul_ghats.jpg/600px-Gokul_ghats.jpg',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/d/d2/Gokul_ghats.jpg',
     desc: 'Mother Yashoda ties little Krishna with a rope — and the Lord of the universe allows Himself to be bound by love.',
     body: `<p>Little Krishna had a habit that drove Vrindavan's butter-merchants to despair. Every morning while Yashoda milked the cows He would steal into the dairy, break the pots of butter and yogurt, distribute the contents to His friends and the monkeys, and run away with a butter-smeared face.</p><p>One morning Yashoda caught Him. She chased the little butter thief and finally caught Him by His arm. His lotus eyes filled with tears of mock-fear, kajal running in dark lines down His cheeks.</p><p>Yashoda decided to tie Him to a mortar. She took a rope — always two finger-widths too short. She tied more rope — still two fingers short. Every rope in the house fell short. Then Krishna allowed Himself to be bound — not because the rope was sufficient, but because of the love in Yashoda's heart.</p><p>The Lord of all creation, whom Brahma cannot find with his greatest wisdom, submitted completely to a mother's love. This is why He is called Damodara — "He who was bound by a rope around the belly."</p>`
   },
   {
     tag: 'Radha Kund · Braj Mandal',
     title: 'Radha Kund — The Holy Lake',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Radha_Kund%2C_Vrindavan.jpg/600px-Radha_Kund%2C_Vrindavan.jpg',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Radha_Kund%2C_Vrindavan.jpg',
     desc: 'How Radharani created Her sacred lake — the most holy tirtha in all of Braj Mandal.',
     body: `<p>On the auspicious day of Ashtami in Kartik, Krishna killed the demon Arishta who had come as a bull and terrorized Vrindavan. Radharani chided Krishna with loving reproach: "You have sinned by killing a bull — bathe in all holy rivers to purify yourself."</p><p>Krishna smiled and struck the earth with His heel. From that spot sprang a divine lake. Every tirtha, every holy river, came in their divine forms to fill it. Krishna bathed and was purified, naming the lake Shyama Kund.</p><p>Then Radharani with Her companions began digging with their bangles. All the tirthas flowed into Her lake as well — but through Shyama Kund, honoring Krishna first. Sri Chaitanya Mahaprabhu rediscovered Radha Kund in the 16th century when it had been lost beneath fields and brush.</p><p>The great Goswamis declared: to bathe in Radha Kund even once is to receive the highest devotional treasure in all the three worlds.</p>`
   },
   {
     tag: 'Mathura · Janmabhoomi',
     title: 'Nandotsava — The Birth of Krishna',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Krishna_Janmabhoomi_Mathura.jpg/600px-Krishna_Janmabhoomi_Mathura.jpg',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/5/52/Krishna_Janmabhoomi_Mathura.jpg',
     desc: 'The whole of Braj erupts in celebration as the Lord appears in the house of Nanda Maharaj.',
     body: `<p>The night was extraordinary from the beginning. Stars aligned in configurations that made sages weep with joy. Flowers bloomed out of season. Something the world had been waiting for since before memory was coming.</p><p>In the prison of Mathura, at the darkest hour, the divine child was born to Devaki and Vasudeva. Prison guards fell into deep sleep. Chains fell open. Doors swung wide. Vasudeva carried the baby across the flood-swollen Yamuna — the river parted, and a great serpent spread its hoods as an umbrella over the holy child.</p><p>In Gokul, Nanda Maharaj awoke to find a beautiful boy at Yashoda's side and wept with joy. He distributed gold, cows, and garments to every Brahmin who came to bless the child. The whole of Braj Mandal — the sacred land of 84 krosas — erupted in celebration.</p><p>Even today on Janmashtami night, devotees recreate this joy — fasting through the dark hours and breaking their fast at midnight when the Lord appears once more in the world's heart.</p>`
   }
@@ -667,7 +674,7 @@ const stories = [
 function renderStories() {
   document.getElementById('stories-grid').innerHTML = stories.map((s, i) => `
     <div class="story-card" onclick="openReader(${i})">
-      <img class="story-img" src="${s.img}" alt="${s.title}" onerror="this.style.background='linear-gradient(135deg,#FFE0A0,#FFB347)'">
+      <img class="story-img" src="${s.img}" alt="${s.title}" onerror="this.src='';this.style.background='linear-gradient(135deg,#E8821A,#D4AF37)';this.style.display='block'">
       <div class="story-body">
         <div class="story-tag">${s.tag}</div>
         <div class="story-title">${s.title}</div>
@@ -883,40 +890,69 @@ let animScene,animCamera,animRenderer,animMixer,animClock,animPlaying=false;
 
 function initThree(){
   window._threeReady=true;
+
+  // show the section elements first so offsetWidth is real
+  document.getElementById('model-viewer-wrap').style.display='block';
+
   const canvas=document.getElementById('model-canvas');
-  canvas.width=canvas.offsetWidth; canvas.height=480;
-  scene=new THREE.Scene(); scene.background=new THREE.Color(0x1a1a2e);
-  camera=new THREE.PerspectiveCamera(50,canvas.width/480,0.01,1000);
+  // use window.innerWidth as reliable fallback
+  const W=Math.max(canvas.offsetWidth, window.innerWidth-60, 300);
+  const H=480;
+  canvas.width=W; canvas.height=H;
+  canvas.style.width='100%'; canvas.style.height=H+'px';
+
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x1a1a2e);
+  camera=new THREE.PerspectiveCamera(50,W/H,0.01,1000);
   camera.position.set(0,1.5,4);
-  renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+
+  try {
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  } catch(e) {
+    canvas.insertAdjacentHTML('afterend','<p style="color:#aaa;padding:20px;text-align:center">WebGL not supported in this browser.</p>');
+    return;
+  }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.setSize(canvas.width,480);
-  scene.add(new THREE.AmbientLight(0xffffff,.65));
-  const d=new THREE.DirectionalLight(0xffd9a0,1.2); d.position.set(5,10,7); scene.add(d);
-  orbitControls(canvas,camera,()=>renderer.render(scene,camera));
+  renderer.setSize(W,H);
+  renderer.outputEncoding = (THREE.sRGBEncoding !== undefined) ? THREE.sRGBEncoding : 3001;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+  const d=new THREE.DirectionalLight(0xffffff, 1.2);
+  d.position.set(5,10,7); scene.add(d);
+  const d2=new THREE.DirectionalLight(0xffd9a0, 0.6);
+  d2.position.set(-5,3,-5); scene.add(d2);
+
+  orbitControls(canvas,camera);
   renderer.setAnimationLoop(()=>renderer.render(scene,camera));
 
-  // render model list
+  // resize handler
+  window.addEventListener('resize', ()=>{
+    const nw=Math.max(canvas.offsetWidth, window.innerWidth-60, 300);
+    renderer.setSize(nw, H);
+    camera.aspect=nw/H; camera.updateProjectionMatrix();
+  });
+
   if(MY_MODELS.length){
     document.getElementById('model-picker').style.display='block';
     document.getElementById('model-list').innerHTML=MY_MODELS.map((m,i)=>`
       <div class="story-card" onclick="loadModel(${i})" style="cursor:pointer">
-        <div style="padding:20px 16px;display:flex;align-items:center;gap:12px">
-          <div style="font-size:2rem">🗿</div>
+        <div style="padding:18px 16px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:2rem">&#x1F5FF;</div>
           <div>
             <div class="story-title" style="font-size:1rem">${m.title}</div>
             <div class="story-desc" style="margin:0;font-size:.76rem">${m.src.split('/').pop()}</div>
           </div>
         </div>
       </div>`).join('');
-    if(MY_MODELS.length===1) loadModel(0);
+    loadModel(0);
   }
+
   if(MY_ANIM_MODELS.length){
     document.getElementById('anim-picker').style.display='block';
     document.getElementById('anim-list').innerHTML=MY_ANIM_MODELS.map((m,i)=>`
       <div class="story-card" onclick="loadAnimModel(${i})" style="cursor:pointer">
-        <div style="padding:20px 16px;display:flex;align-items:center;gap:12px">
-          <div style="font-size:2rem">🎬</div>
+        <div style="padding:18px 16px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:2rem">&#x1F3AC;</div>
           <div>
             <div class="story-title" style="font-size:1rem">${m.title}</div>
             <div class="story-desc" style="margin:0;font-size:.76rem">${m.src.split('/').pop()}</div>
@@ -973,10 +1009,14 @@ function loadOBJLoader(cb){
 function loadModel(i){
   const m=MY_MODELS[i];
   document.getElementById('model-viewer-wrap').style.display='block';
-  document.getElementById('model-name-label').textContent=m.title;
+  document.getElementById('model-name-label').textContent='Loading '+m.title+'...';
   const ext=m.src.split('.').pop().toLowerCase();
+  const onErr=e=>{
+    document.getElementById('model-name-label').textContent='❌ Could not load: '+m.src+' — check the file path and that it is uploaded to your repo.';
+    console.error(e);
+  };
   if(ext==='glb'||ext==='gltf'){
-    loadGLTFLoader(()=>new THREE.GLTFLoader().load(m.src,gltf=>placeModel(gltf.scene),null,e=>alert('Error: '+e.message)));
+    loadGLTFLoader(()=>new THREE.GLTFLoader().load(m.src,gltf=>{document.getElementById('model-name-label').textContent=m.title;placeModel(gltf.scene);},null,onErr));
   } else if(ext==='obj'){
     loadOBJLoader(()=>new THREE.OBJLoader().load(m.src,obj=>placeModel(obj),null,e=>alert('Error: '+e.message)));
   }
