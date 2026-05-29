@@ -76,7 +76,7 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
 }
 .hero-inner { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:18px; padding:40px 28px; text-align:center; }
 .hero-deity-img {
-  width:190px; height:250px; border-radius:22px; overflow:hidden;
+  width:500px; height:250px; border-radius:22px; overflow:hidden;
   border:3px solid rgba(212,175,55,.55);
   box-shadow:0 0 44px rgba(212,175,55,.38),0 22px 44px rgba(0,0,0,.42);
 }
@@ -281,7 +281,7 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
       <!-- ISKCON Vrindavan Radha Shyamsundar deity image -->
       <div class="hero-deity-img">
         <img
-          src="img/srila_prabhubada.jpg"
+          src="img/Radha_shyamsundar.jpg"
           alt="Radha Shyamsundar — ISKCON Vrindavan"
           onerror="this.style.opacity='0'"
         >
@@ -290,7 +290,7 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
       <div class="hero-sub">All glories to Sri Sri Radha Shyamsundar — the divine couple of Vrindavan</div>
       <div class="prabhupada-badge">
         <div class="prabhu-avatar">
-          <img src="img/srila_prabhubada.jpg" alt="Srila Prabhupada" onerror="this.parentElement.textContent='🙏'">
+          <img src="img/prabhupad_profile.jpg" alt="Srila Prabhupada" onerror="this.parentElement.textContent='🙏'">
         </div>
         <div class="prabhu-name">
           His Divine Grace A.C. Bhaktivedanta Swami Srila Prabhupada
@@ -564,9 +564,10 @@ const MY_VIDEOS = [
    Put .mp3 / .m4a files in  audio/  folder
 ────────────────────────────────────────────── */
 const MY_AUDIO = [
-  // { title: "Om Namo Bhagavate Vasudevaya", src: "audio/Om Namo Bhagavate Vasudevaya.mp3" },
-  // { title: "Hare Krishna Mahamantra", src: "audio/mahamantra.mp3" },
-  // { title: "Govinda Jaya Jaya", src: "audio/govinda.mp3" },
+  { title: "HARI-NAAM-SANKIRTAN", src: "audio/Hare Krsna Kirtan At Sri Vrindavan Dham w_ Aindra Prabhu ep8.m4a" },
+  { title: "HG.Aindra-prabhu", src: "audio/Aindra prabhu _Janmashtami kirtan 24.08.2008.m4a" },
+  { title: "vrindavan-mellows", src: "audio/Hare Krsna Kirtan At Sri Vrindavan Dham w_ Aindra Prabhu ep5.m4a" },
+  
 ];
 
 /* ──────────────────────────────────────────────
@@ -630,28 +631,28 @@ const stories = [
   {
     tag: 'Govardhan Hill · Braj Mandal',
     title: 'Govardhan Puja',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/8/87/Govardhan_Hill.jpg',
+    img: 'img/Govardhana-Braj-Mandal.jpg',
     desc: 'Krishna lifts mighty Govardhan Hill on His little finger to shelter Vrindavan from Indra\'s fury.',
     body: `<p>Long ago the residents of Vrindavan prepared offerings for Lord Indra, keeper of rains. Young Krishna smiled and asked Nanda Maharaj why they worshipped Indra when Govardhan Hill — right before them — gave grass for cows, fresh water, and shelter from storms.</p><p>Trusting Krishna completely, the villagers redirected every offering to Govardhan Hill. Enraged, Indra unleashed torrential rains and howling winds upon Vrindavan. Cows shivered, children trembled, and the village was threatened with destruction.</p><p>Then little Krishna walked to Govardhan Hill and lifted it upon the little finger of His left hand — as easily as a child lifts a mushroom. For seven days and nights all of Vrindavan sheltered beneath the hill while Indra's fury spent itself in vain.</p><p>Finally Indra's pride was humbled. He descended, bowed before Krishna, and begged forgiveness. Krishna embraced him with divine compassion and gently lowered the hill. From that day this festival is celebrated as Govardhan Puja — a reminder that true shelter rests only in the Lord.</p>`
   },
   {
     tag: 'Seva Kunj · Vrindavan',
     title: 'Rasa Lila — The Divine Dance',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/Vrindavan_-_the_holy_land.jpg',
+    img: 'img/rasa_dance.jpg',
     desc: 'Under the full moon of Sharad Purnima, Krishna dances the eternal Rasa with the gopis of Vrindavan.',
     body: `<p>On the night of Sharad Purnima the forest of Vrindavan became a paradise unlike any in the three worlds. The moon bathed every leaf in silver light. Jasmine filled the air. The Yamuna flowed in gentle ripples.</p><p>Krishna lifted His flute and played. The notes carried the call of the eternal — the divine heart longing for reunion. Every gopi heard her name in that melody and came running to the forest.</p><p>What followed was the Maha Rasa — the great circle dance. Krishna multiplied Himself between each gopi so that every devotee experienced the Lord's presence beside her alone. For one celestial night they danced and sang in divine ecstasy.</p><p>The sages declare: there is no activity more pure than this. The gopis had no worldly motive, only love — pure, unmixed, unconditional devotion. The Rasa Lila is the summit of bhakti, the perfection of the soul's journey home.</p>`
   },
   {
     tag: 'Kaliya Ghat · Yamuna, Vrindavan',
     title: 'Kaliya Mardana',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Yamuna_River_at_Vrindavan.jpg',
+    img: 'img/yamuna_ghat.jpg',
     desc: 'Krishna subdues the fearsome serpent Kaliya in the Yamuna and dances upon his hoods.',
     body: `<p>In the sacred Yamuna near Vrindavan lived the terrible serpent Kaliya with a hundred and ten hoods, each dripping with venom so powerful that birds fell dead above the water and no child dared approach its banks.</p><p>One day the cowherd boys' ball rolled into the water. Krishna, with a mischievous smile, climbed the tallest kadamba tree and jumped into Kaliya's pool with a mighty splash.</p><p>Kaliya rose in fury, his coils wrapping around Krishna, his hoods spitting venom. Devotees on the bank fell to the ground in grief. Then Krishna expanded within the coils until Kaliya could not hold Him. He climbed atop Kaliya's central hood and began to dance — a cosmic dance of liberation.</p><p>Kaliya's wives, the Nagapatnis, prayed to Krishna on behalf of their husband. Moved by their devotion, Krishna spared Kaliya and ordered him to return to his island in the ocean. From that day the Yamuna's waters flowed pure and sweet.</p>`
   },
   {
     tag: 'Nanda Bhavan · Gokul',
     title: 'Damodara Lila',
-    img: 'https://upload.wikimedia.org/wikipedia/commons/d/d2/Gokul_ghats.jpg',
+    img: 'img/damodar_lila.jpg',
     desc: 'Mother Yashoda ties little Krishna with a rope — and the Lord of the universe allows Himself to be bound by love.',
     body: `<p>Little Krishna had a habit that drove Vrindavan's butter-merchants to despair. Every morning while Yashoda milked the cows He would steal into the dairy, break the pots of butter and yogurt, distribute the contents to His friends and the monkeys, and run away with a butter-smeared face.</p><p>One morning Yashoda caught Him. She chased the little butter thief and finally caught Him by His arm. His lotus eyes filled with tears of mock-fear, kajal running in dark lines down His cheeks.</p><p>Yashoda decided to tie Him to a mortar. She took a rope — always two finger-widths too short. She tied more rope — still two fingers short. Every rope in the house fell short. Then Krishna allowed Himself to be bound — not because the rope was sufficient, but because of the love in Yashoda's heart.</p><p>The Lord of all creation, whom Brahma cannot find with his greatest wisdom, submitted completely to a mother's love. This is why He is called Damodara — "He who was bound by a rope around the belly."</p>`
   },
