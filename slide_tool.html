@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Classic Slideshow | Play/Pause + Arrows + Auto Slide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* avoid accidental selection on mobile */
+        }
+
+        body {
+            background: #000000;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            overflow-x: hidden;
+            overflow-y: auto;
+            touch-action: pan-y pinch-zoom;
+        }
+
+        .app {
+            max-width: 100%;
+            min-height: 100vh;
+            background: #0a0c0f;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* top bar */
+        .toolbar {
+            background: #11161c;
+            padding: 10px 16px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            border-bottom: 1px solid #2a2f36;
+            z-index: 10;
+        }
+
+        .title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #eef4ff;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .folder-btn, .fullscreen-btn {
+            background: #2c3e33;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .fullscreen-btn {
+            background: #2a2f3c;
+        }
+
+        .folder-btn:active, .fullscreen-btn:active, .control-btn:active {
+            transform: scale(0.96);
+        }
+
+        .counter-badge {
+            background: #1e1f24;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #b9c7d9;
+            font-family: monospace;
+        }
+
+        /* slider container */
+        .slider-container {
+            flex: 1;
+            width: 100%;
+            background: #000000;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        .track {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.05);
+            will-change: transform;
+        }
+
+        .slide {
+            flex: 0 0 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #030507;
+            position: relative;
+            min-height: 60vh;
+            height: auto;
+        }
+
+        .slide img {
+            max-width: 100%;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+
+        /* empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: #8f9bb3;
+            gap: 16px;
+            background: #0a0c0f;
+            min-height: 65vh;
+        }
+
+        .empty-state svg {
+            opacity: 0.5;
+            width: 64px;
+            height: 64px;
+        }
+
+        /* control bar (play/pause + arrows) */
+        .slide-controls {
+            background: #0e1117ea;
+            backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            border-top: 1px solid #2a2f38;
+            border-bottom: 1px solid #2a2f38;
+        }
+
+        .control-btn {
+            background: #1f2a32;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 60px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: white;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .control-btn:active {
+            background: #3a4a58;
+            transform: scale(0.94);
+        }
+
+        .play-pause-btn {
+            width: 56px;
+            height: 56px;
+            background: #2c5a6e;
+            font-size: 1.8rem;
+        }
+
+        .info-bar {
+            background: #0e1117;
+            padding: 7px 16px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #9aaec5;
+            letter-spacing: 0.3px;
+        }
+
+        /* fullscreen overrides */
+        .app:fullscreen .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+        }
+        .app:fullscreen .slider-container {
+            height: 100vh;
+        }
+        .app:fullscreen .slide img {
+            max-height: 85vh;
+        }
+        .app:fullscreen .slide-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid #3a4a58;
+            border-bottom: none;
+            z-index: 1000;
+        }
+        .app:fullscreen .info-bar {
+            position: fixed;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            background: transparent;
+            color: #ccc;
+            pointer-events: none;
+        }
+        img {
+            pointer-events: none;
+        }
+        button {
+            background: none;
+            border: none;
+        }
+        @media (max-width: 560px) {
+            .control-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.4rem;
+            }
+            .play-pause-btn {
+                width: 52px;
+                height: 52px;
+            }
+            .slide-controls {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="appRoot">
+    <div class="toolbar">
+        <div class="title">
+            <span>🎞️</span> AutoSlide
+        </div>
+        <div class="btn-group">
+            <button class="folder-btn" id="selectFolderBtn">📁 Select Folder</button>
+            <button class="fullscreen-btn" id="fullscreenBtn">⛶ Fullscreen</button>
+            <div class="counter-badge" id="counterBadge">0 images</div>
+        </div>
+    </div>
+
+    <div class="slider-container" id="sliderContainer">
+        <div class="track" id="sliderTrack"></div>
+        <div id="emptyMessage" class="empty-state" style="display: flex;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="10.5" r="2.5"></circle>
+                <polyline points="21 15 16 10 5 20"></polyline>
+            </svg>
+            <p>Pick a folder with images<br>.jpg .png .webp .gif</p>
+            <small>Auto‑slide every 5s · use play/pause & arrows</small>
+        </div>
+    </div>
+
+    <!-- control row: left arrow, play/pause, right arrow -->
+    <div class="slide-controls">
+        <button class="control-btn" id="prevBtn" title="Previous image">◀</button>
+        <button class="control-btn play-pause-btn" id="playPauseBtn" title="Play/Pause">⏸</button>
+        <button class="control-btn" id="nextBtn" title="Next image">▶</button>
+    </div>
+
+    <div class="info-bar" id="infoMessage">
+        📂 Choose a folder → auto slide starts (5s). Use ⏸ to pause, ▶◀ to navigate.
+    </div>
+</div>
+
+<script>
+    (function() {
+        // DOM elements
+        const folderInput = document.createElement('input');
+        folderInput.type = 'file';
+        folderInput.setAttribute('webkitdirectory', '');
+        folderInput.setAttribute('directory', '');
+        folderInput.setAttribute('multiple', '');
+        folderInput.style.display = 'none';
+        document.body.appendChild(folderInput);
+
+        const selectFolderBtn = document.getElementById('selectFolderBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const sliderTrack = document.getElementById('sliderTrack');
+        const emptyMessageDiv = document.getElementById('emptyMessage');
+        const counterBadge = document.getElementById('counterBadge');
+        const infoMessageSpan = document.getElementById('infoMessage');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const appRoot = document.getElementById('appRoot');
+
+        // Core state
+        let currentImageURLs = [];     // blob URLs
+        let totalImages = 0;
+        let currentIndex = 0;
+        let slideInterval = null;
+        let isPlaying = false;          // true = auto sliding active
+
+        // Helper: revoke all blob URLs (critical for low memory)
+        function revokeAllImages() {
+            if (currentImageURLs.length) {
+                for (let i = 0; i < currentImageURLs.length; i++) {
+                    const url = currentImageURLs[i];
+                    if (url && url.startsWith('blob:')) {
+                        URL.revokeObjectURL(url);
+                    }
+                }
+                currentImageURLs = [];
+            }
+        }
+
+        // Stop auto timer
+        function stopTimer() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+                slideInterval = null;
+            }
+            isPlaying = false;
+            updatePlayPauseButton();
+        }
+
+        // Start auto timer (only if total >= 2)
+        function startTimer() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+                slideInterval = null;
+            }
+            if (totalImages >= 2) {
+                slideInterval = setInterval(() => {
+                    if (totalImages === 0) {
+                        stopTimer();
+                        return;
+                    }
+                    // auto move to next (with loop)
+                    const nextIndex = (currentIndex + 1) % totalImages;
+                    goToSlide(nextIndex, false); // don't reset timer inside
+                }, 5000);
+                isPlaying = true;
+            } else {
+                isPlaying = false;
+            }
+            updatePlayPauseButton();
+        }
+
+        // Resume auto sliding from current image (preserve 5s cycle)
+        function resumeAutoSlide() {
+            if (totalImages >= 2 && !isPlaying) {
+                // reset any existing timer and start fresh
+                if (slideInterval) clearInterval(slideInterval);
+                slideInterval = setInterval(() => {
+                    if (totalImages === 0) {
+                        stopTimer();
+                        return;
+                    }
+                    const nextIndex = (currentIndex + 1) % totalImages;
+                    goToSlide(nextIndex, false);
+                }, 5000);
+                isPlaying = true;
+                updatePlayPauseButton();
+                if (infoMessageSpan) infoMessageSpan.innerHTML = `▶️ Auto‑slide resumed · every 5s · image ${currentIndex+1}/${totalImages}`;
+            } else if (totalImages === 0) {
+                infoMessageSpan.innerHTML = `📁 No images. Select a folder first.`;
+            } else if (totalImages === 1) {
+                infoMessageSpan.innerHTML = `🖼️ Only 1 image. Add more for auto‑slide.`;
+            } else {
+                // already playing
+                if (isPlaying) infoMessageSpan.innerHTML = `⏵ Already sliding · ${currentIndex+1}/${totalImages}`;
+            }
+        }
+
+        // Pause auto slide
+        function pauseAutoSlide() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+                slideInterval = null;
+            }
+            isPlaying = false;
+            updatePlayPauseButton();
+            if (infoMessageSpan && totalImages > 0) {
+                infoMessageSpan.innerHTML = `⏸ Paused at image ${currentIndex+1}/${totalImages} · press play to resume 5s loop`;
+            } else if (totalImages === 0) {
+                infoMessageSpan.innerHTML = `⏸ No images loaded. Select a folder.`;
+            }
+        }
+
+        // toggle play/pause
+        function togglePlayPause() {
+            if (totalImages === 0) {
+                infoMessageSpan.innerHTML = `⚠️ No images. Please select a folder first.`;
+                return;
+            }
+            if (totalImages === 1) {
+                infoMessageSpan.innerHTML = `⏸ Only one image, auto‑slide needs at least 2 images.`;
+                return;
+            }
+            if (isPlaying) {
+                pauseAutoSlide();
+            } else {
+                resumeAutoSlide();
+            }
+        }
+
+        // update play/pause button icon
+        function updatePlayPauseButton() {
+            if (playPauseBtn) {
+                if (isPlaying) {
+                    playPauseBtn.innerHTML = '⏸';
+                    playPauseBtn.title = 'Pause slideshow';
+                } else {
+                    playPauseBtn.innerHTML = '▶';
+                    playPauseBtn.title = 'Play slideshow';
+                }
+            }
+        }
+
+        // Move to specific slide (smooth)
+        function goToSlide(index, fromManual = true) {
+            if (!sliderTrack) return;
+            if (totalImages === 0) return;
+            const safeIdx = Math.min(Math.max(0, index), totalImages - 1);
+            if (safeIdx !== currentIndex) {
+                currentIndex = safeIdx;
+                const offset = currentIndex * 100;
+                sliderTrack.style.transform = `translateX(-${offset}%)`;
+                // update info message (show current image)
+                if (infoMessageSpan && totalImages > 0) {
+                    if (isPlaying) {
+                        infoMessageSpan.innerHTML = `🎬 Auto‑slide · ${currentIndex+1} / ${totalImages} · next in 5s`;
+                    } else {
+                        infoMessageSpan.innerHTML = `⏸ Paused · image ${currentIndex+1} / ${totalImages} · press play for auto`;
+                    }
+                }
+                // if manual navigation (prev/next) and we are in auto mode, we do NOT reset timer
+                // but the timer continues, which is correct: after manual click, the auto slide continues from current index.
+                // No extra reset needed. If we are paused, we remain paused.
+            } else if (safeIdx === currentIndex && fromManual) {
+                // same image clicked? do nothing but maybe show toast
+                if (infoMessageSpan) infoMessageSpan.innerHTML = `📸 Already at image ${currentIndex+1}`;
+            }
+        }
+
+        // next image (with loop)
+        function nextImage() {
+            if (totalImages === 0) return;
+            const newIndex = (currentIndex + 1) % totalImages;
+            goToSlide(newIndex, true);
+            // If slideshow was playing, we keep playing (no timer reset). But to ensure smoothness we don't touch interval.
+            // If paused, stays paused, just manual move.
+            if (!isPlaying && totalImages > 0) {
+                // update info to show manual move
+                infoMessageSpan.innerHTML = `⏸ Manual next · ${currentIndex+1}/${totalImages} · press play for auto`;
+            }
+        }
+
+        // previous image (with loop)
+        function prevImage() {
+            if (totalImages === 0) return;
+            let newIndex = currentIndex - 1;
+            if (newIndex < 0) newIndex = totalImages - 1;
+            goToSlide(newIndex, true);
+            if (!isPlaying && totalImages > 0) {
+                infoMessageSpan.innerHTML = `⏸ Manual previous · ${currentIndex+1}/${totalImages} · press play for auto`;
+            }
+        }
+
+        // rebuild slider from currentImageURLs
+        function rebuildSlider() {
+            if (!sliderTrack) return;
+            sliderTrack.innerHTML = '';
+            
+            if (currentImageURLs.length === 0) {
+                if (emptyMessageDiv) emptyMessageDiv.style.display = 'flex';
+                sliderTrack.style.transform = `translateX(0%)`;
+                totalImages = 0;
+                currentIndex = 0;
+                counterBadge.innerText = `0 images`;
+                stopTimer(); // ensures isPlaying false and interval cleared
+                updatePlayPauseButton();
+                infoMessageSpan.innerHTML = `📁 Select a folder with .jpg .png .webp .gif`;
+                return;
+            }
+            
+            if (emptyMessageDiv) emptyMessageDiv.style.display = 'none';
+            
+            // create slides
+            for (let i = 0; i < currentImageURLs.length; i++) {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'slide';
+                const img = document.createElement('img');
+                img.src = currentImageURLs[i];
+                img.alt = `img-${i+1}`;
+                img.loading = 'eager';
+                img.onerror = function() {
+                    if (img.src !== currentImageURLs[i]) return;
+                    img.style.opacity = '0.5';
+                    img.style.filter = 'grayscale(0.2)';
+                };
+                slideDiv.appendChild(img);
+                sliderTrack.appendChild(slideDiv);
+            }
+            
+            totalImages = currentImageURLs.length;
+            currentIndex = 0;
+            sliderTrack.style.transform = `translateX(0%)`;
+            counterBadge.innerText = `${totalImages} img${totalImages !== 1 ? 's' : ''}`;
+            
+            // stop any previous timer
+            stopTimer();
+            
+            if (totalImages >= 2) {
+                // auto-start slideshow when new folder loads (as per requirement: after play clicked continue from that image, but default auto after load)
+                // but spec: after play option clicked again continue from that image every 5 seconds.
+                // We'll start playing automatically when folder selected (good UX). But user can pause.
+                startTimer(); // starts auto-slide
+                infoMessageSpan.innerHTML = `✅ Loaded ${totalImages} images. Auto‑slide every 5s → use ⏸ to pause, ◀ ▶ to navigate.`;
+            } else if (totalImages === 1) {
+                infoMessageSpan.innerHTML = `🖼️ 1 image loaded. Need at least 2 for auto-slide. Use arrows if more images later.`;
+                isPlaying = false;
+                updatePlayPauseButton();
+            } else {
+                isPlaying = false;
+                updatePlayPauseButton();
+            }
+        }
+
+        // Process folder files
+        function processFolderFiles(fileList) {
+            const allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+            const imageFiles = [];
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+      
+if (!file || !file.name) continue;
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (allowed.includes(ext)) {
+                    imageFiles.push(file);
+                }
+            }
+            
+            if (imageFiles.length === 0) {
+                revokeAllImages();
+                rebuildSlider();
+                infoMessageSpan.innerHTML = `⚠️ No supported images. Use .jpg, .png, .webp, .gif`;
+                counterBadge.innerText = `0 images`;
+                return;
+            }
+            
+            // revoke old URLs before creating new
+            revokeAllImages();
+            
+            const newUrls = [];
+            for (let i = 0; i < imageFiles.length; i++) {
+                try {
+                    const blobUrl = URL.createObjectURL(imageFiles[i]);
+                    newUrls.push(blobUrl);
+                } catch (err) {
+                    console.warn("blob error", err);
+                }
+            }
+            
+            if (newUrls.length === 0) {
+                infoMessageSpan.innerHTML = `❌ Failed to load images, try another folder.`;
+                return;
+            }
+            
+            currentImageURLs = newUrls;
+            rebuildSlider();
+        }
+        
+        // folder selection handler
+        function onFolderSelected(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            // stop current timer before processing new folder
+            stopTimer();
+            processFolderFiles(files);
+        }
+        
+        function openFolderPicker() {
+            folderInput.value = '';
+            folderInput.click();
+        }
+        
+        // fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const elem = appRoot;
+                const requestMethod = elem.requestFullscreen || elem.webkitRequestFullscreen;
+                if (requestMethod) {
+                    requestMethod.call(elem).catch(err => {
+                        infoMessageSpan.innerHTML = `⚠️ Fullscreen not allowed`;
+                    });
+                }
+            } else {
+                const exitMethod = document.exitFullscreen || document.webkitExitFullscreen;
+                if (exitMethod) exitMethod.call(document);
+            }
+        }
+        
+        // visibility handling: pause when hidden, resume when visible if was playing
+        let wasPlayingBeforeHidden = false;
+        function handleVisibility() {
+            if (document.hidden) {
+                if (isPlaying && slideInterval) {
+                    wasPlayingBeforeHidden = true;
+                    pauseAutoSlide();  // stops interval, sets isPlaying false but keeps state
+                } else {
+                    wasPlayingBeforeHidden = false;
+                }
+            } else {
+                if (wasPlayingBeforeHidden && totalImages >= 2) {
+                    // resume auto slide
+                    resumeAutoSlide();
+                    wasPlayingBeforeHidden = false;
+                }
+            }
+        }
+        
+        // cleanup on unload
+        window.addEventListener('beforeunload', () => {
+            if (currentImageURLs.length) {
+                for (let url of currentImageURLs) {
+                    if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
+                }
+            }
+            if (slideInterval) clearInterval(slideInterval);
+        });
+        
+        // event listeners
+        selectFolderBtn.addEventListener('click', openFolderPicker);
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        folderInput.addEventListener('change', onFolderSelected);
+        prevBtn.addEventListener('click', prevImage);
+        nextBtn.addEventListener('click', nextImage);
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        document.addEventListener('visibilitychange', handleVisibility);
+         
+        
+// ========== KEYBOARD NAVIGATION (ADD THIS BLOCK) ==========
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevImage();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextImage();
+            } else if (e.key === ' ' || e.key === 'Space') {
+                e.preventDefault();
+                togglePlayPause();
+            }
+        });
+        // ========== END KEYBOARD NAVIGATION ==========
+
+
+
+           
+        // resize / fullscreen events: maintain transform
+        window.addEventListener('resize', () => {
+            if (sliderTrack && totalImages > 0) {
+                const offset = currentIndex * 100;
+                sliderTrack.style.transform = `translateX(-${offset}%)`;
+            }
+        });
+        document.addEventListener('fullscreenchange', () => {
+            if (sliderTrack && totalImages > 0) {
+                const offset = currentIndex * 100;
+                sliderTrack.style.transform = `translateX(-${offset}%)`;
+            }
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (sliderTrack && totalImages > 0) {
+                const offset = currentIndex * 100;
+                sliderTrack.style.transform = `translateX(-${offset}%)`;
+            }
+        });
+        
+        // initialize empty
+        revokeAllImages();
+        rebuildSlider();
+        
+        // ensure play/pause shows correct state (no images)
+        updatePlayPauseButton();
+        console.log("Slideshow ready — play/pause, arrows, fullscreen, auto 5s loop");
+    })();
+</script>
+</body>
+</html>
