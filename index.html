@@ -354,7 +354,7 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
 <!-- ══════════ AUDIO ══════════ -->
 <section id="sec-audio">
     <!-- BACKGROUND MUTED VIDEO -->
-  <video
+ <!--- <video
     id="audio-bg-video"
     autoplay
     muted
@@ -370,7 +370,21 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
      opacity: 0.55;
       pointer-events: none;
     "
-  ></video>
+  ></video> --->
+
+ <img
+  id="audio-bg-img"
+  src="img/pleasure of namasmaran.jpg"
+  style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    opacity: 1;
+    pointer-events: none;
+  "
+> 
 
   <h2 class="sec-heading">Bhajans & Kirtans</h2>
   <p class="sec-sub">Your personal audio library</p>
