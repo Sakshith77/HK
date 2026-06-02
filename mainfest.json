@@ -1,0 +1,31 @@
+{
+  "name": "Hare Krishna 🪷",
+  "short_name": "Hare Krishna",
+  "description": "Your personal devotional companion — bhajans, stories, Krishna leelas",
+  "start_url": "/HK/",
+  "scope": "/HK/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FDF3E0",
+  "theme_color": "#E8821A",
+  "icons": [
+    {
+      "src": "img/icon-192.png",
+      "sizes": "192x192",
+      "type": "img/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/icon-512.png",
+      "sizes": "512x512",
+      "type": "img/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "lifestyle",
+    "music",
+    "entertainment"
+  ],
+  "lang": "en"
+}
