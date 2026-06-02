@@ -9,11 +9,29 @@ const PRECACHE = [
   '/HK/img/icon-512.png',
 ];
  
-// Install — cache core files
+// 1. Install — cache core files
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(PRECACHE))
+  );
+  self.skipWaiting();
+});
+ 
+// 2. Activate — clean old caches
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+ 
+// 3. Fetch — network first, fallback to cache
 self.addEventListener('fetch', e => {
-  // If it's not a GET request or not our origin, let the browser handle it normally!
+  // If it's not a GET request or not our origin, let the browser handle it normally
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) {
-    return; // This is okay if you don't call e.respondWith(), BUT read below:
+    return; 
   }
  
   e.respondWith(
