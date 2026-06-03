@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>UV Image Composer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e12;
+  --panel: #16161c;
+  --panel2: #1e1e28;
+  --border: #2a2a38;
+  --accent: #7c6aff;
+  --accent2: #ff6a6a;
+  --gold: #ffc64a;
+  --text: #e8e8f0;
+  --text-muted: #6b6b80;
+  --toolbar-h: 52px;
+  --layers-w: 220px;
+  --radius: 8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;user-select:none;}
+
+/* ── TOOLBAR ── */
+#toolbar{
+  height:var(--toolbar-h);
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:4px;padding:0 10px;
+  flex-shrink:0;overflow-x:auto;scrollbar-width:none;
+  z-index:10;
+}
+#toolbar::-webkit-scrollbar{display:none;}
+.tb-sep{width:1px;height:28px;background:var(--border);margin:0 4px;flex-shrink:0;}
+.tb-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 11px;border-radius:6px;border:none;
+  background:transparent;color:var(--text-muted);
+  font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;
+  cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
+  letter-spacing:.03em;
+}
+.tb-btn:hover{background:var(--panel2);color:var(--text);}
+.tb-btn.active{background:var(--accent);color:#fff;}
+.tb-btn.danger{color:var(--accent2);}
+.tb-btn.danger:hover{background:rgba(255,106,106,.15);}
+.tb-logo{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;color:var(--gold);letter-spacing:.05em;margin-right:8px;flex-shrink:0;}
+
+/* ── MAIN AREA ── */
+#main{display:flex;flex:1;overflow:hidden;}
+
+/* ── CANVAS AREA ── */
+#canvas-wrap{
+  flex:1;overflow:hidden;position:relative;
+  background:
+    radial-gradient(ellipse at 20% 50%,rgba(124,106,255,.06) 0%,transparent 60%),
+    repeating-conic-gradient(#111115 0% 25%,#0e0e12 0% 50%) 0 0/24px 24px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:crosshair;
+}
+#canvas-scroll{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
+#uv-canvas{
+  position:absolute;
+  box-shadow:0 0 0 1px var(--border),0 24px 80px rgba(0,0,0,.6);
+  cursor:default;
+  touch-action:none;
+}
+
+/* grid overlay */
+#grid-overlay{position:absolute;pointer-events:none;z-index:5;opacity:.18;}
+
+/* selection handles */
+.sel-handle{position:absolute;width:10px;height:10px;background:#fff;border:2px solid var(--accent);border-radius:2px;z-index:20;cursor:pointer;}
+
+/* ── LAYERS PANEL ── */
+#layers-panel{
+  width:var(--layers-w);
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;
+  flex-shrink:0;
+  overflow:hidden;
+}
+.lp-header{
+  padding:12px 14px 10px;
+  border-bottom:1px solid var(--border);
+  font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;
+}
+#layer-list{flex:1;overflow-y:auto;padding:6px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.layer-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 8px;border-radius:6px;cursor:pointer;
+  border:1px solid transparent;transition:all .15s;margin-bottom:3px;
+}
+.layer-item:hover{background:var(--panel2);}
+.layer-item.selected{background:rgba(124,106,255,.15);border-color:rgba(124,106,255,.4);}
+.layer-thumb{
+  width:32px;height:32px;border-radius:4px;object-fit:cover;
+  background:var(--panel2);flex-shrink:0;border:1px solid var(--border);
+}
+.layer-info{flex:1;min-width:0;}
+.layer-name{font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.layer-sub{font-size:.64rem;color:var(--text-muted);}
+.layer-vis{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.85rem;padding:2px;transition:color .15s;}
+.layer-vis:hover{color:var(--text);}
+.layer-del{background:none;border:none;color:transparent;cursor:pointer;font-size:.75rem;padding:2px;transition:color .15s;}
+.layer-item:hover .layer-del{color:var(--accent2);}
+
+/* ── PROPS PANEL (bottom of layers) ── */
+#props-panel{
+  border-top:1px solid var(--border);
+  padding:10px 12px;
+  background:var(--panel);
+  flex-shrink:0;
+}
+.prop-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.prop-label{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);width:52px;flex-shrink:0;}
+.prop-input{
+  flex:1;background:var(--panel2);border:1px solid var(--border);
+  border-radius:5px;padding:4px 8px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;outline:none;
+  transition:border-color .15s;
+}
+.prop-input:focus{border-color:var(--accent);}
+.prop-select{
+  flex:1;background:var(--panel2);border:1px solid var(--border);
+  border-radius:5px;padding:4px 6px;color:var(--text);
+  font-family:'Syne',sans-serif;font-size:.72rem;outline:none;cursor:pointer;
+}
+.prop-range{flex:1;accent-color:var(--accent);cursor:pointer;}
+.prop-val{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--gold);width:32px;text-align:right;}
+
+/* ── CANVAS SETUP MODAL ── */
+#setup-modal{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-box{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:16px;padding:36px 32px;width:min(420px,95vw);
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+}
+.modal-title{font-size:1.4rem;font-weight:800;color:var(--gold);margin-bottom:4px;letter-spacing:.02em;}
+.modal-sub{font-size:.8rem;color:var(--text-muted);margin-bottom:28px;}
+.modal-row{display:flex;gap:10px;margin-bottom:14px;align-items:center;}
+.modal-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);width:60px;}
+.modal-inp{
+  flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:7px;
+  padding:9px 12px;color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:.88rem;outline:none;transition:border-color .15s;
+}
+.modal-inp:focus{border-color:var(--accent);}
+.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+.preset-btn{
+  padding:8px;border-radius:7px;border:1px solid var(--border);
+  background:var(--panel2);color:var(--text-muted);font-family:'Syne',sans-serif;
+  font-size:.72rem;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;
+}
+.preset-btn:hover,.preset-btn.active{background:rgba(124,106,255,.2);border-color:var(--accent);color:var(--accent);}
+.big-btn{
+  width:100%;padding:12px;border-radius:8px;border:none;
+  background:linear-gradient(135deg,var(--accent),#5a48ff);
+  color:#fff;font-family:'Syne',sans-serif;font-size:.9rem;font-weight:800;
+  cursor:pointer;transition:all .2s;letter-spacing:.04em;
+}
+.big-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,106,255,.4);}
+
+/* ── EXPORT MODAL ── */
+#export-modal{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+}
+#export-modal.hidden{display:none;}
+.exp-box{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:16px;padding:28px 26px;width:min(360px,95vw);
+}
+.exp-title{font-size:1.1rem;font-weight:800;color:var(--gold);margin-bottom:18px;}
+.exp-row{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+.exp-label{font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);width:58px;}
+.exp-sel{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'Syne',sans-serif;font-size:.8rem;outline:none;cursor:pointer;}
+.exp-btns{display:flex;gap:8px;margin-top:16px;}
+.exp-btn{flex:1;padding:10px;border-radius:7px;border:none;font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.exp-btn.primary{background:var(--accent);color:#fff;}
+.exp-btn.primary:hover{background:#6a58ff;}
+.exp-btn.secondary{background:var(--panel2);color:var(--text-muted);border:1px solid var(--border);}
+.exp-btn.secondary:hover{color:var(--text);}
+
+/* ── CROP OVERLAY ── */
+#crop-overlay{display:none;position:absolute;inset:0;z-index:30;cursor:crosshair;}
+#crop-overlay.active{display:block;}
+#crop-rect{position:absolute;border:2px dashed var(--gold);pointer-events:none;}
+
+/* ── COLOR PICKER POPUP ── */
+#color-pick{
+  display:none;position:fixed;z-index:50;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;padding:14px;box-shadow:0 16px 48px rgba(0,0,0,.5);
+}
+#color-pick.open{display:block;}
+
+/* ── STATUS BAR ── */
+#statusbar{
+  height:24px;background:var(--panel);border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 12px;gap:16px;flex-shrink:0;
+}
+.sb-item{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-muted);}
+.sb-item span{color:var(--gold);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* mobile layers toggle */
+#layers-toggle{display:none;}
+@media(max-width:700px){
+  #layers-panel{position:fixed;right:0;top:0;bottom:0;z-index:50;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+  #layers-panel.open{transform:translateX(0);}
+  #layers-toggle{display:flex;position:fixed;right:10px;bottom:70px;z-index:51;width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:1.1rem;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(124,106,255,.4);cursor:pointer;}
+  :root{--layers-w:200px;}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<div id="setup-modal">
+  <div class="modal-box">
+    <div class="modal-title">UV Image Composer</div>
+    <div class="modal-sub">Set your canvas size for the UV texture</div>
+
+    <div style="margin-bottom:12px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)">Presets</div>
+    <div class="preset-grid">
+      <button class="preset-btn" onclick="setPreset(1024,1024)">1024²</button>
+      <button class="preset-btn" onclick="setPreset(2048,2048)">2048²</button>
+      <button class="preset-btn" onclick="setPreset(4096,4096)">4096²</button>
+      <button class="preset-btn" onclick="setPreset(1024,2048)">1024×2048</button>
+      <button class="preset-btn" onclick="setPreset(2048,1024)">2048×1024</button>
+      <button class="preset-btn" onclick="setPreset(8192,8192)">8K</button>
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-label">Width</div>
+      <input class="modal-inp" id="setup-w" type="number" value="2048" min="64" max="16384" placeholder="px">
+      <div style="color:var(--text-muted);font-size:.8rem">px</div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">Height</div>
+      <input class="modal-inp" id="setup-h" type="number" value="2048" min="64" max="16384" placeholder="px">
+      <div style="color:var(--text-muted);font-size:.8rem">px</div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">BG Color</div>
+      <input class="modal-inp" id="setup-bg" type="color" value="#000000" style="height:36px;padding:2px 6px;cursor:pointer;">
+    </div>
+    <button class="big-btn" onclick="createCanvas()">Create Canvas →</button>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div id="export-modal" class="hidden">
+  <div class="exp-box">
+    <div class="exp-title">Export UV Image</div>
+    <div class="exp-row">
+      <div class="exp-label">Format</div>
+      <select class="exp-sel" id="exp-fmt">
+        <option value="image/png">.PNG (lossless)</option>
+        <option value="image/jpeg">.JPG (smaller size)</option>
+        <option value="image/webp">.WEBP (best compression)</option>
+      </select>
+    </div>
+    <div class="exp-row" id="exp-quality-row">
+      <div class="exp-label">Quality</div>
+      <input type="range" class="prop-range" id="exp-quality" min="0.1" max="1" step="0.05" value="0.95" oninput="document.getElementById('exp-qval').textContent=Math.round(this.value*100)+'%'">
+      <div class="prop-val" id="exp-qval">95%</div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-label">Name</div>
+      <input class="exp-sel" id="exp-name" type="text" value="uv_texture" style="font-family:'JetBrains Mono',monospace;font-size:.75rem;">
+    </div>
+    <div class="exp-btns">
+      <button class="exp-btn primary" onclick="doExport()">⬇ Download</button>
+      <button class="exp-btn secondary" onclick="document.getElementById('export-modal').classList.add('hidden')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div class="tb-logo">UV◆COMP</div>
+  <div class="tb-sep"></div>
+
+  <!-- File -->
+  <button class="tb-btn" onclick="document.getElementById('file-input').click()">＋ Add Images</button>
+  <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="addImages(this)">
+  <button class="tb-btn" onclick="document.getElementById('folder-input').click()">📁 Folder</button>
+  <input type="file" id="folder-input" multiple accept="image/*" webkitdirectory style="display:none" onchange="addImages(this)">
+  <div class="tb-sep"></div>
+
+  <!-- Tools -->
+  <button class="tb-btn active" id="tool-select" onclick="setTool('select')">↖ Select</button>
+  <button class="tb-btn" id="tool-crop" onclick="setTool('crop')">✂ Crop</button>
+  <button class="tb-btn" id="tool-pan" onclick="setTool('pan')">✋ Pan</button>
+  <div class="tb-sep"></div>
+
+  <!-- Actions -->
+  <button class="tb-btn" onclick="flipH()">↔ Flip H</button>
+  <button class="tb-btn" onclick="flipV()">↕ Flip V</button>
+  <button class="tb-btn" onclick="bringForward()">▲ Fwd</button>
+  <button class="tb-btn" onclick="sendBackward()">▼ Bck</button>
+  <button class="tb-btn" onclick="centerLayer()">⊙ Center</button>
+  <button class="tb-btn" onclick="fitLayer()">⤢ Fit</button>
+  <div class="tb-sep"></div>
+
+  <!-- Grid -->
+  <button class="tb-btn" id="grid-btn" onclick="toggleGrid()">⊞ Grid</button>
+  <button class="tb-btn" onclick="resetView()">⟳ Reset View</button>
+  <div class="tb-sep"></div>
+
+  <!-- Canvas -->
+  <button class="tb-btn" onclick="document.getElementById('setup-modal').style.display='flex'">⚙ Canvas</button>
+  <button class="tb-btn" onclick="clearAll()" style="color:var(--accent2)">🗑 Clear</button>
+  <div class="tb-sep"></div>
+
+  <!-- Export -->
+  <button class="tb-btn" onclick="document.getElementById('export-modal').classList.remove('hidden')" style="color:var(--gold);background:rgba(255,198,74,.08);border:1px solid rgba(255,198,74,.2)">⬇ Export</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- CANVAS AREA -->
+  <div id="canvas-wrap">
+    <div id="canvas-scroll">
+      <canvas id="uv-canvas"></canvas>
+      <canvas id="grid-overlay"></canvas>
+      <div id="crop-overlay"><div id="crop-rect"></div></div>
+    </div>
+  </div>
+
+  <!-- LAYERS PANEL -->
+  <div id="layers-panel">
+    <div class="lp-header">
+      Layers
+      <span id="layer-count" style="color:var(--gold)">0</span>
+    </div>
+    <div id="layer-list"></div>
+
+    <!-- PROPS -->
+    <div id="props-panel">
+      <div class="prop-row">
+        <div class="prop-label">X</div>
+        <input class="prop-input" id="prop-x" type="number" onchange="applyProp()" placeholder="0">
+        <div class="prop-label" style="text-align:right">Y</div>
+        <input class="prop-input" id="prop-y" type="number" onchange="applyProp()" placeholder="0">
+      </div>
+      <div class="prop-row">
+        <div class="prop-label">W</div>
+        <input class="prop-input" id="prop-w" type="number" onchange="applyProp()" placeholder="0">
+        <div class="prop-label" style="text-align:right">H</div>
+        <input class="prop-input" id="prop-h" type="number" onchange="applyProp()" placeholder="0">
+      </div>
+      <div class="prop-row">
+        <div class="prop-label">Rotate</div>
+        <input type="range" class="prop-range" id="prop-rot" min="-180" max="180" value="0" oninput="applyRot(this.value)">
+        <div class="prop-val" id="prop-rot-val">0°</div>
+      </div>
+      <div class="prop-row">
+        <div class="prop-label">Opacity</div>
+        <input type="range" class="prop-range" id="prop-opacity" min="0" max="1" step="0.01" value="1" oninput="applyOpacity(this.value)">
+        <div class="prop-val" id="prop-opacity-val">100%</div>
+      </div>
+      <div class="prop-row">
+        <div class="prop-label">Blend</div>
+        <select class="prop-select" id="prop-blend" onchange="applyBlend()">
+          <option value="source-over">Normal</option>
+          <option value="multiply">Multiply</option>
+          <option value="screen">Screen</option>
+          <option value="overlay">Overlay</option>
+          <option value="darken">Darken</option>
+          <option value="lighten">Lighten</option>
+          <option value="color-dodge">Color Dodge</option>
+          <option value="color-burn">Color Burn</option>
+          <option value="hard-light">Hard Light</option>
+          <option value="soft-light">Soft Light</option>
+          <option value="difference">Difference</option>
+          <option value="exclusion">Exclusion</option>
+          <option value="hue">Hue</option>
+          <option value="saturation">Saturation</option>
+          <option value="color">Color</option>
+          <option value="luminosity">Luminosity</option>
+        </select>
+      </div>
+      <!-- Color adjust -->
+      <div class="prop-row">
+        <div class="prop-label">Bright</div>
+        <input type="range" class="prop-range" id="prop-bright" min="-100" max="100" value="0" oninput="applyColor()">
+        <div class="prop-val" id="prop-bright-val">0</div>
+      </div>
+      <div class="prop-row">
+        <div class="prop-label">Contrast</div>
+        <input type="range" class="prop-range" id="prop-contrast" min="-100" max="100" value="0" oninput="applyColor()">
+        <div class="prop-val" id="prop-contrast-val">0</div>
+      </div>
+      <div class="prop-row">
+        <div class="prop-label">Hue</div>
+        <input type="range" class="prop-range" id="prop-hue" min="-180" max="180" value="0" oninput="applyColor()">
+        <div class="prop-val" id="prop-hue-val">0°</div>
+      </div>
+      <div class="prop-row">
+        <div class="prop-label">Saturate</div>
+        <input type="range" class="prop-range" id="prop-sat" min="0" max="300" value="100" oninput="applyColor()">
+        <div class="prop-val" id="prop-sat-val">100%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <div class="sb-item">Canvas: <span id="sb-size">—</span></div>
+  <div class="sb-item">Layers: <span id="sb-layers">0</span></div>
+  <div class="sb-item">Zoom: <span id="sb-zoom">100%</span></div>
+  <div class="sb-item">Pos: <span id="sb-pos">0, 0</span></div>
+  <div class="sb-item" id="sb-sel">Selected: <span>none</span></div>
+</div>
+
+<!-- MOBILE layers toggle -->
+<button id="layers-toggle" onclick="document.getElementById('layers-panel').classList.toggle('open')">⊞</button>
+
+<script>
+// ══════════════════════════════════════════════
+//   STATE
+// ══════════════════════════════════════════════
+let canvasW=2048, canvasH=2048, bgColor='#000000';
+let layers=[]; // {id,name,img,x,y,w,h,rot,opacity,blend,visible,flipH,flipV,brightness,contrast,hue,saturation,cropX,cropY,cropW,cropH}
+let selId=null;
+let zoom=1, panX=0, panY=0;
+let tool='select';
+let showGrid=true, gridSize=64;
+let isDragging=false, isResizing=false, dragStart={x:0,y:0};
+let resizeHandle='';
+let isCropping=false, cropStart={x:0,y:0};
+let isPanning=false, panStart={x:0,y:0};
+
+const canvas=document.getElementById('uv-canvas');
+const ctx=canvas.getContext('2d');
+const gridCvs=document.getElementById('grid-overlay');
+const gridCtx=gridCvs.getContext('2d');
+let uid=0;
+
+// ══════════════════════════════════════════════
+//   SETUP
+// ══════════════════════════════════════════════
+function setPreset(w,h){
+  document.getElementById('setup-w').value=w;
+  document.getElementById('setup-h').value=h;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function createCanvas(){
+  canvasW=parseInt(document.getElementById('setup-w').value)||2048;
+  canvasH=parseInt(document.getElementById('setup-h').value)||2048;
+  bgColor=document.getElementById('setup-bg').value;
+  canvas.width=canvasW; canvas.height=canvasH;
+  gridCvs.width=canvasW; gridCvs.height=canvasH;
+  document.getElementById('setup-modal').style.display='none';
+  document.getElementById('sb-size').textContent=canvasW+'×'+canvasH;
+  fitCanvasToView();
+  render();
+  drawGridOverlay();
+}
+function fitCanvasToView(){
+  const wrap=document.getElementById('canvas-wrap');
+  const pw=wrap.clientWidth-40, ph=wrap.clientHeight-40;
+  zoom=Math.min(pw/canvasW, ph/canvasH, 1);
+  panX=0; panY=0;
+  applyTransform();
+  updateZoomStatus();
+}
+function applyTransform(){
+  canvas.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
+  canvas.style.transformOrigin='center center';
+  gridCvs.style.transform=canvas.style.transform;
+  gridCvs.style.transformOrigin='center center';
+  document.getElementById('crop-overlay').style.transform=canvas.style.transform;
+  document.getElementById('crop-overlay').style.transformOrigin='center center';
+}
+function updateZoomStatus(){
+  document.getElementById('sb-zoom').textContent=Math.round(zoom*100)+'%';
+}
+
+// ══════════════════════════════════════════════
+//   ADD IMAGES
+// ══════════════════════════════════════════════
+function addImages(input){
+  const files=[...input.files].filter(f=>f.type.startsWith('image/'));
+  let loaded=0;
+  files.forEach((file,fi)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        // fit image to canvas while maintaining aspect
+        let w=img.width, h=img.height;
+        const maxW=canvasW*0.6, maxH=canvasH*0.6;
+        if(w>maxW||h>maxH){ const s=Math.min(maxW/w,maxH/h); w*=s; h*=s; }
+        const layer={
+          id: ++uid,
+          name: file.name.replace(/\.[^.]+$/,''),
+          img, origImg: img,
+          x: Math.floor((canvasW-w)/2)+fi*20,
+          y: Math.floor((canvasH-h)/2)+fi*20,
+          w: Math.floor(w), h: Math.floor(h),
+          rot:0, opacity:1, blend:'source-over',
+          visible:true, flipH:false, flipV:false,
+          brightness:0, contrast:0, hue:0, saturation:100,
+          cropX:0, cropY:0, cropW:img.width, cropH:img.height,
+          thumb: e.target.result
+        };
+        layers.push(layer);
+        selId=layer.id;
+        renderLayerList();
+        render();
+        updateStatusSel();
+        loaded++;
+        document.getElementById('sb-layers').textContent=layers.length;
+        document.getElementById('layer-count').textContent=layers.length;
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value='';
+}
+
+// ══════════════════════════════════════════════
+//   RENDER
+// ══════════════════════════════════════════════
+function render(){
+  ctx.fillStyle=bgColor;
+  ctx.fillRect(0,0,canvasW,canvasH);
+
+  // draw grid on canvas if enabled
+  if(showGrid){
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,0.06)';
+    ctx.lineWidth=1;
+    for(let x=0;x<canvasW;x+=gridSize){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvasH);ctx.stroke(); }
+    for(let y=0;y<canvasH;y+=gridSize){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvasW,y);ctx.stroke(); }
+    ctx.restore();
+  }
+
+  // draw layers bottom to top
+  [...layers].reverse().forEach(l=>{
+    if(!l.visible) return;
+    ctx.save();
+    ctx.globalAlpha=l.opacity;
+    ctx.globalCompositeOperation=l.blend;
+    // build filter string
+    let f=`brightness(${1+l.brightness/100}) contrast(${1+l.contrast/100}) hue-rotate(${l.hue}deg) saturate(${l.saturation/100})`;
+    ctx.filter=f;
+    // transform
+    ctx.translate(l.x+l.w/2, l.y+l.h/2);
+    ctx.rotate(l.rot*Math.PI/180);
+    ctx.scale(l.flipH?-1:1, l.flipV?-1:1);
+    // draw cropped
+    ctx.drawImage(l.img, l.cropX,l.cropY,l.cropW,l.cropH, -l.w/2,-l.h/2, l.w,l.h);
+    ctx.restore();
+
+    // selection outline
+    if(l.id===selId){
+      ctx.save();
+      ctx.translate(l.x+l.w/2, l.y+l.h/2);
+      ctx.rotate(l.rot*Math.PI/180);
+      ctx.strokeStyle='rgba(124,106,255,0.9)';
+      ctx.lineWidth=2/zoom;
+      ctx.setLineDash([6/zoom,3/zoom]);
+      ctx.strokeRect(-l.w/2,-l.h/2,l.w,l.h);
+      // handles
+      const hs=8/zoom;
+      ctx.fillStyle='#fff';
+      ctx.setLineDash([]);
+      [[-l.w/2,-l.h/2],[l.w/2,-l.h/2],[-l.w/2,l.h/2],[l.w/2,l.h/2],
+       [0,-l.h/2],[0,l.h/2],[-l.w/2,0],[l.w/2,0]].forEach(([hx,hy])=>{
+        ctx.fillRect(hx-hs/2,hy-hs/2,hs,hs);
+        ctx.strokeStyle=`rgba(124,106,255,0.9)`;ctx.lineWidth=1.5/zoom;
+        ctx.strokeRect(hx-hs/2,hy-hs/2,hs,hs);
+      });
+      ctx.restore();
+    }
+  });
+}
+
+function drawGridOverlay(){
+  gridCtx.clearRect(0,0,canvasW,canvasH);
+}
+
+// ══════════════════════════════════════════════
+//   LAYER LIST UI
+// ══════════════════════════════════════════════
+function renderLayerList(){
+  const list=document.getElementById('layer-list');
+  list.innerHTML=layers.map(l=>`
+    <div class="layer-item ${l.id===selId?'selected':''}" onclick="selectLayer(${l.id})" id="litem-${l.id}">
+      <img class="layer-thumb" src="${l.thumb}" alt="">
+      <div class="layer-info">
+        <div class="layer-name">${l.name}</div>
+        <div class="layer-sub">${l.w}×${l.h} · ${l.blend}</div>
+      </div>
+      <button class="layer-vis" onclick="event.stopPropagation();toggleVis(${l.id})">${l.visible?'👁':'🙈'}</button>
+      <button class="layer-del" onclick="event.stopPropagation();deleteLayer(${l.id})">✕</button>
+    </div>`).join('');
+  document.getElementById('layer-count').textContent=layers.length;
+  document.getElementById('sb-layers').textContent=layers.length;
+  updateProps();
+}
+function selectLayer(id){
+  selId=id;
+  renderLayerList();
+  render();
+  updateProps();
+  updateStatusSel();
+}
+function toggleVis(id){
+  const l=layers.find(x=>x.id===id);
+  if(l){ l.visible=!l.visible; renderLayerList(); render(); }
+}
+function deleteLayer(id){
+  layers=layers.filter(x=>x.id!==id);
+  if(selId===id) selId=layers[0]?.id||null;
+  renderLayerList(); render(); updateStatusSel();
+}
+function clearAll(){ if(confirm('Clear all layers?')){ layers=[]; selId=null; renderLayerList(); render(); }}
+
+// ══════════════════════════════════════════════
+//   PROPS
+// ══════════════════════════════════════════════
+function updateProps(){
+  const l=sel();
+  if(!l) return;
+  document.getElementById('prop-x').value=Math.round(l.x);
+  document.getElementById('prop-y').value=Math.round(l.y);
+  document.getElementById('prop-w').value=Math.round(l.w);
+  document.getElementById('prop-h').value=Math.round(l.h);
+  document.getElementById('prop-rot').value=l.rot;
+  document.getElementById('prop-rot-val').textContent=Math.round(l.rot)+'°';
+  document.getElementById('prop-opacity').value=l.opacity;
+  document.getElementById('prop-opacity-val').textContent=Math.round(l.opacity*100)+'%';
+  document.getElementById('prop-blend').value=l.blend;
+  document.getElementById('prop-bright').value=l.brightness;
+  document.getElementById('prop-bright-val').textContent=l.brightness;
+  document.getElementById('prop-contrast').value=l.contrast;
+  document.getElementById('prop-contrast-val').textContent=l.contrast;
+  document.getElementById('prop-hue').value=l.hue;
+  document.getElementById('prop-hue-val').textContent=l.hue+'°';
+  document.getElementById('prop-sat').value=l.saturation;
+  document.getElementById('prop-sat-val').textContent=l.saturation+'%';
+}
+function applyProp(){
+  const l=sel(); if(!l) return;
+  l.x=parseFloat(document.getElementById('prop-x').value)||0;
+  l.y=parseFloat(document.getElementById('prop-y').value)||0;
+  l.w=parseFloat(document.getElementById('prop-w').value)||1;
+  l.h=parseFloat(document.getElementById('prop-h').value)||1;
+  render();
+}
+function applyRot(v){
+  const l=sel(); if(!l) return;
+  l.rot=parseFloat(v); document.getElementById('prop-rot-val').textContent=Math.round(v)+'°';
+  render();
+}
+function applyOpacity(v){
+  const l=sel(); if(!l) return;
+  l.opacity=parseFloat(v); document.getElementById('prop-opacity-val').textContent=Math.round(v*100)+'%';
+  render();
+}
+function applyBlend(){
+  const l=sel(); if(!l) return;
+  l.blend=document.getElementById('prop-blend').value;
+  renderLayerList(); render();
+}
+function applyColor(){
+  const l=sel(); if(!l) return;
+  l.brightness=parseFloat(document.getElementById('prop-bright').value);
+  l.contrast=parseFloat(document.getElementById('prop-contrast').value);
+  l.hue=parseFloat(document.getElementById('prop-hue').value);
+  l.saturation=parseFloat(document.getElementById('prop-sat').value);
+  document.getElementById('prop-bright-val').textContent=l.brightness;
+  document.getElementById('prop-contrast-val').textContent=l.contrast;
+  document.getElementById('prop-hue-val').textContent=l.hue+'°';
+  document.getElementById('prop-sat-val').textContent=l.saturation+'%';
+  render();
+}
+
+// ══════════════════════════════════════════════
+//   TOOLBAR ACTIONS
+// ══════════════════════════════════════════════
+function setTool(t){
+  tool=t;
+  document.querySelectorAll('[id^="tool-"]').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('tool-'+t);
+  if(el) el.classList.add('active');
+  canvas.style.cursor=t==='pan'?'grab':t==='crop'?'crosshair':'default';
+  if(t!=='crop') document.getElementById('crop-overlay').classList.remove('active');
+}
+function flipH(){ const l=sel(); if(!l) return; l.flipH=!l.flipH; render(); }
+function flipV(){ const l=sel(); if(!l) return; l.flipV=!l.flipV; render(); }
+function bringForward(){
+  const i=layers.findIndex(x=>x.id===selId);
+  if(i>0){ [layers[i],layers[i-1]]=[layers[i-1],layers[i]]; renderLayerList(); render(); }
+}
+function sendBackward(){
+  const i=layers.findIndex(x=>x.id===selId);
+  if(i<layers.length-1){ [layers[i],layers[i+1]]=[layers[i+1],layers[i]]; renderLayerList(); render(); }
+}
+function centerLayer(){
+  const l=sel(); if(!l) return;
+  l.x=(canvasW-l.w)/2; l.y=(canvasH-l.h)/2;
+  updateProps(); render();
+}
+function fitLayer(){
+  const l=sel(); if(!l) return;
+  const s=Math.min(canvasW/l.img.width, canvasH/l.img.height);
+  l.w=Math.round(l.img.width*s); l.h=Math.round(l.img.height*s);
+  l.x=(canvasW-l.w)/2; l.y=(canvasH-l.h)/2;
+  updateProps(); render();
+}
+function toggleGrid(){
+  showGrid=!showGrid;
+  document.getElementById('grid-btn').classList.toggle('active',showGrid);
+  render();
+}
+function resetView(){ fitCanvasToView(); }
+
+// ══════════════════════════════════════════════
+//   MOUSE / TOUCH INPUT
+// ══════════════════════════════════════════════
+function canvasCoords(e){
+  const rect=canvas.getBoundingClientRect();
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  return {
+    x:(clientX-rect.left)/zoom,
+    y:(clientY-rect.top)/zoom
+  };
+}
+function sel(){ return layers.find(x=>x.id===selId)||null; }
+function hitTest(x,y){
+  // test layers front to back
+  for(let i=0;i<layers.length;i++){
+    const l=layers[i];
+    if(!l.visible) continue;
+    // simplified hit: axis-aligned bounding box (ignores rotation for simplicity)
+    if(x>=l.x && x<=l.x+l.w && y>=l.y && y<=l.y+l.h) return l;
+  }
+  return null;
+}
+function getResizeHandle(l,x,y){
+  const hs=10/zoom;
+  const corners={
+    'nw':{cx:l.x,cy:l.y},'ne':{cx:l.x+l.w,cy:l.y},
+    'sw':{cx:l.x,cy:l.y+l.h},'se':{cx:l.x+l.w,cy:l.y+l.h},
+    'n':{cx:l.x+l.w/2,cy:l.y},'s':{cx:l.x+l.w/2,cy:l.y+l.h},
+    'w':{cx:l.x,cy:l.y+l.h/2},'e':{cx:l.x+l.w,cy:l.y+l.h/2}
+  };
+  for(const [k,v] of Object.entries(corners)){
+    if(Math.abs(x-v.cx)<hs && Math.abs(y-v.cy)<hs) return k;
+  }
+  return '';
+}
+
+// pointer down
+function onPointerDown(e){
+  if(tool==='pan'){ isPanning=true; panStart={x:e.clientX||e.touches[0].clientX,y:e.clientY||e.touches[0].clientY}; canvas.style.cursor='grabbing'; return; }
+  const {x,y}=canvasCoords(e);
+  updateStatusPos(x,y);
+
+  if(tool==='crop'){
+    const l=sel(); if(!l) return;
+    isCropping=true;
+    cropStart={x,y};
+    const overlay=document.getElementById('crop-overlay');
+    overlay.classList.add('active');
+    const rect=document.getElementById('crop-rect');
+    rect.style.left=x+'px'; rect.style.top=y+'px'; rect.style.width='0'; rect.style.height='0';
+    return;
+  }
+
+  // select tool
+  const l=sel();
+  if(l){
+    const rh=getResizeHandle(l,x,y);
+    if(rh){ isResizing=true; resizeHandle=rh; dragStart={x,y,lx:l.x,ly:l.y,lw:l.w,lh:l.h}; return; }
+  }
+  const hit=hitTest(x,y);
+  if(hit){ selId=hit.id; isDragging=true; dragStart={x,y,lx:hit.x,ly:hit.y}; renderLayerList(); updateProps(); updateStatusSel(); }
+  else { selId=null; renderLayerList(); updateStatusSel(); }
+  render();
+}
+
+// pointer move
+function onPointerMove(e){
+  const cx=e.clientX||e.touches?.[0]?.clientX;
+  const cy=e.clientY||e.touches?.[0]?.clientY;
+
+  if(isPanning){ panX+=cx-panStart.x; panY+=cy-panStart.y; panStart={x:cx,y:cy}; applyTransform(); return; }
+
+  const {x,y}=canvasCoords(e);
+  updateStatusPos(x,y);
+
+  if(isCropping){
+    const l=sel(); if(!l) return;
+    const rect=document.getElementById('crop-rect');
+    const rx=Math.min(x,cropStart.x), ry=Math.min(y,cropStart.y);
+    const rw=Math.abs(x-cropStart.x), rh=Math.abs(y-cropStart.y);
+    rect.style.left=rx+'px'; rect.style.top=ry+'px'; rect.style.width=rw+'px'; rect.style.height=rh+'px';
+    return;
+  }
+
+  if(isDragging){
+    const l=sel(); if(!l) return;
+    let nx=dragStart.lx+(x-dragStart.x);
+    let ny=dragStart.ly+(y-dragStart.y);
+    if(showGrid){ const g=gridSize; nx=Math.round(nx/g)*g; ny=Math.round(ny/g)*g; }
+    l.x=nx; l.y=ny;
+    updateProps(); render(); return;
+  }
+
+  if(isResizing){
+    const l=sel(); if(!l) return;
+    const dx=x-dragStart.x, dy=y-dragStart.y;
+    let nx=dragStart.lx, ny=dragStart.ly, nw=dragStart.lw, nh=dragStart.lh;
+    if(resizeHandle.includes('e')) nw=Math.max(10,dragStart.lw+dx);
+    if(resizeHandle.includes('s')) nh=Math.max(10,dragStart.lh+dy);
+    if(resizeHandle.includes('w')){ nx=dragStart.lx+dx; nw=Math.max(10,dragStart.lw-dx); }
+    if(resizeHandle.includes('n')){ ny=dragStart.ly+dy; nh=Math.max(10,dragStart.lh-dy); }
+    if(showGrid){ const g=gridSize; nw=Math.round(nw/g)*g; nh=Math.round(nh/g)*g; }
+    l.x=nx; l.y=ny; l.w=nw; l.h=nh;
+    updateProps(); render();
+  }
+}
+
+// pointer up
+function onPointerUp(e){
+  if(isCropping){
+    const l=sel(); if(l){
+      const {x,y}=canvasCoords(e);
+      const rx=Math.min(x,cropStart.x), ry=Math.min(y,cropStart.y);
+      const rw=Math.abs(x-cropStart.x), rh=Math.abs(y-cropStart.y);
+      if(rw>5&&rh>5){
+        // convert canvas coords to image coords
+        const scaleX=l.img.width/l.w, scaleY=l.img.height/l.h;
+        l.cropX=Math.max(0,Math.floor((rx-l.x)*scaleX));
+        l.cropY=Math.max(0,Math.floor((ry-l.y)*scaleY));
+        l.cropW=Math.min(l.img.width-l.cropX,Math.ceil(rw*scaleX));
+        l.cropH=Math.min(l.img.height-l.cropY,Math.ceil(rh*scaleY));
+        l.w=Math.round(rw); l.h=Math.round(rh);
+        l.x=Math.round(rx); l.y=Math.round(ry);
+        updateProps(); render();
+      }
+    }
+    isCropping=false;
+    document.getElementById('crop-overlay').classList.remove('active');
+    document.getElementById('crop-rect').style.width='0';
+    document.getElementById('crop-rect').style.height='0';
+  }
+  isDragging=false; isResizing=false; isPanning=false;
+  canvas.style.cursor=tool==='pan'?'grab':'default';
+}
+
+// scroll to zoom
+function onWheel(e){
+  e.preventDefault();
+  const delta=e.deltaY<0?1.1:0.9;
+  zoom=Math.max(0.05,Math.min(8,zoom*delta));
+  applyTransform(); updateZoomStatus();
+}
+
+// touch pinch zoom
+let lastPinchDist=0;
+function onTouchStart(e){
+  if(e.touches.length===2){ lastPinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); return; }
+  onPointerDown(e);
+}
+function onTouchMove(e){
+  e.preventDefault();
+  if(e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    const delta=d/lastPinchDist;
+    zoom=Math.max(0.05,Math.min(8,zoom*delta));
+    lastPinchDist=d; applyTransform(); updateZoomStatus(); return;
+  }
+  onPointerMove(e);
+}
+function onTouchEnd(e){ onPointerUp(e); }
+
+// attach events
+const wrap=document.getElementById('canvas-wrap');
+wrap.addEventListener('mousedown',onPointerDown);
+wrap.addEventListener('mousemove',onPointerMove);
+wrap.addEventListener('mouseup',onPointerUp);
+wrap.addEventListener('mouseleave',onPointerUp);
+wrap.addEventListener('wheel',onWheel,{passive:false});
+wrap.addEventListener('touchstart',onTouchStart,{passive:false});
+wrap.addEventListener('touchmove',onTouchMove,{passive:false});
+wrap.addEventListener('touchend',onTouchEnd);
+
+// ══════════════════════════════════════════════
+//   STATUS BAR
+// ══════════════════════════════════════════════
+function updateStatusPos(x,y){
+  document.getElementById('sb-pos').textContent=Math.round(x)+', '+Math.round(y);
+}
+function updateStatusSel(){
+  const l=sel();
+  document.getElementById('sb-sel').innerHTML='Selected: <span>'+(l?l.name:'none')+'</span>';
+}
+
+// ══════════════════════════════════════════════
+//   EXPORT
+// ══════════════════════════════════════════════
+document.getElementById('exp-fmt').addEventListener('change',function(){
+  document.getElementById('exp-quality-row').style.display=this.value==='image/png'?'none':'flex';
+});
+function doExport(){
+  // render clean (no selection outlines) to offscreen
+  const off=document.createElement('canvas');
+  off.width=canvasW; off.height=canvasH;
+  const offCtx=off.getContext('2d');
+  offCtx.fillStyle=bgColor; offCtx.fillRect(0,0,canvasW,canvasH);
+  [...layers].reverse().forEach(l=>{
+    if(!l.visible) return;
+    offCtx.save();
+    offCtx.globalAlpha=l.opacity;
+    offCtx.globalCompositeOperation=l.blend;
+    let f=`brightness(${1+l.brightness/100}) contrast(${1+l.contrast/100}) hue-rotate(${l.hue}deg) saturate(${l.saturation/100})`;
+    offCtx.filter=f;
+    offCtx.translate(l.x+l.w/2, l.y+l.h/2);
+    offCtx.rotate(l.rot*Math.PI/180);
+    offCtx.scale(l.flipH?-1:1, l.flipV?-1:1);
+    offCtx.drawImage(l.img, l.cropX,l.cropY,l.cropW,l.cropH, -l.w/2,-l.h/2, l.w,l.h);
+    offCtx.restore();
+  });
+  const fmt=document.getElementById('exp-fmt').value;
+  const quality=parseFloat(document.getElementById('exp-quality').value);
+  const name=document.getElementById('exp-name').value||'uv_texture';
+  const ext=fmt==='image/png'?'.png':fmt==='image/webp'?'.webp':'.jpg';
+  off.toBlob(blob=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=name+ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.getElementById('export-modal').classList.add('hidden');
+  }, fmt, fmt==='image/png'?undefined:quality);
+}
+
+// ══════════════════════════════════════════════
+//   KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA') return;
+  const l=sel();
+  const step=e.shiftKey?10:1;
+  if(e.key==='Delete'||e.key==='Backspace'){ if(l){ deleteLayer(l.id); } }
+  if(e.key==='ArrowLeft'&&l){ l.x-=step; updateProps(); render(); }
+  if(e.key==='ArrowRight'&&l){ l.x+=step; updateProps(); render(); }
+  if(e.key==='ArrowUp'&&l){ l.y-=step; updateProps(); render(); }
+  if(e.key==='ArrowDown'&&l){ l.y+=step; updateProps(); render(); }
+  if(e.key==='v'||e.key==='V') setTool('select');
+  if(e.key==='c'||e.key==='C') setTool('crop');
+  if(e.key==='h'||e.key==='H') setTool('pan');
+  if(e.key==='+'||e.key==='='){ zoom=Math.min(8,zoom*1.2); applyTransform(); updateZoomStatus(); }
+  if(e.key==='-'){ zoom=Math.max(0.05,zoom/1.2); applyTransform(); updateZoomStatus(); }
+  if(e.key==='0') fitCanvasToView();
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){ /* undo placeholder */ }
+});
+
+// drag & drop images onto canvas
+wrap.addEventListener('dragover',e=>{e.preventDefault();wrap.style.outline='2px solid var(--accent)';});
+wrap.addEventListener('dragleave',()=>wrap.style.outline='');
+wrap.addEventListener('drop',e=>{
+  e.preventDefault(); wrap.style.outline='';
+  const fakeInput={files:[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/'))};
+  if(fakeInput.files.length) addImages(fakeInput);
+});
+
+console.log('UV Image Composer ready. Shortcuts: V=select C=crop H=pan Delete=remove layer Arrows=move +=zoom in -=zoom out 0=fit');
+</script>
+</body>
+</html>

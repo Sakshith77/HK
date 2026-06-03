@@ -470,12 +470,21 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
         <button class="btn btn-primary" onclick="japaClick()" style="flex:1">+1 Hare Krishna</button>
         <button class="btn btn-outline" onclick="resetJapa()">Reset</button>
       </div>
+      <!----slide_tool-->
     </div>
     <div class="other-card" onclick="window.location.href='slide_tool.html'" style="cursor:pointer">
   <div class="other-icon">🎞️</div>
   <div class="other-title">Slide Tool</div>
   <div class="other-desc">Image Slider.</div>
 </div>
+
+<!----uv-image_generator_tool-->
+ <div class="other-card" onclick="window.location.href='uv_image.html'" style="cursor:pointer">
+  <div class="other-icon">🧑‍💻</div>
+  <div class="other-title">uv-image generator Tool</div>
+  <div class="other-desc">UV-image.</div>
+</div>
+
     <div class="tool-card">
       <div class="tool-head"><div class="tool-icon">🔗</div><div class="tool-title">URL Encoder</div></div>
       <div class="tool-sub">Encode / decode URLs instantly</div>
@@ -659,6 +668,8 @@ const MY_MODELS = [
    { title: "Tv show case model", src: "models/showcase.glb" },
   // { title: "Krishna Murti", src: "models/krishna.obj" },
    { title: "krsna book model", src: "models/krsna_book.glb" },
+   { title: "window model", src: "models/win.glb" },
+   
 ];
 
 /* ──────────────────────────────────────────────
@@ -667,6 +678,7 @@ const MY_MODELS = [
 ────────────────────────────────────────────── */
 const MY_ANIM_MODELS = [
   // { title: "Animated Figure", src: "models/animated.glb" },
+
 ];
 
 /* ════════════════════════════════════════════════

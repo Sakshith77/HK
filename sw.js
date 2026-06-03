@@ -1,4 +1,4 @@
-const CACHE = 'hk-v1';
+const CACHE = 'hk-v2';
  
 // Files to cache for offline use
 const PRECACHE = [
