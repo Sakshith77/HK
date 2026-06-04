@@ -321,6 +321,9 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height
   <button class="tb-btn" id="grid-btn" onclick="toggleGrid()">⊞ Grid</button>
   <button class="tb-btn" onclick="resetView()">⟳ Reset View</button>
   <div class="tb-sep"></div>
+  <button class="tb-btn tip" id="uv-undo" data-tip="Undo (Ctrl+Z)" onclick="uvUndo()" style="opacity:.35" disabled>↩ Undo</button>
+  <button class="tb-btn tip" id="uv-redo" data-tip="Redo (Alt+Z)" onclick="uvRedo()" style="opacity:.35" disabled>↪ Redo</button>
+  <div class="tb-sep"></div>
 
   <!-- Canvas -->
   <button class="tb-btn" onclick="document.getElementById('setup-modal').style.display='flex'">⚙ Canvas</button>
@@ -454,6 +457,87 @@ const gridCvs=document.getElementById('grid-overlay');
 const gridCtx=gridCvs.getContext('2d');
 let uid=0;
 
+// ── UNDO / REDO ──
+let _undoStack=[];
+let _redoStack=[];
+const MAX_HIST=60;
+
+function saveUVState(){
+  // snapshot layers (no img element — use thumb + props)
+  const snap=layers.map(l=>({
+    id:l.id, name:l.name, thumb:l.thumb,
+    x:l.x, y:l.y, w:l.w, h:l.h,
+    rot:l.rot, opacity:l.opacity, blend:l.blend,
+    visible:l.visible, flipH:l.flipH, flipV:l.flipV,
+    brightness:l.brightness, contrast:l.contrast,
+    hue:l.hue, saturation:l.saturation,
+    cropX:l.cropX, cropY:l.cropY, cropW:l.cropW, cropH:l.cropH,
+    // store img src as data URL via thumb (already base64)
+    _imgSrc:l.img ? l.img.src : null
+  }));
+  _undoStack.push(JSON.stringify(snap));
+  if(_undoStack.length>MAX_HIST) _undoStack.shift();
+  _redoStack=[];
+  _updateUndoBtns();
+}
+
+function uvUndo(){
+  if(!_undoStack.length) return;
+  const cur=_captureLayerJSON();
+  _redoStack.push(cur);
+  const prev=JSON.parse(_undoStack.pop());
+  _restoreUVState(prev);
+  _updateUndoBtns();
+}
+
+function uvRedo(){
+  if(!_redoStack.length) return;
+  const cur=_captureLayerJSON();
+  _undoStack.push(cur);
+  const next=JSON.parse(_redoStack.pop());
+  _restoreUVState(next);
+  _updateUndoBtns();
+}
+
+function _captureLayerJSON(){
+  return JSON.stringify(layers.map(l=>({
+    id:l.id, name:l.name, thumb:l.thumb,
+    x:l.x, y:l.y, w:l.w, h:l.h,
+    rot:l.rot, opacity:l.opacity, blend:l.blend,
+    visible:l.visible, flipH:l.flipH, flipV:l.flipV,
+    brightness:l.brightness, contrast:l.contrast,
+    hue:l.hue, saturation:l.saturation,
+    cropX:l.cropX, cropY:l.cropY, cropW:l.cropW, cropH:l.cropH,
+    _imgSrc:l.img ? l.img.src : null
+  })));
+}
+
+function _restoreUVState(snap){
+  let pending=snap.length;
+  if(!pending){ layers=[]; selId=null; renderLayerList(); render(); _updateUndoBtns(); return; }
+  const restored=[];
+  snap.forEach((s,i)=>{
+    const img=new Image();
+    img.onload=()=>{
+      restored[i]={...s, img, origImg:img,
+        cropW:s.cropW||img.width, cropH:s.cropH||img.height};
+      pending--;
+      if(pending===0){
+        layers=restored.filter(Boolean);
+        selId=null; renderLayerList(); render(); _updateUndoBtns();
+      }
+    };
+    img.src=s._imgSrc||s.thumb;
+  });
+}
+
+function _updateUndoBtns(){
+  const u=document.getElementById('uv-undo');
+  const r=document.getElementById('uv-redo');
+  if(u){ u.style.opacity=_undoStack.length?'1':'.35'; u.disabled=!_undoStack.length; }
+  if(r){ r.style.opacity=_redoStack.length?'1':'.35'; r.disabled=!_redoStack.length; }
+}
+
 // ══════════════════════════════════════════════
 //   SETUP
 // ══════════════════════════════════════════════
@@ -523,6 +607,7 @@ function addImages(input){
           cropX:0, cropY:0, cropW:img.width, cropH:img.height,
           thumb: e.target.result
         };
+        saveUVState();
         layers.push(layer);
         selId=layer.id;
         renderLayerList();
@@ -632,11 +717,12 @@ function toggleVis(id){
   if(l){ l.visible=!l.visible; renderLayerList(); render(); }
 }
 function deleteLayer(id){
+  saveUVState();
   layers=layers.filter(x=>x.id!==id);
   if(selId===id) selId=layers[0]?.id||null;
   renderLayerList(); render(); updateStatusSel();
 }
-function clearAll(){ if(confirm('Clear all layers?')){ layers=[]; selId=null; renderLayerList(); render(); }}
+function clearAll(){ if(confirm('Clear all layers?')){ saveUVState(); layers=[]; selId=null; renderLayerList(); render(); }}
 
 // ══════════════════════════════════════════════
 //   PROPS
@@ -664,6 +750,7 @@ function updateProps(){
 }
 function applyProp(){
   const l=sel(); if(!l) return;
+  saveUVState();
   l.x=parseFloat(document.getElementById('prop-x').value)||0;
   l.y=parseFloat(document.getElementById('prop-y').value)||0;
   l.w=parseFloat(document.getElementById('prop-w').value)||1;
@@ -709,8 +796,8 @@ function setTool(t){
   canvas.style.cursor=t==='pan'?'grab':t==='crop'?'crosshair':'default';
   if(t!=='crop') document.getElementById('crop-overlay').classList.remove('active');
 }
-function flipH(){ const l=sel(); if(!l) return; l.flipH=!l.flipH; render(); }
-function flipV(){ const l=sel(); if(!l) return; l.flipV=!l.flipV; render(); }
+function flipH(){ const l=sel(); if(!l) return; saveUVState(); l.flipH=!l.flipH; render(); }
+function flipV(){ const l=sel(); if(!l) return; saveUVState(); l.flipV=!l.flipV; render(); }
 function bringForward(){
   const i=layers.findIndex(x=>x.id===selId);
   if(i>0){ [layers[i],layers[i-1]]=[layers[i-1],layers[i]]; renderLayerList(); render(); }
@@ -870,6 +957,7 @@ function onPointerUp(e){
     document.getElementById('crop-rect').style.width='0';
     document.getElementById('crop-rect').style.height='0';
   }
+  if(isDragging||isResizing) saveUVState();
   isDragging=false; isResizing=false; isPanning=false;
   canvas.style.cursor=tool==='pan'?'grab':'default';
 }
@@ -969,6 +1057,8 @@ document.addEventListener('keydown',e=>{
   const l=sel();
   const step=e.shiftKey?10:1;
   if(e.key==='Delete'||e.key==='Backspace'){ if(l){ deleteLayer(l.id); } }
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key==='z'){ e.preventDefault(); uvUndo(); return; }
+  if(e.altKey&&e.key==='z'){ e.preventDefault(); uvRedo(); return; }
   if(e.key==='ArrowLeft'&&l){ l.x-=step; updateProps(); render(); }
   if(e.key==='ArrowRight'&&l){ l.x+=step; updateProps(); render(); }
   if(e.key==='ArrowUp'&&l){ l.y-=step; updateProps(); render(); }
