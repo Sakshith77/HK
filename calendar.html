@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Vaishnava Calendar</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cinzel:wght@400;500;600&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f5ecd9;
+  --paper2:#ede0c8;
+  --paper3:#e3d3b6;
+  --ink:#3a2c1a;
+  --ink2:#6b5538;
+  --ink3:#a8957a;
+  --maroon:#7a2d2d;
+  --maroon2:#8f3d3d;
+  --gold:#a8762e;
+  --gold2:#c4923f;
+  --green:#4a6b4a;
+  --line:#cdb98f;
+  --shadow:rgba(58,44,26,.12);
+  --serif:'Cormorant Garamond',serif;
+  --display:'Cinzel',serif;
+  --body:'EB Garamond',serif;
+  --r:4px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100dvh;background:var(--paper);color:var(--ink);font-family:var(--body);}
+
+/* subtle paper texture */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(168,149,122,.02) 2px,rgba(168,149,122,.02) 4px),
+    radial-gradient(ellipse at 20% 30%,rgba(168,118,46,.04) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 70%,rgba(122,45,45,.03) 0%,transparent 50%);
+}
+
+/* ── HEADER ── */
+header{
+  position:relative;z-index:2;
+  text-align:center;padding:36px 20px 24px;
+  border-bottom:3px double var(--line);
+}
+.om{
+  font-size:1.6rem;color:var(--gold);margin-bottom:6px;
+  font-family:var(--display);
+}
+.title{
+  font-family:var(--display);font-size:clamp(1.5rem,5vw,2.2rem);
+  color:var(--maroon);letter-spacing:.12em;font-weight:500;
+  margin-bottom:4px;
+}
+.subtitle{
+  font-family:var(--serif);font-style:italic;font-size:.85rem;
+  color:var(--ink2);letter-spacing:.04em;
+}
+.gaurabda{
+  margin-top:10px;font-family:var(--display);font-size:.65rem;
+  color:var(--gold);letter-spacing:.2em;text-transform:uppercase;
+}
+
+/* ── NOTIFICATION BANNER ── */
+#notif-banner{
+  background:var(--paper3);border-bottom:1px solid var(--line);
+  padding:10px 20px;text-align:center;font-size:.78rem;
+  color:var(--ink2);display:none;
+}
+#notif-banner.show{display:block;}
+#notif-banner button{
+  background:var(--maroon);color:var(--paper);border:none;
+  padding:5px 16px;border-radius:var(--r);font-family:var(--serif);
+  font-size:.78rem;font-weight:600;cursor:pointer;margin-left:10px;
+  transition:background .15s;
+}
+#notif-banner button:hover{background:var(--maroon2);}
+#notif-banner .dismiss{
+  background:transparent;color:var(--ink3);text-decoration:underline;
+}
+
+/* ── VIEW TOGGLE ── */
+#view-toggle{
+  display:flex;justify-content:center;gap:0;margin:20px auto 16px;
+  max-width:300px;border:1px solid var(--line);border-radius:24px;
+  overflow:hidden;position:relative;z-index:2;
+}
+.vt-btn{
+  flex:1;padding:9px 0;background:transparent;border:none;
+  font-family:var(--display);font-size:.7rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink2);cursor:pointer;
+  transition:all .2s;
+}
+.vt-btn.active{background:var(--maroon);color:var(--paper);}
+
+/* ── NEXT UP CARD ── */
+#next-up{
+  max-width:600px;margin:0 auto 20px;padding:0 16px;
+  position:relative;z-index:2;
+}
+.next-card{
+  background:var(--paper2);border:1px solid var(--line);
+  border-radius:6px;padding:18px 20px;
+  box-shadow:0 2px 8px var(--shadow);
+  display:flex;align-items:center;gap:16px;
+}
+.next-date{
+  font-family:var(--display);text-align:center;flex-shrink:0;
+  border-right:1px solid var(--line);padding-right:16px;
+}
+.next-date .day{font-size:1.8rem;color:var(--maroon);line-height:1;}
+.next-date .month{font-size:.65rem;letter-spacing:.15em;color:var(--ink2);text-transform:uppercase;margin-top:2px;}
+.next-info{flex:1;}
+.next-label{font-size:.6rem;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;font-family:var(--display);margin-bottom:3px;}
+.next-name{font-family:var(--serif);font-size:1.15rem;font-weight:600;color:var(--ink);}
+.next-countdown{font-size:.72rem;color:var(--ink2);font-style:italic;margin-top:2px;}
+
+/* ── MAIN ── */
+#main{max-width:680px;margin:0 auto;padding:0 16px 60px;position:relative;z-index:2;}
+
+/* ── MONTH NAV ── */
+#month-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;
+}
+.mn-btn{
+  background:transparent;border:1px solid var(--line);border-radius:50%;
+  width:36px;height:36px;cursor:pointer;font-size:1rem;color:var(--maroon);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.mn-btn:hover{background:var(--paper3);}
+.mn-title{
+  font-family:var(--display);font-size:1.2rem;color:var(--ink);
+  letter-spacing:.08em;
+}
+
+/* ── CALENDAR GRID ── */
+#cal-grid-view{display:block;}
+#cal-list-view{display:none;}
+
+.cal-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:6px;overflow:hidden;
+}
+.cal-dow{
+  background:var(--paper3);text-align:center;padding:8px 2px;
+  font-family:var(--display);font-size:.6rem;letter-spacing:.1em;
+  color:var(--ink2);text-transform:uppercase;
+}
+.cal-cell{
+  background:var(--paper);min-height:64px;padding:5px 4px;
+  position:relative;cursor:pointer;transition:background .15s;
+}
+.cal-cell:hover{background:var(--paper2);}
+.cal-cell.empty{background:var(--paper2);cursor:default;}
+.cal-cell.empty:hover{background:var(--paper2);}
+.cal-daynum{
+  font-family:var(--serif);font-size:.85rem;color:var(--ink2);
+  font-weight:600;
+}
+.cal-cell.today{background:rgba(122,45,45,.08);}
+.cal-cell.today .cal-daynum{
+  color:var(--paper);background:var(--maroon);
+  border-radius:50%;width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;
+}
+.cal-events{margin-top:3px;display:flex;flex-direction:column;gap:2px;}
+.cal-event-dot{
+  font-size:.56rem;padding:1px 4px;border-radius:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:var(--serif);font-weight:600;
+}
+.cal-event-dot.festival{background:rgba(122,45,45,.14);color:var(--maroon);}
+.cal-event-dot.ekadashi{background:rgba(74,107,74,.13);color:var(--green);}
+.cal-event-dot.acharya{background:rgba(168,118,46,.15);color:var(--gold);}
+
+@media(max-width:480px){
+  .cal-cell{min-height:48px;padding:3px 2px;}
+  .cal-event-dot{font-size:.5rem;}
+}
+
+/* ── LIST VIEW ── */
+.list-month-group{margin-bottom:24px;}
+.list-month-title{
+  font-family:var(--display);font-size:.85rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--gold);
+  border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px;
+}
+.list-item{
+  display:flex;gap:14px;padding:11px 0;
+  border-bottom:1px solid rgba(205,185,143,.4);cursor:pointer;
+  transition:background .15s;
+}
+.list-item:hover{background:var(--paper2);}
+.list-item:last-child{border-bottom:none;}
+.list-date-box{
+  flex-shrink:0;width:48px;text-align:center;
+  font-family:var(--display);
+}
+.list-date-box .day{font-size:1.3rem;color:var(--maroon);line-height:1.1;}
+.list-date-box .dow{font-size:.58rem;letter-spacing:.1em;color:var(--ink3);text-transform:uppercase;margin-top:1px;}
+.list-item-info{flex:1;}
+.list-item-name{font-family:var(--serif);font-size:1.02rem;font-weight:600;color:var(--ink);}
+.list-item-type{
+  display:inline-block;font-size:.58rem;letter-spacing:.1em;
+  text-transform:uppercase;font-family:var(--display);
+  padding:1px 7px;border-radius:3px;margin-top:3px;
+}
+.list-item-type.festival{background:rgba(122,45,45,.12);color:var(--maroon);}
+.list-item-type.ekadashi{background:rgba(74,107,74,.12);color:var(--green);}
+.list-item-type.acharya{background:rgba(168,118,46,.13);color:var(--gold);}
+.list-item-desc{font-size:.78rem;color:var(--ink2);margin-top:4px;line-height:1.5;font-style:italic;}
+
+/* ── EVENT DETAIL MODAL ── */
+#modal-overlay{
+  display:none;position:fixed;inset:0;z-index:50;
+  background:rgba(58,44,26,.5);backdrop-filter:blur(2px);
+  align-items:center;justify-content:center;padding:20px;
+}
+#modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:8px;max-width:480px;width:100%;
+  max-height:85vh;overflow-y:auto;
+  padding:32px 28px;position:relative;
+  box-shadow:0 24px 64px rgba(58,44,26,.3);
+  scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+}
+.modal-close{
+  position:absolute;top:14px;right:14px;
+  width:30px;height:30px;border-radius:50%;border:1px solid var(--line);
+  background:transparent;color:var(--ink2);font-size:.9rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.modal-close:hover{background:var(--paper3);color:var(--maroon);}
+.modal-date{
+  font-family:var(--display);font-size:.65rem;letter-spacing:.18em;
+  color:var(--gold);text-transform:uppercase;margin-bottom:8px;
+}
+.modal-title{
+  font-family:var(--serif);font-size:1.5rem;font-weight:600;
+  color:var(--maroon);margin-bottom:10px;line-height:1.3;
+}
+.modal-type-badge{
+  display:inline-block;font-size:.62rem;letter-spacing:.12em;
+  text-transform:uppercase;font-family:var(--display);
+  padding:3px 10px;border-radius:4px;margin-bottom:16px;
+}
+.modal-type-badge.festival{background:rgba(122,45,45,.12);color:var(--maroon);}
+.modal-type-badge.ekadashi{background:rgba(74,107,74,.12);color:var(--green);}
+.modal-type-badge.acharya{background:rgba(168,118,46,.13);color:var(--gold);}
+.modal-divider{border:none;border-top:1px solid var(--line);margin:14px 0;}
+.modal-story{
+  font-family:var(--serif);font-size:1.02rem;line-height:1.8;
+  color:var(--ink);
+}
+.modal-story p{margin-bottom:1em;}
+.modal-notify-btn{
+  width:100%;padding:11px;margin-top:18px;border-radius:var(--r);
+  border:1px solid var(--gold);background:transparent;
+  color:var(--gold);font-family:var(--display);font-size:.75rem;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:all .2s;
+}
+.modal-notify-btn:hover{background:var(--gold);color:var(--paper);}
+.modal-notify-btn.set{background:var(--green);color:var(--paper);border-color:var(--green);}
+
+/* ── SETTINGS ── */
+#settings-link{
+  text-align:center;margin-top:24px;
+}
+#settings-link button{
+  background:transparent;border:none;color:var(--ink3);
+  font-family:var(--serif);font-size:.78rem;font-style:italic;
+  cursor:pointer;text-decoration:underline;
+}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--paper);
+  padding:11px 22px;border-radius:6px;
+  font-family:var(--serif);font-size:.82rem;
+  opacity:0;transition:all .3s;z-index:100;
+  white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.3);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="om">ॐ</div>
+  <div class="title">Vaishnava Calendar</div>
+  <div class="subtitle">Festivals · Ekadashi · Acharya Days</div>
+  <div class="gaurabda">Gaurabda 540 · 2026</div>
+</header>
+
+<!-- Notification permission banner -->
+<div id="notif-banner">
+  🔔 Enable reminders so you never miss a festival or Ekadashi
+  <button onclick="requestNotifPermission()">Enable</button>
+  <button class="dismiss" onclick="dismissBanner()">Not now</button>
+</div>
+
+<!-- View toggle -->
+<div id="view-toggle">
+  <button class="vt-btn active" id="vt-grid" onclick="setView('grid')">Calendar</button>
+  <button class="vt-btn" id="vt-list" onclick="setView('list')">Upcoming</button>
+</div>
+
+<!-- Next up -->
+<div id="next-up"></div>
+
+<div id="main">
+
+  <!-- GRID VIEW -->
+  <div id="cal-grid-view">
+    <div id="month-nav">
+      <button class="mn-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="mn-title" id="mn-title">—</div>
+      <button class="mn-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="cal-grid" id="cal-dow-row"></div>
+    <div class="cal-grid" id="cal-grid" style="margin-top:-1px"></div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="cal-list-view"></div>
+
+  <div id="settings-link">
+    <button onclick="toggleAllNotifs()">⚙ Notification settings</button>
+  </div>
+
+</div>
+
+<!-- Event detail modal -->
+<div id="modal-overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-date" id="modal-date">—</div>
+    <div class="modal-title" id="modal-title">—</div>
+    <div class="modal-type-badge" id="modal-badge">—</div>
+    <hr class="modal-divider">
+    <div class="modal-story" id="modal-story">—</div>
+    <button class="modal-notify-btn" id="modal-notify-btn" onclick="toggleEventNotif()">🔔 Remind me a day before</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//   DATA — 2026 ISKCON Vaishnava Calendar
+// ══════════════════════════════════════════════
+const EVENTS = [
+  // ── EKADASHI (24) ──
+  {date:'2026-01-14', name:'Shat-tila Ekadashi', type:'ekadashi', story:'Shat-tila Ekadashi falls in the month of Magha and is marked by the use of sesame seeds (til) in six different ways — eating, bathing, offering, and donating sesame. Lord Krishna explained to Yudhishthira that observing this Ekadashi removes the sinful reactions accumulated over many lifetimes. Devotees fast from grains, meditate on the Lord\'s pastimes, and engage in charity, especially the donation of sesame seeds and oil, which is considered especially meritorious on this sacred day.'},
+  {date:'2026-01-29', name:'Jaya Ekadashi', type:'ekadashi', story:'Jaya Ekadashi is described in the Bhavishyottara Purana as a day with the power to free one from the lower species of life. According to the pastime, a Gandharva named Pushpavanta and his wife Malyavati were cursed to become ghosts for disturbing Lord Shiva\'s rest with their singing. They unknowingly observed Jaya Ekadashi while wandering in the forest, and by the purifying effect of the fast — even though performed unintentionally — they were released from their ghostly forms and returned to their celestial abode, illustrating the boundless mercy contained in this Ekadashi vrata.'},
+  {date:'2026-02-13', name:'Vijaya Ekadashi', type:'ekadashi', story:'Vijaya Ekadashi, meaning "victorious," is glorified for granting success in any endeavor. Lord Krishna narrated to Yudhishthira how Lord Rama, before crossing the ocean to reach Lanka, observed this Ekadashi on the advice of the sage Bakadalbhya. By its power, Rama was able to cross the impassable ocean and ultimately achieve victory over Ravana. Devotees observe this fast seeking the same quality of unstoppable determination and triumph over obstacles in their spiritual and material endeavors.'},
+  {date:'2026-02-27', name:'Amalaki Ekadashi', type:'ekadashi', story:'Amalaki Ekadashi is dedicated to the worship of the amalaki (Indian gooseberry) tree, which is considered very dear to Lord Vishnu — so sacred that the Lord Himself is said to reside within it. Devotees worship the amalaki tree with lamps, flowers, and prayers on this day. The Bhavishya Purana explains that one who fasts and worships the amalaki tree on this Ekadashi attains freedom from sinful reactions equal to those accumulated over a thousand births, and develops devotion that leads one toward the Lord\'s eternal abode.'},
+  {date:'2026-03-15', name:'Papamochani Ekadashi', type:'ekadashi', story:'Papamochani Ekadashi, observed in the month of Chaitra, is famous for liberating devotees from even the most severe sinful reactions — its very name means "the remover of sins." In the associated pastime, a sage named Medhavi was distracted from his austerities by the celestial nymph Manjughosha, and both became entangled in a curse as a result. By later observing Papamochani Ekadashi, they were freed from the reactions of their actions. The story teaches that sincere observance of this vrata can dissolve even deeply rooted karmic bondage.'},
+  {date:'2026-03-29', name:'Kamada Ekadashi', type:'ekadashi', story:'Kamada Ekadashi, "the fulfiller of desires," is associated with a touching story of a Gandharva couple, Lalita and Lalit, whose happiness was disturbed by a curse that transformed Lalit into a man-eating demon due to an offense committed during a musical performance. Grief-stricken, Lalita sought the guidance of sages in the forest and was advised to observe Kamada Ekadashi on behalf of her husband. Through her faithful observance, Lalit was restored to his original divine form, demonstrating how this Ekadashi can fulfill even the deepest heartfelt desires of a sincere devotee.'},
+  {date:'2026-04-13', name:'Varuthini Ekadashi', type:'ekadashi', story:'Varuthini Ekadashi falls in the month of Vaishakha and is said to bestow the merit equal to giving in charity gold, land, and even performing the horse sacrifice (ashvamedha yajna). In its associated pastime, a royal sage named Mandhata was saved from a tiger\'s attack in the forest through Lord Vishnu\'s direct intervention after the sage had observed this Ekadashi with great devotion. The story illustrates that the Lord personally protects His devotees who faithfully keep this vow, regardless of the danger they may face.'},
+  {date:'2026-04-27', name:'Mohini Ekadashi', type:'ekadashi', story:'Mohini Ekadashi takes its name from "moha," meaning illusion, and is glorified as a fast capable of freeing one from the deep illusions of material existence. King Dhanapala\'s son Dhrishtabuddhi had fallen into degraded association and lost his way in life. On the instruction of the sage Vasishtha, he observed Mohini Ekadashi and was instantly freed from the influence of his sinful associations and past misdeeds, his consciousness purified and his direction in life restored — a powerful testament to this Ekadashi\'s ability to dispel the mohini, or illusion, that binds the soul.'},
+  {date:'2026-05-13', name:'Apara Ekadashi', type:'ekadashi', story:'Apara Ekadashi, observed in the month of Jyeshtha, is described as bestowing fame, fortune, and freedom from the heaviest sins, including those committed knowingly. King Mandhata once asked the sage Vasishtha how a person burdened with grave sins could be purified, and was told the story of King Vajradhwaja, whose brother had committed many sinful acts. By observing Apara Ekadashi on his brother\'s behalf, Vajradhwaja secured his brother\'s liberation from hellish reactions and elevation to a heavenly abode — showing the vrata\'s power to purify even sins committed by another when performed with devotion.'},
+  {date:'2026-05-27', name:'Padmini Ekadashi', type:'ekadashi', story:'Padmini Ekadashi is a special Ekadashi that occurs only during Adhika Masa (the intercalary leap month) and is considered exceptionally rare and auspicious. Also called Purushottama Ekadashi, it is dedicated to Lord Purushottama, a special form of Vishnu who presides over the leap month. Because the leap month itself has no presiding deity in the regular calendar, Lord Krishna declared that He would personally accept this month as His own, making any fasting and worship performed during it — especially on this Ekadashi — exceptionally fruitful for spiritual advancement.'},
+  {date:'2026-06-11', name:'Parama Ekadashi', type:'ekadashi', story:'Parama Ekadashi, like Padmini, occurs specifically during Adhika Masa and is considered the supreme (parama) of all Ekadashi observances during that special month. The Brahmanda Purana describes that a poor and honest brahmana named Sumedha, despite great hardship, observed this Ekadashi with full faith. As a direct result, he and his wife were blessed with great prosperity and ultimately attained an exalted spiritual destination, illustrating how sincere observance — even amid poverty — brings the highest blessings of Lord Vishnu.'},
+  {date:'2026-06-25', name:'Pandava Nirjala Ekadashi', type:'ekadashi', story:'Nirjala Ekadashi, observed in the month of Jyeshtha/Ashadha, is the strictest of all Ekadashis — devotees abstain completely from both food and water for the full day and night. It is also called "Pandava" or "Bhimseni" Ekadashi because Bhima, the mighty Pandava brother known for his great appetite, found it impossible to fast without food even once a month. The sage Vyasadeva advised him that observing this single, most rigorous Ekadashi would grant the combined merit of all twenty-four Ekadashis in the year. Bhima observed it and attained the equivalent benefit, making Nirjala Ekadashi especially treasured by those seeking maximum spiritual merit through disciplined austerity.'},
+  {date:'2026-07-11', name:'Yogini Ekadashi', type:'ekadashi', story:'Yogini Ekadashi, observed in the month of Ashadha, is said to liberate one from the disease of separation from the Supreme Lord — both literal illness and the deeper malady of spiritual forgetfulness. In its associated story, a gardener named Hemamali, servant of the demigod Kuvera, neglected his temple duties one day due to longing for his wife and was cursed with leprosy as a result. Upon the advice of a sage, he observed Yogini Ekadashi and was instantly cured of the disease, his body and consciousness restored — demonstrating the vrata\'s power to heal afflictions born from neglecting one\'s devotional duties.'},
+  {date:'2026-07-25', name:'Shayani Ekadashi', type:'ekadashi', story:'Shayani Ekadashi marks the beginning of Chaturmasya, the sacred four-month period when Lord Vishnu is described as entering His mystic yogic sleep (yoga-nidra) on the cosmic ocean, resting upon Ananta Shesha. During Chaturmasya, devotees take on additional vows — often giving up particular foods month by month — and increase their spiritual practices, japa, scriptural study, and austerity. This Ekadashi is considered the most important of the year alongside its counterpart, Utthana Ekadashi, which marks the Lord\'s "awakening" four months later, bookending this deeply auspicious devotional season.'},
+  {date:'2026-08-09', name:'Kamika Ekadashi', type:'ekadashi', story:'Kamika Ekadashi, observed during the holy month of Shravana, is glorified in the Padma Purana as removing even the sin of killing a brahmana when performed with sincere devotion. Lord Krishna explained to Yudhishthira that simply hearing the narration of this Ekadashi\'s glories bestows the merit of giving a thousand cows in charity. Worship of Lord Vishnu in His form as Damodara — bound by ropes due to mother Yashoda\'s love — is especially recommended on this day, connecting the Ekadashi to the tender pastimes of the Lord\'s childhood in Vrindavan.'},
+  {date:'2026-08-24', name:'Pavitropana Ekadashi', type:'ekadashi', story:'Pavitropana Ekadashi, observed in the month of Shravana, is unique for the offering of a "pavitra" — a sacred thread, often made of cotton with knots representing the syllables of the Lord\'s names — to the deity of Vishnu. This ritual is believed to atone for offenses committed in the course of devotional service throughout the year, restoring purity (pavitra) to one\'s practice. The Brahma Vaivarta Purana describes that this Ekadashi cleanses the heart of a devotee just as washing cleanses a garment, preparing the soul for renewed and more purified service to the Lord.'},
+  {date:'2026-09-07', name:'Annada Ekadashi', type:'ekadashi', story:'Annada Ekadashi, observed in the month of Bhadrapada, takes its name from "anna" (food/grains) and "da" (giver) — signifying that one who observes this Ekadashi with devotion will never lack for food or sustenance, in this life or beyond. According to the Brahmanda Purana, King Harishchandra, renowned for his unwavering truthfulness, faced extreme hardship and was even forced to work in a crematorium, but upon observing Annada Ekadashi he was freed from all his sufferings and reunited with his kingdom and family — a story of how truthful surrender combined with this vrata removes even the most severe trials.'},
+  {date:'2026-09-22', name:'Parsva Ekadashi', type:'ekadashi', story:'Parsva Ekadashi, also called Parivartini Ekadashi, falls during Chaturmasya and marks the moment when Lord Vishnu, in His cosmic sleep, is said to turn from one side (parsva) to the other as He rests upon Ananta Shesha. This "turning" symbolizes a shift in cosmic energies and is considered an especially powerful time for devotional activities. The Skanda Purana relates that King Bali was granted the rare privilege of having Lord Vishnu personally guard the gates of his kingdom for these months, a boon connected to the sanctity of this period within Chaturmasya.'},
+  {date:'2026-10-06', name:'Indira Ekadashi', type:'ekadashi', story:'Indira Ekadashi, observed in the month of Ashwina during the Pitru Paksha (fortnight dedicated to ancestors), is specifically glorified for liberating one\'s deceased forefathers from any unfortunate destinations they may have attained after death. In the associated story, King Indrasena learned through the sage Narada that his father had taken birth in a lower species due to past misdeeds. By observing Indira Ekadashi on his father\'s behalf with full faith, Indrasena secured his father\'s liberation and elevation to Vaikuntha, the spiritual world — making this Ekadashi especially significant for honoring one\'s ancestors.'},
+  {date:'2026-10-22', name:'Pashankusha Ekadashi', type:'ekadashi', story:'Pashankusha Ekadashi, observed in the month of Ashwina, derives its name from "pasha" (a rope or noose) and "ankusha" (a goad used to direct an elephant) — symbolizing that this Ekadashi acts like a goad, directing the wayward mind away from sinful tendencies just as a goad controls an elephant. Lord Krishna told Yudhishthira that observing this Ekadashi grants the combined merit of all major Vedic sacrifices and pilgrimages, and that the very act of controlling one\'s senses on this day "binds" sinful tendencies as if with a rope, redirecting the soul toward devotional life.'},
+  {date:'2026-11-05', name:'Rama Ekadashi', type:'ekadashi', story:'Rama Ekadashi, observed in the month of Kartika just before Diwali, is glorified as bestowing freedom from the fear of hellish destinations after death. In its associated pastime, a pious King Muchukunda\'s daughter Chandrabhaga and her husband Shobhana observed Rama Ekadashi together. When Shobhana, weak from the strict fast, passed away during the observance, he attained a celestial form and a divine kingdom due to the merit of the vrata — illustrating that even if death occurs during the fast, the benefit of Rama Ekadashi grants an exalted destination to the soul.'},
+  {date:'2026-11-21', name:'Utthana Ekadashi', type:'ekadashi', story:'Utthana Ekadashi, also called Prabodhini Ekadashi, marks the joyous conclusion of Chaturmasya — the day Lord Vishnu is said to "awaken" (utthana) from His four months of cosmic rest upon Ananta Shesha. This is one of the most celebrated Ekadashis of the year, observed with great festivity, kirtan, and the lighting of lamps, similar in spirit to Diwali. Devotees who have kept Chaturmasya vows complete them on this day, and it is considered an extremely auspicious time to begin new devotional practices, as the Lord Himself has "awakened" to bless His devotees.'},
+  {date:'2026-12-04', name:'Utpanna Ekadashi', type:'ekadashi', story:'Utpanna Ekadashi, observed in the month of Margashirsha, commemorates the very origin (utpanna) of the goddess Ekadashi herself. According to the Bhavishyottara Purana, Lord Vishnu, in His form as Mura-ari, manifested a powerful female form from His own being to defeat the demon Mura, who could not be slain by ordinary means. Pleased with her victory, Lord Vishnu named her "Ekadashi" and granted her the boon that anyone who fasts on this tithi in her honor will be freed from sin and attain His association — making this the foundational Ekadashi from which all others derive their glory.'},
+  {date:'2026-12-20', name:'Mokshada Ekadashi', type:'ekadashi', story:'Mokshada Ekadashi, observed in the month of Margashirsha, takes its name from "moksha," meaning liberation — it is glorified as the Ekadashi capable of granting liberation to one\'s ancestors. This Ekadashi also coincides with the day the Bhagavad Gita was spoken by Lord Krishna to Arjuna on the battlefield of Kurukshetra, making it doubly significant. In the associated pastime, King Vaikhanasa saw his deceased father suffering in a hellish condition in a dream; upon the advice of brahmanas, he observed Mokshada Ekadashi on his father\'s behalf, and his father was immediately liberated and ascended to the heavenly planets.'},
+
+  // ── MAJOR FESTIVALS & ACHARYA DAYS ──
+  {date:'2026-02-01', name:'Nityananda Trayodashi', type:'acharya', story:'Nityananda Trayodashi celebrates the appearance of Lord Nityananda Prabhu, who is non-different from Lord Balarama, Krishna\'s elder brother, and who appeared as the closest associate of Sri Chaitanya Mahaprabhu during the Sankirtan movement five hundred years ago. Lord Nityananda is celebrated for His boundless mercy — He is said to give love of God even to the most fallen and undeserving souls without consideration of their qualification. Devotees commemorate this day with kirtan, feasting, and recounting the pastimes of this most merciful incarnation, praying for the causeless compassion that He so freely distributes.'},
+  {date:'2026-02-17', name:'Srila Bhaktisiddhanta Saraswati Appearance', type:'acharya', story:'This day commemorates the appearance of Srila Bhaktisiddhanta Saraswati Thakura in 1874, the spiritual master of Srila Prabhupada and one of the towering figures of modern Gaudiya Vaishnavism. An accomplished astronomer, scholar, and tireless preacher, he established dozens of monasteries (mathas) and was the first to send disciples to preach Krishna consciousness in the Western world, decades before ISKCON was founded. He is remembered for his uncompromising standards, his vast scholarship, and his prophetic vision that the chanting of Hare Krishna would one day spread to every town and village across the globe — a vision his disciple Srila Prabhupada would go on to fulfill.'},
+  {date:'2026-03-03', name:'Gaura Purnima', type:'festival', story:'Gaura Purnima celebrates the appearance of Sri Chaitanya Mahaprabhu in Navadvipa, Bengal, in 1486 — considered by Gaudiya Vaishnavas to be a combined incarnation of Radha and Krishna who appeared in this age to teach the easiest path to God-realization: the congregational chanting of the holy names. This is the single most important festival in the Gaudiya Vaishnava calendar. Temples worldwide hold all-night kirtans, dramatic recreations of Mahaprabhu\'s appearance, and grand feasts. The day is celebrated with overwhelming joy, as devotees remember how the Lord personally descended to inaugurate the sankirtan movement that continues to this day.'},
+  {date:'2026-06-25', name:'Jagannath Rath Yatra', type:'festival', story:'Rath Yatra, the chariot festival of Lord Jagannath, Baladeva, and Subhadra, commemorates the journey of these deity forms from the main temple to the Gundicha temple, re-enacting the pastime of Krishna returning to Vrindavan with Balarama and Subhadra at the request of the residents. Massive, ornately decorated chariots are pulled through the streets by thousands of devotees in a wave of kirtan and celebration. Originating in Puri and celebrated for centuries, this festival was brought to the Western world by Srila Prabhupada, and ISKCON now holds Rath Yatra celebrations in major cities worldwide, often drawing enormous crowds of devotees and curious onlookers alike.'},
+  {date:'2026-07-31', name:'Guru Purnima (Vyasa Puja)', type:'festival', story:'Guru Purnima honors Srila Vyasadeva, the literary incarnation of Lord Vishnu who compiled the Vedas, the Puranas, and the Mahabharata (including the Bhagavad Gita), and who is considered the original spiritual master in the disciplic succession. On this day, devotees also honor their own spiritual masters as representatives of Vyasadeva in the chain of guru-parampara. It is traditionally a day of deep gratitude — offering prayers, gifts, and devotional service to one\'s guru — recognizing that knowledge of the Absolute Truth is transmitted from teacher to student across generations, and that the guru is the means by which the Lord\'s mercy reaches the sincere seeker.'},
+  {date:'2026-08-08', name:'Balarama Jayanti', type:'festival', story:'Balarama Jayanti celebrates the appearance of Lord Balarama, the elder brother of Krishna and the first expansion of the Supreme Lord, who appears as the original spiritual master and the source of all spiritual strength. Balarama is considered the foundation upon which Krishna\'s pastimes rest — without His mercy, none of the Lord\'s sweet pastimes could be properly understood or relished. He is celebrated for His immense physical strength and equally immense devotion. Temples mark the day with kirtan and an abhisheka (ceremonial bathing) of the deity, and devotees pray for the strength to remain fixed in their devotional service, just as Balarama remains fixed at Krishna\'s side.'},
+  {date:'2026-08-14', name:'Sri Krishna Janmashtami', type:'festival', story:'Janmashtami celebrates the appearance of Lord Sri Krishna at midnight in Mathura over five thousand years ago — the Supreme Personality of Godhead descending to this world to display His transcendental pastimes and deliver the message of the Bhagavad Gita. Devotees observe a strict fast from sunrise until the midnight hour, when the deities are bathed in an elaborate abhisheka ceremony amid continuous kirtan, before the fast is broken with prasadam. Throughout the day, temples recite stories of Krishna\'s life and pastimes. This is considered one of the most significant and joyously celebrated festivals in all of Vaishnavism, marking the very arrival of God on Earth.'},
+  {date:'2026-08-15', name:'Nandotsav', type:'festival', story:'Nandotsav, "the festival of Nanda," takes place the day after Janmashtami and celebrates the overwhelming joy of Nanda Maharaja — Krishna\'s foster father — upon the birth of his divine son. According to the pastimes, Nanda Maharaja distributed vast charity to brahmanas and held a grand celebration for all the residents of Vraja upon hearing of Krishna\'s appearance, even before realizing the true identity of the child he was blessed with. This day is celebrated with abundant feasting (following the previous day\'s fast), kirtan, and the playful spirit of celebration that mirrors the cowherd community\'s spontaneous, loving outpouring of joy at the birth of their beloved Krishna.'},
+  {date:'2026-08-28', name:'Radhastami', type:'festival', story:'Radhastami celebrates the appearance of Srimati Radharani, the eternal consort of Lord Krishna and the personification of His pleasure potency (hladini-shakti). She is considered the embodiment of the highest form of devotion — pure, selfless love for Krishna without any trace of personal desire. Radharani is so dear to Krishna that He is said to be conquered by Her love, and the path to Krishna is said to pass through Her mercy. On this day, devotees pray especially for Radharani\'s blessings, as it is taught that pleasing Radharani is the surest way to please Krishna Himself, since Her love for Him is without limit.'},
+  {date:'2026-09-01', name:'Srila Prabhupada Appearance (Vyasa Puja)', type:'acharya', story:'This day celebrates the appearance of His Divine Grace A.C. Bhaktivedanta Swami Srila Prabhupada in 1896, the founder-acharya of ISKCON. At the age of 69, with very little money and no institutional support, he traveled alone to America to fulfill his spiritual master\'s order to spread Krishna consciousness throughout the English-speaking world. Within just twelve years, he established over a hundred temples, wrote dozens of books that have been translated into many languages, and gave the gift of the Hare Krishna mahamantra to people across every continent. Devotees around the world hold grand Vyasa Puja ceremonies, offering prayers, kirtan, and homage to his tireless dedication and boundless compassion.'},
+  {date:'2026-09-13', name:'Srila Bhaktivinoda Thakura Appearance', type:'acharya', story:'This day commemorates the appearance of Srila Bhaktivinoda Thakura in 1838, often called the father of the modern Gaudiya Vaishnava revival. A government magistrate by profession, he was also a prolific writer, composing hundreds of devotional songs, books, and commentaries that reignited interest in the teachings of Sri Chaitanya Mahaprabhu after centuries of decline. He was also the first to predict — in the 1880s — that an Englishman would one day come and preach Krishna consciousness throughout the Western world, a prophecy fulfilled decades later by Srila Prabhupada. Devotees honor his legacy with kirtan and the singing of his many beloved devotional compositions.'},
+  {date:'2026-10-21', name:'Govardhan Puja', type:'festival', story:'Govardhan Puja celebrates the pastime in which young Krishna lifted the entire Govardhan Hill on the little finger of His left hand for seven days, sheltering the residents of Vrindavan from a torrential deluge sent by Indra in anger. After Indra realized his error and begged forgiveness, the residents of Vrindavan, on Krishna\'s instruction, began worshipping Govardhan Hill instead of Indra. On this day, devotees prepare "Annakuta" — a mountain of varied food preparations representing the hill itself — and offer it to the deity, then distribute it as prasadam, commemorating the Lord\'s protection and the proper object of worship He revealed to His devotees.'},
+  {date:'2026-11-14', name:'Srila Prabhupada Disappearance', type:'acharya', story:'This solemn day marks the disappearance of Srila Prabhupada in 1977 in Vrindavan, the holy land he loved above all places. Though it marks his physical departure from this world, devotees understand that a pure devotee\'s instructions and presence remain eternally accessible through his teachings and books. Devotees observe this day with fasting until noon, memorial programs (often called "Vyasa Puja" or "Disappearance Day" observances), the reading of his final pastimes and instructions, and renewed commitment to the mission he gave his life to establish — the worldwide spread of the Hare Krishna mahamantra and the teachings of the Bhagavad Gita as it is.'},
+];
+
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+let viewMonth = new Date().getMonth();
+let viewYear = new Date().getFullYear();
+const TODAY = new Date();
+TODAY.setHours(0,0,0,0);
+
+// notification state stored in memory (and localStorage if available)
+let notifiedEvents = {};
+try{ notifiedEvents = JSON.parse(localStorage.getItem('vc_notified')||'{}'); }catch(e){}
+
+// ══════════════════════════════════════════════
+//   NOTIFICATIONS
+// ══════════════════════════════════════════════
+function checkNotifBanner(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission==='default'){
+    const dismissed = sessionStorage.getItem('vc_banner_dismissed');
+    if(!dismissed) document.getElementById('notif-banner').classList.add('show');
+  }
+}
+function requestNotifPermission(){
+  if(!('Notification' in window)){ toast('Notifications not supported on this browser'); return; }
+  Notification.requestPermission().then(perm=>{
+    if(perm==='granted'){
+      toast('🔔 Notifications enabled');
+      document.getElementById('notif-banner').classList.remove('show');
+      scheduleAllNotifications();
+    } else {
+      toast('Notifications blocked — enable in browser settings');
+    }
+  });
+}
+function dismissBanner(){
+  document.getElementById('notif-banner').classList.remove('show');
+  sessionStorage.setItem('vc_banner_dismissed','1');
+}
+
+function toggleAllNotifs(){
+  if(Notification.permission!=='granted'){
+    requestNotifPermission();
+    return;
+  }
+  toast('🔔 Checking upcoming events for reminders...');
+  scheduleAllNotifications();
+}
+
+// schedule local notifications for events within next 30 days
+function scheduleAllNotifications(){
+  if(Notification.permission!=='granted') return;
+  const now=new Date();
+  let count=0;
+  EVENTS.forEach(ev=>{
+    const evDate=new Date(ev.date+'T00:00:00');
+    const dayBefore=new Date(evDate); dayBefore.setDate(dayBefore.getDate()-1);
+    const msUntil=dayBefore.getTime()-now.getTime();
+    // only schedule if within next 30 days and in future
+    if(msUntil>0 && msUntil < 30*24*60*60*1000){
+      const key=ev.date+'_'+ev.name;
+      if(!notifiedEvents[key]){
+        setTimeout(()=>{
+          new Notification('🪷 Tomorrow: '+ev.name, {
+            body: ev.story.slice(0,100)+'...',
+            icon: 'images/icon-192.png'
+          });
+        }, msUntil);
+        count++;
+      }
+    }
+  });
+  if(count>0) toast(`🔔 ${count} reminder(s) scheduled for the next 30 days`);
+  else toast('No upcoming events in the next 30 days to remind about');
+}
+
+function toggleEventNotif(){
+  const ev=currentModalEvent;
+  if(!ev) return;
+  const key=ev.date+'_'+ev.name;
+  const btn=document.getElementById('modal-notify-btn');
+
+  if(Notification.permission!=='granted'){
+    requestNotifPermission();
+    return;
+  }
+
+  if(notifiedEvents[key]){
+    delete notifiedEvents[key];
+    btn.classList.remove('set');
+    btn.textContent='🔔 Remind me a day before';
+    toast('Reminder removed');
+  } else {
+    const evDate=new Date(ev.date+'T00:00:00');
+    const dayBefore=new Date(evDate); dayBefore.setDate(dayBefore.getDate()-1);
+    const msUntil=dayBefore.getTime()-Date.now();
+    if(msUntil<=0){
+      toast('⚠ This event is too close — reminder would fire immediately or has passed');
+      return;
+    }
+    notifiedEvents[key]=true;
+    setTimeout(()=>{
+      new Notification('🪷 Tomorrow: '+ev.name, {
+        body: ev.story.slice(0,100)+'...',
+        icon:'images/icon-192.png'
+      });
+    }, msUntil);
+    btn.classList.add('set');
+    btn.textContent='✓ Reminder set';
+    toast('🔔 You\\'ll be reminded the day before');
+  }
+  try{ localStorage.setItem('vc_notified', JSON.stringify(notifiedEvents)); }catch(e){}
+}
+
+// ══════════════════════════════════════════════
+//   DATE HELPERS
+// ══════════════════════════════════════════════
+function parseDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function eventsOnDate(dateStr){ return EVENTS.filter(e=>e.date===dateStr); }
+function daysUntil(d){ const diff=Math.ceil((d-TODAY)/(1000*60*60*24)); return diff; }
+
+// ══════════════════════════════════════════════
+//   NEXT UP CARD
+// ══════════════════════════════════════════════
+function renderNextUp(){
+  const upcoming=EVENTS
+    .map(e=>({...e,d:parseDate(e.date)}))
+    .filter(e=>e.d>=TODAY)
+    .sort((a,b)=>a.d-b.d);
+  if(!upcoming.length){ document.getElementById('next-up').innerHTML=''; return; }
+  const ev=upcoming[0];
+  const days=daysUntil(ev.d);
+  const dayLabel=days===0?'Today':days===1?'Tomorrow':`In ${days} days`;
+  document.getElementById('next-up').innerHTML=`
+    <div class="next-card" onclick="openModal('${ev.date}','${escapeAttr(ev.name)}')">
+      <div class="next-date">
+        <div class="day">${ev.d.getDate()}</div>
+        <div class="month">${MONTH_NAMES[ev.d.getMonth()].slice(0,3)}</div>
+      </div>
+      <div class="next-info">
+        <div class="next-label">Next Observance</div>
+        <div class="next-name">${ev.name}</div>
+        <div class="next-countdown">${dayLabel}</div>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+//   GRID VIEW
+// ══════════════════════════════════════════════
+function renderGrid(){
+  document.getElementById('mn-title').textContent = MONTH_NAMES[viewMonth]+' '+viewYear;
+
+  // dow row
+  document.getElementById('cal-dow-row').innerHTML = DOW_NAMES.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+
+  const firstDay=new Date(viewYear,viewMonth,1).getDay();
+  const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
+  const cells=[];
+
+  for(let i=0;i<firstDay;i++) cells.push('<div class="cal-cell empty"></div>');
+
+  for(let day=1;day<=daysInMonth;day++){
+    const dateObj=new Date(viewYear,viewMonth,day);
+    const dateStr=fmtDate(dateObj);
+    const evs=eventsOnDate(dateStr);
+    const isToday=dateObj.getTime()===TODAY.getTime();
+    let evHtml='';
+    if(evs.length){
+      evHtml='<div class="cal-events">'+evs.map(e=>`<div class="cal-event-dot ${e.type}">${e.name}</div>`).join('')+'</div>';
+    }
+    cells.push(`<div class="cal-cell ${isToday?'today':''}" onclick="${evs.length?`openModal('${dateStr}','${escapeAttr(evs[0].name)}')`:''}">
+      <div class="cal-daynum">${day}</div>
+      ${evHtml}
+    </div>`);
+  }
+
+  document.getElementById('cal-grid').innerHTML=cells.join('');
+}
+function changeMonth(delta){
+  viewMonth+=delta;
+  if(viewMonth<0){ viewMonth=11; viewYear--; }
+  if(viewMonth>11){ viewMonth=0; viewYear++; }
+  renderGrid();
+}
+
+// ══════════════════════════════════════════════
+//   LIST VIEW
+// ══════════════════════════════════════════════
+function renderList(){
+  const upcoming=EVENTS
+    .map(e=>({...e,d:parseDate(e.date)}))
+    .filter(e=>e.d>=TODAY)
+    .sort((a,b)=>a.d-b.d);
+
+  const groups={};
+  upcoming.forEach(e=>{
+    const key=MONTH_NAMES[e.d.getMonth()]+' '+e.d.getFullYear();
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(e);
+  });
+
+  let html='';
+  Object.entries(groups).forEach(([month,evs])=>{
+    html+=`<div class="list-month-group"><div class="list-month-title">${month}</div>`;
+    evs.forEach(e=>{
+      html+=`<div class="list-item" onclick="openModal('${e.date}','${escapeAttr(e.name)}')">
+        <div class="list-date-box">
+          <div class="day">${e.d.getDate()}</div>
+          <div class="dow">${DOW_NAMES[e.d.getDay()]}</div>
+        </div>
+        <div class="list-item-info">
+          <div class="list-item-name">${e.name}</div>
+          <div class="list-item-type ${e.type}">${e.type}</div>
+          <div class="list-item-desc">${e.story.slice(0,110)}...</div>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+
+  if(!html) html='<div style="text-align:center;padding:40px;color:var(--ink3);font-style:italic">No more events this year</div>';
+  document.getElementById('cal-list-view').innerHTML=html;
+}
+
+// ══════════════════════════════════════════════
+//   VIEW TOGGLE
+// ══════════════════════════════════════════════
+function setView(v){
+  document.getElementById('vt-grid').classList.toggle('active',v==='grid');
+  document.getElementById('vt-list').classList.toggle('active',v==='list');
+  document.getElementById('cal-grid-view').style.display=v==='grid'?'block':'none';
+  document.getElementById('cal-list-view').style.display=v==='list'?'block':'none';
+  if(v==='list') renderList();
+}
+
+// ══════════════════════════════════════════════
+//   MODAL
+// ══════════════════════════════════════════════
+let currentModalEvent=null;
+function openModal(dateStr,name){
+  const ev=EVENTS.find(e=>e.date===dateStr&&e.name===name);
+  if(!ev) return;
+  currentModalEvent=ev;
+  const d=parseDate(ev.date);
+
+  document.getElementById('modal-date').textContent=
+    DOW_NAMES[d.getDay()]+', '+MONTH_NAMES[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+  document.getElementById('modal-title').textContent=ev.name;
+
+  const badge=document.getElementById('modal-badge');
+  badge.textContent=ev.type==='ekadashi'?'Ekadashi Fasting Day':ev.type==='acharya'?'Acharya Day':'Festival';
+  badge.className='modal-type-badge '+ev.type;
+
+  // story as paragraphs
+  document.getElementById('modal-story').innerHTML='<p>'+ev.story+'</p>';
+
+  // notify button state
+  const key=ev.date+'_'+ev.name;
+  const btn=document.getElementById('modal-notify-btn');
+  if(notifiedEvents[key]){
+    btn.classList.add('set'); btn.textContent='✓ Reminder set';
+  } else {
+    btn.classList.remove('set'); btn.textContent='🔔 Remind me a day before';
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// escape for inline attribute
+function escapeAttr(s){ return s.replace(/'/g,"\\'"); }
+
+// ══════════════════════════════════════════════
+//   TOAST
+// ══════════════════════════════════════════════
+let toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════
+//   INIT
+// ══════════════════════════════════════════════
+renderNextUp();
+renderGrid();
+checkNotifBanner();
+if(Notification && Notification.permission==='granted') scheduleAllNotifications();
+
+// keyboard escape closes modal
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>

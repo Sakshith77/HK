@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#e74c3c">
+    <title>JPG to PDF - 300 DPI Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #e74c3c;
+            --primary-dark: #c0392b;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --success: #27ae60;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.6rem; font-weight: 700; }
+        .header p { font-size: 0.95rem; opacity: 0.9; margin-top: 5px; }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .drop-zone {
+            border: 3px dashed #bdc3c7;
+            border-radius: 20px;
+            padding: 50px 20px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background: #fff5f5;
+        }
+
+        .drop-zone .icon { font-size: 3.5rem; margin-bottom: 15px; display: block; }
+        .drop-zone p { font-size: 1.2rem; font-weight: 600; color: var(--dark); }
+        .drop-zone .sub { font-size: 0.9rem; color: #7f8c8d; margin-top: 8px; }
+
+        .file-input { display: none; }
+
+        .preview-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            display: none;
+        }
+
+        .preview-card.active { display: block; }
+
+        .preview-img {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            max-height: 300px;
+            object-fit: contain;
+            background: #f8f9fa;
+        }
+
+        .file-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: var(--light);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .info-box .label { font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; }
+        .info-box .value { font-size: 1.1rem; font-weight: 700; color: var(--dark); margin-top: 4px; }
+
+        .dpi-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .dpi-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dpi-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dpi-option:hover { border-color: var(--primary); }
+        .dpi-option.selected { border-color: var(--primary); background: #fff5f5; }
+
+        .dpi-option input { width: 22px; height: 22px; accent-color: var(--primary); }
+        .dpi-option label { flex: 1; margin-left: 12px; font-weight: 600; cursor: pointer; }
+        .dpi-option .desc { font-size: 0.85rem; color: #7f8c8d; }
+
+        .custom-dpi {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+        }
+
+        .custom-dpi input[type="number"] {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .page-size-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .page-size-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .size-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .size-btn {
+            padding: 15px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .size-btn:hover { border-color: var(--primary); }
+        .size-btn.selected { border-color: var(--primary); background: #fff5f5; color: var(--primary); }
+
+        .size-btn .dim { font-size: 0.75rem; color: #7f8c8d; margin-top: 4px; font-weight: 400; }
+
+        .output-info {
+            background: #e8f5e9;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .output-info strong { color: var(--success); }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #219a52 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .progress-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .progress-container.active { display: block; }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f0f0f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .result-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .result-container.active { display: block; }
+
+        .result-icon { font-size: 3.5rem; margin-bottom: 10px; }
+        .result-title { font-size: 1.3rem; font-weight: 700; color: var(--success); margin-bottom: 8px; }
+        .result-desc { font-size: 0.95rem; color: #7f8c8d; margin-bottom: 20px; }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .warning-box strong { color: #e65100; }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--dark);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            z-index: 3000;
+            opacity: 0;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖼️ JPG to PDF Converter</h1>
+        <p>True 300 DPI output using jsPDF with explicit scaling</p>
+    </div>
+
+    <div class="container">
+        <div class="warning-box">
+            <strong>⚠️ Reality Check:</strong> "300 DPI" means your image is sized so each inch contains 300 pixels. 
+            A 3000×2400px image at 300 DPI = 10"×8" print size. If your JPG is only 600×400px, 
+            it will be tiny at 300 DPI (2"×1.3"). The tool cannot create pixels that don't exist.
+        </div>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <span class="icon">📤</span>
+            <p>Drop JPG/PNG here or click to browse</p>
+            <div class="sub">Supports JPG, PNG, WEBP, BMP</div>
+        </div>
+        <input type="file" class="file-input" id="fileInput" accept="image/*" onchange="handleFile(this)">
+
+        <div class="preview-card" id="previewCard">
+            <img class="preview-img" id="previewImg" alt="Preview">
+            <div class="file-info">
+                <div class="info-box">
+                    <div class="label">Dimensions</div>
+                    <div class="value" id="imgDimensions">-</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">File Size</div>
+                    <div class="value" id="fileSize">-</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">At 300 DPI</div>
+                    <div class="value" id="dpiSize">-</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">Quality</div>
+                    <div class="value" id="quality verdict">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dpi-section" id="dpiSection" style="display:none;">
+            <h3>🎯 Target DPI</h3>
+            <div class="dpi-option selected" onclick="selectDPI(300, this)">
+                <input type="radio" name="dpi" value="300" checked id="dpi300">
+                <label for="dpi300">300 DPI (Print Quality)</label>
+                <div class="desc">Professional printing standard</div>
+            </div>
+            <div class="dpi-option" onclick="selectDPI(150, this)">
+                <input type="radio" name="dpi" value="150" id="dpi150">
+                <label for="dpi150">150 DPI (Good Quality)</label>
+                <div class="desc">Draft prints, presentations</div>
+            </div>
+            <div class="dpi-option" onclick="selectDPI(72, this)">
+                <input type="radio" name="dpi" value="72" id="dpi72">
+                <label for="dpi72">72 DPI (Screen/Web)</label>
+                <div class="desc">Web, email, screens only</div>
+            </div>
+            <div class="dpi-option" onclick="selectDPI('custom', this)">
+                <input type="radio" name="dpi" value="custom" id="dpicustom">
+                <label for="dpicustom">Custom DPI</label>
+                <div class="custom-dpi">
+                    <input type="number" id="customDpiValue" value="300" min="1" max="2400" onchange="updateCustomDPI(this.value)">
+                    <span>DPI</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-size-section" id="pageSizeSection" style="display:none;">
+            <h3>📄 Page Size</h3>
+            <div class="size-grid">
+                <div class="size-btn selected" onclick="selectSize('fit', this)">
+                    Fit to Image
+                    <div class="dim">Image determines size</div>
+                </div>
+                <div class="size-btn" onclick="selectSize('a4', this)">
+                    A4
+                    <div class="dim">210×297mm</div>
+                </div>
+                <div class="size-btn" onclick="selectSize('letter', this)">
+                    Letter
+                    <div class="dim">8.5×11"</div>
+                </div>
+                <div class="size-btn" onclick="selectSize('a3', this)">
+                    A3
+                    <div class="dim">297×420mm</div>
+                </div>
+                <div class="size-btn" onclick="selectSize('a5', this)">
+                    A5
+                    <div class="dim">148×210mm</div>
+                </div>
+                <div class="size-btn" onclick="selectSize('custom', this)">
+                    Custom
+                    <div class="dim">Set dimensions</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="output-info" id="outputInfo" style="display:none;">
+            <strong>📐 Output:</strong> <span id="outputDesc">-</span>
+        </div>
+
+        <button class="btn btn-primary" id="convertBtn" onclick="convertToPDF()" disabled>
+            ⚙️ Convert to PDF
+        </button>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="spinner"></div>
+            <p style="font-weight:600;">Converting...</p>
+            <p style="font-size:0.9rem;color:#7f8c8d;margin-top:5px;">Embedding image at target DPI</p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-icon">✅</div>
+            <div class="result-title">PDF Created!</div>
+            <div class="result-desc" id="resultDesc">Your image has been converted</div>
+            <button class="btn btn-success" onclick="downloadPDF()">⬇️ Download PDF</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>🔒 All processing happens in your browser. No files uploaded to any server.</p>
+        <p>Uses jsPDF library with explicit DPI scaling calculations.</p>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        let currentFile = null;
+        let currentImage = null;
+        let selectedDPI = 300;
+        let selectedSize = 'fit';
+        let generatedPDF = null;
+
+        // Page sizes in mm (jsPDF uses mm internally)
+        const pageSizes = {
+            'a4': { width: 210, height: 297 },
+            'letter': { width: 215.9, height: 279.4 },
+            'a3': { width: 297, height: 420 },
+            'a5': { width: 148, height: 210 },
+            'fit': null,
+            'custom': { width: 210, height: 297 }
+        };
+
+        // Setup drag and drop
+        const dropZone = document.getElementById('dropZone');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+            dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); }, false);
+        });
+        ['dragenter', 'dragover'].forEach(e => {
+            dropZone.addEventListener(e, () => dropZone.classList.add('dragover'), false);
+        });
+        ['dragleave', 'drop'].forEach(e => {
+            dropZone.addEventListener(e, () => dropZone.classList.remove('dragover'), false);
+        });
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile({ files: files });
+        }, false);
+
+        function handleFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select an image file (JPG, PNG, etc.)');
+                return;
+            }
+
+            currentFile = file;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    displayPreview(file, img);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayPreview(file, img) {
+            // Show preview
+            document.getElementById('previewImg').src = img.src;
+            document.getElementById('previewCard').classList.add('active');
+
+            // Calculate info
+            const width = img.naturalWidth;
+            const height = img.naturalHeight;
+            const pixels = width * height;
+
+            document.getElementById('imgDimensions').textContent = width + ' × ' + height + ' px';
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+
+            // Calculate print size at 300 DPI
+            const widthInches = (width / 300).toFixed(2);
+            const heightInches = (height / 300).toFixed(2);
+            const widthMm = (widthInches * 25.4).toFixed(1);
+            const heightMm = (heightInches * 25.4).toFixed(1);
+            document.getElementById('dpiSize').textContent = widthInches + '" × ' + heightInches + '" (' + widthMm + '×' + heightMm + 'mm)';
+
+            // Quality verdict
+            let verdict = 'Low';
+            let color = '#e74c3c';
+            if (pixels >= 3000000) { verdict = 'Excellent (300+ DPI at A4)'; color = '#27ae60'; }
+            else if (pixels >= 1500000) { verdict = 'Good (150+ DPI at A4)'; color = '#f39c12'; }
+            else if (pixels >= 600000) { verdict = 'Fair (72+ DPI at A4)'; color = '#e67e22'; }
+
+            const qEl = document.getElementById('quality verdict');
+            qEl.textContent = verdict;
+            qEl.style.color = color;
+
+            // Show options
+            document.getElementById('dpiSection').style.display = 'block';
+            document.getElementById('pageSizeSection').style.display = 'block';
+            document.getElementById('outputInfo').style.display = 'block';
+            document.getElementById('convertBtn').disabled = false;
+
+            updateOutputInfo();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function selectDPI(dpi, element) {
+            document.querySelectorAll('.dpi-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            element.querySelector('input').checked = true;
+
+            if (dpi === 'custom') {
+                selectedDPI = parseInt(document.getElementById('customDpiValue').value) || 300;
+            } else {
+                selectedDPI = dpi;
+            }
+            updateOutputInfo();
+        }
+
+        function updateCustomDPI(value) {
+            selectedDPI = parseInt(value) || 300;
+            document.querySelector('input[name="dpi"][value="custom"]').checked = true;
+            document.querySelectorAll('.dpi-option').forEach(el => el.classList.remove('selected'));
+            document.querySelector('.dpi-option:has(input[value="custom"])').classList.add('selected');
+            updateOutputInfo();
+        }
+
+        function selectSize(size, element) {
+            document.querySelectorAll('.size-btn').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedSize = size;
+            updateOutputInfo();
+        }
+
+        function updateOutputInfo() {
+            if (!currentImage) return;
+
+            const width = currentImage.naturalWidth;
+            const height = currentImage.naturalHeight;
+
+            let desc = '';
+
+            if (selectedSize === 'fit') {
+                const wInch = (width / selectedDPI).toFixed(2);
+                const hInch = (height / selectedDPI).toFixed(2);
+                desc = 'Page size: ' + wInch + '" × ' + hInch + '" at ' + selectedDPI + ' DPI';
+            } else {
+                const size = pageSizes[selectedSize];
+                if (size) {
+                    desc = 'Page: ' + selectedSize.toUpperCase() + ' (' + size.width + '×' + size.height + 'mm). Image scaled to fit at ' + selectedDPI + ' DPI equivalent.';
+                }
+            }
+
+            document.getElementById('outputDesc').textContent = desc;
+        }
+
+        function convertToPDF() {
+            if (!currentImage) {
+                showToast('Please select an image first');
+                return;
+            }
+
+            document.getElementById('progressContainer').classList.add('active');
+            document.getElementById('convertBtn').disabled = true;
+
+            // Small delay to let UI update
+            setTimeout(() => {
+                try {
+                    createPDF();
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error: ' + err.message);
+                    document.getElementById('progressContainer').classList.remove('active');
+                    document.getElementById('convertBtn').disabled = false;
+                }
+            }, 100);
+        }
+
+        function createPDF() {
+            const imgWidth = currentImage.naturalWidth;
+            const imgHeight = currentImage.naturalHeight;
+            const aspectRatio = imgHeight / imgWidth;
+
+            // Calculate page dimensions based on selection
+            let pageWidth, pageHeight, imgDisplayWidth, imgDisplayHeight;
+
+            if (selectedSize === 'fit') {
+                // Page size equals image size at target DPI
+                // Convert pixels to mm: mm = pixels * 25.4 / DPI
+                pageWidth = imgWidth * 25.4 / selectedDPI;
+                pageHeight = imgHeight * 25.4 / selectedDPI;
+                imgDisplayWidth = pageWidth;
+                imgDisplayHeight = pageHeight;
+            } else {
+                const size = pageSizes[selectedSize];
+                if (!size) {
+                    showToast('Invalid page size');
+                    return;
+                }
+                pageWidth = size.width;
+                pageHeight = size.height;
+
+                // Scale image to fit page while maintaining aspect ratio
+                const pageAspect = pageHeight / pageWidth;
+                if (aspectRatio > pageAspect) {
+                    imgDisplayHeight = pageHeight;
+                    imgDisplayWidth = pageHeight / aspectRatio;
+                } else {
+                    imgDisplayWidth = pageWidth;
+                    imgDisplayHeight = pageWidth * aspectRatio;
+                }
+            }
+
+            // Create PDF with calculated dimensions
+            // jsPDF unit is mm, format takes [width, height]
+            const pdf = new jsPDF({
+                orientation: pageWidth > pageHeight ? 'l' : 'p',
+                unit: 'mm',
+                format: [pageWidth, pageHeight],
+                compress: true
+            });
+
+            // Add image to PDF
+            // The image is embedded at full resolution, the page size determines the "DPI"
+            const imgData = currentImage.src;
+            const imgType = currentFile.type === 'image/png' ? 'PNG' : 'JPEG';
+
+            // Center the image if page is larger than image
+            const x = (pageWidth - imgDisplayWidth) / 2;
+            const y = (pageHeight - imgDisplayHeight) / 2;
+
+            pdf.addImage(imgData, imgType, x, y, imgDisplayWidth, imgDisplayHeight);
+
+            // Add metadata about DPI
+            pdf.setProperties({
+                title: currentFile.name.replace(/\.[^/.]+$/, ''),
+                creator: 'JPG to PDF Converter (300 DPI)',
+                subject: 'Converted at ' + selectedDPI + ' DPI'
+            });
+
+            generatedPDF = pdf;
+
+            // Show result
+            document.getElementById('progressContainer').classList.remove('active');
+            document.getElementById('resultContainer').classList.add('active');
+
+            const resultDesc = 'Page: ' + pageWidth.toFixed(1) + '×' + pageHeight.toFixed(1) + 'mm | ' +
+                'Image: ' + imgWidth + '×' + imgHeight + 'px at ' + selectedDPI + ' DPI';
+            document.getElementById('resultDesc').textContent = resultDesc;
+
+            showToast('PDF created successfully!');
+        }
+
+        function downloadPDF() {
+            if (!generatedPDF) {
+                showToast('No PDF to download');
+                return;
+            }
+
+            const filename = currentFile.name.replace(/\.[^/.]+$/, '') + '_300dpi.pdf';
+            generatedPDF.save(filename);
+            showToast('Downloading ' + filename);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
