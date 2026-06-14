@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Image Compressor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg: #f4f5f9;
+  --surface: #ffffff;
+  --panel-bg: #f8fafc;
+  --border: #e2e8f0;
+  --border2: #cbd5e1;
+  --accent: #4f46e5;
+  --accent2: #6366f1;
+  --accent-light: #eef2ff;
+  --green: #10b981;
+  --green-light: #ecfdf5;
+  --red: #ef4444;
+  --text: #0f172a;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --sans: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --r: 16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5;}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(circle at 80% 0%, rgba(99,102,241,0.08) 0%, transparent 50%);
+}
+
+/* ── HEADER ── */
+header{
+  position:relative;z-index:2;
+  padding:32px 40px;
+  background: var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;
+}
+.logo{font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:-.02em;}
+.logo span{color:var(--accent);}
+.logo-sub{font-size:.85rem;color:var(--text2);margin-top:4px;}
+.header-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{
+  padding:6px 14px;border-radius:20px;font-size:.72rem;font-weight:600;
+  font-family:var(--mono);letter-spacing:.02em;
+  border:1px solid var(--border);background:var(--panel-bg);color:var(--text2);
+}
+
+/* ── MAIN LAYOUT (BIGGER & MORE SPACIOUS) ── */
+#app{
+  position:relative;z-index:1;
+  max-width:1280px;margin:0 auto;
+  padding:40px 24px 80px;
+  display:grid;
+  grid-template-columns:1.2fr 1fr;
+  gap:32px;
+}
+@media(max-width:960px){#app{grid-template-columns:1fr;}}
+
+/* ── DROP ZONE ── */
+#drop-zone{
+  grid-column:1/-1;
+  border:2.5px dashed var(--border2);
+  border-radius:24px;
+  padding:64px 32px;
+  text-align:center;
+  cursor:pointer;
+  transition: all .2s ease;
+  background:var(--surface);
+  position:relative;
+  overflow:hidden;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+#drop-zone:hover{
+  border-color:var(--accent);
+  background: var(--accent-light);
+}
+#drop-zone.dragover{
+  border-color:var(--accent);
+  background:var(--accent-light);
+}
+#drop-zone.has-image{
+  padding:0;border-style:solid;border-color:var(--border);
+  cursor:default;
+}
+#drop-zone.has-image:hover{background: transparent;}
+.dz-icon{font-size:4rem;margin-bottom:16px;}
+.dz-title{font-size:1.25rem;font-weight:700;margin-bottom:8px;color:var(--text);}
+.dz-sub{font-size:.9rem;color:var(--text2);margin-bottom:16px;}
+.dz-btn{
+  display:inline-block;
+  padding:12px 28px;border-radius:10px;
+  background:var(--accent);color:#fff;
+  font-family:var(--sans);font-size:.9rem;font-weight:600;
+  cursor:pointer;transition:all .18s;border:none;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+.dz-btn:hover{background:var(--accent2);transform: translateY(-1px);}
+#file-input{display:none;}
+
+/* Preview setup */
+#preview-wrap{display:none;position:relative;width:100%;background: #f1f5f9;}
+#preview-img{
+  width:100%;max-height:450px;
+  object-fit:contain;display:block;
+  margin: 0 auto;
+}
+#preview-overlay{position:absolute;top:16px;right:16px;display:flex;gap:10px;}
+.prev-action{
+  padding:8px 16px;border-radius:8px;border:none;
+  font-family:var(--sans);font-size:.8rem;font-weight:600;
+  cursor:pointer;transition:all .15s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.prev-change{background:rgba(255,255,255,0.95);color:var(--text);}
+.prev-change:hover{background:#fff;}
+.prev-clear{background:var(--red);color:#fff;}
+.prev-clear:hover{opacity:0.9;}
+
+/* ── CARDS & PANELS ── */
+.panel{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:32px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+.panel-title{
+  font-size:.78rem;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--text2);
+  font-family:var(--mono);margin-bottom:24px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom:10px;
+}
+
+/* ── IMAGE INFO GRID ── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.info-item{background:var(--panel-bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.info-label{font-size:.68rem;color:var(--text2);font-family:var(--mono);letter-spacing:.06em;margin-bottom:4px;}
+.info-value{font-size:1rem;font-weight:600;color:var(--text);font-family:var(--mono);}
+
+/* ── FORM CONTROLS ── */
+.ctrl-section{margin-bottom:24px;}
+.ctrl-label{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.ctrl-label span{font-family:var(--mono);color:var(--accent);font-weight:700;}
+
+.tab-row{display:flex;gap:6px;background:var(--panel-bg);border-radius:10px;padding:4px;margin-bottom:16px;border:1px solid var(--border);}
+.tab{
+  flex:1;padding:10px;border-radius:8px;border:none;
+  background:transparent;color:var(--text2);
+  font-family:var(--sans);font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:all .15s;text-align:center;
+}
+.tab.active{background:var(--surface);color:var(--accent);box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+
+/* Range Sliders */
+.range-wrap{position:relative;}
+.range{width:100%;accent-color:var(--accent);cursor:pointer;height:6px;background: var(--border);border-radius: 3px;}
+.range-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text2);font-family:var(--mono);margin-top:6px;}
+
+/* Custom Inputs */
+.px-row{display:flex;gap:10px;align-items:center;}
+.px-inp{
+  flex:1;background:var(--surface);border:1px solid var(--border2);
+  border-radius:8px;padding:10px 14px;color:var(--text);
+  font-family:var(--mono);font-size:.9rem;outline:none;
+  transition:all .15s;text-align:center;
+}
+.px-inp:focus{border-color:var(--accent);box-shadow: 0 0 0 3px var(--accent-light);}
+.px-sep{color:var(--text2);font-size:1rem;font-weight:600;}
+.lock-btn{
+  width:42px;height:42px;border-radius:8px;border:1px solid var(--border2);
+  background:var(--surface);color:var(--text2);cursor:pointer;
+  font-size:1rem;display:flex;align-items:center;justify-content:center;transition: all 0.2s;
+}
+.lock-btn.locked{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+
+.size-row{display:flex;gap:10px;align-items:center;}
+.size-inp{
+  flex:1;background:var(--surface);border:1px solid var(--border2);
+  border-radius:8px;padding:10px 14px;color:var(--text);
+  font-family:var(--mono);font-size:.9rem;outline:none;transition:all .15s;
+}
+.size-inp:focus{border-color:var(--accent);box-shadow: 0 0 0 3px var(--accent-light);}
+.size-unit{
+  background:var(--panel-bg);border:1px solid var(--border2);
+  border-radius:8px;padding:10px 14px;color:var(--text);
+  font-family:var(--mono);font-size:.9rem;outline:none;cursor:pointer;
+}
+
+.fmt-row{display:flex;gap:8px;}
+.fmt-btn{
+  flex:1;padding:12px;border-radius:8px;
+  border:1px solid var(--border2);background:var(--surface);
+  color:var(--text2);font-family:var(--mono);font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.fmt-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent);}
+
+/* ACTION BUTTONS */
+#compress-btn{
+  width:100%;padding:16px;border-radius:12px;border:none;
+  background:var(--accent);color:#fff;
+  font-family:var(--sans);font-size:1.05rem;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 14px rgba(79, 70, 229, 0.3);
+  letter-spacing:.01em;margin-top:8px;
+}
+#compress-btn:hover{background: var(--accent2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(79, 70, 229, 0.4);}
+#compress-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow: none;}
+
+/* ── OUTPUT PANEL ── */
+#output-panel{display:none;animation:fadeUp .4s cubic-bezier(0.16, 1, 0.3, 1);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+#output-preview{
+  width:100%;max-height:320px;object-fit:contain;
+  display:block;border-radius:12px;background:#e2e8f0;margin-bottom:20px;
+}
+.compare-bar{background:var(--panel-bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;}
+.compare-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.compare-label{font-size:.72rem;color:var(--text2);font-family:var(--mono);letter-spacing: .02em;}
+.compare-val{font-size:1.1rem;font-weight:700;font-family:var(--mono);}
+.compare-val.green{color:var(--green);}
+.compare-val.red{color:var(--red);}
+.saving-bar-wrap{height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+.saving-bar{height:100%;background:var(--green);border-radius:4px;width:0%;transition:width .6s cubic-bezier(0.16, 1, 0.3, 1);}
+
+#download-btn{
+  width:100%;padding:14px;border-radius:10px;border:none;
+  background:var(--green);color:#fff;
+  font-family:var(--sans);font-size:1rem;font-weight:700;
+  cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+#download-btn:hover{background:#059669;transform:translateY(-1px);}
+.retry-btn{
+  width:100%;padding:12px;border-radius:10px;
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);font-family:var(--sans);font-size:.9rem;font-weight: 500;
+  cursor:pointer;transition:all .15s;margin-top:10px;
+}
+.retry-btn:hover{background:var(--panel-bg);color:var(--text);}
+
+/* ── PROGRESS MODAL ── */
+#progress-overlay{
+  display:none;position:fixed;inset:0;z-index:50;
+  background:rgba(15, 23, 42, 0.3);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;
+}
+#progress-overlay.show{display:flex;}
+.progress-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:40px;text-align:center;
+  min-width:320px;box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+.prog-icon{font-size:2.5rem;margin-bottom:16px;animation: spin 2s linear infinite;}
+@keyframes spin { 100% { transform:rotate(360deg); } }
+.prog-text{font-size:1rem;font-weight:600;margin-bottom:16px;}
+.prog-bar-wrap{height:6px;background:var(--border);border-radius:4px;overflow:hidden;}
+.prog-bar{height:100%;background:var(--accent);width:0%;border-radius:4px;transition:width .2s;}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Image <span>Compressor</span></div>
+    <div class="logo-sub">Compress · Resize · Convert — All securely in your browser</div>
+  </div>
+  <div class="header-badges">
+    <div class="badge">JPG</div>
+    <div class="badge">PNG</div>
+    <div class="badge">WEBP</div>
+    <div class="badge">🔒 100% Local Processing</div>
+  </div>
+</header>
+
+<div id="app">
+
+  <div id="drop-zone"
+    ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)"
+    onclick="handleDropzoneClick(event)">
+    <div id="dz-empty">
+      <div class="dz-icon">🖼️</div>
+      <div class="dz-title">Drag & drop your image here</div>
+      <div class="dz-sub">Supports JPG, PNG, WEBP, GIF up to 50MB</div>
+      <button class="dz-btn" type="button">Browse Files</button>
+    </div>
+    <div id="preview-wrap">
+      <img id="preview-img" alt="Preview">
+      <div id="preview-overlay">
+        <button class="prev-action prev-change" type="button" onclick="triggerFileInput(event)">Change</button>
+        <button class="prev-action prev-clear" type="button" onclick="clearImage(event)">✕ Clear</button>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="file-input" accept="image/*" onchange="loadFile(this)">
+
+  <div>
+    <div class="panel" style="margin-bottom:24px;" id="info-panel">
+      <div class="panel-title">📋 Original File Information</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">FILENAME</div><div class="info-value" id="inf-name">—</div></div>
+        <div class="info-item"><div class="info-label">FILE SIZE</div><div class="info-value" id="inf-size">—</div></div>
+        <div class="info-item"><div class="info-label">DIMENSIONS</div><div class="info-value" id="inf-dims">—</div></div>
+        <div class="info-item"><div class="info-label">FORMAT</div><div class="info-value" id="inf-fmt">—</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">⚙️ Tuning Parameters</div>
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Resize Constraints <span id="resize-mode-label">Off</span></div>
+        <div class="tab-row">
+          <button type="button" class="tab active" id="tab-none" onclick="setResizeMode('none')">Original Size</button>
+          <button type="button" class="tab" id="tab-pct" onclick="setResizeMode('pct')">Scale %</button>
+          <button type="button" class="tab" id="tab-px" onclick="setResizeMode('px')">Dimensions</button>
+          <button type="button" class="tab" id="tab-size" onclick="setResizeMode('size')">Target Cap</button>
+        </div>
+
+        <div id="resize-pct" style="display:none">
+          <div class="ctrl-label">Dimensions Scale <span id="pct-val">50%</span></div>
+          <input type="range" class="range" id="pct-slider" min="1" max="200" value="50" oninput="updatePct(this.value)">
+          <div class="range-labels"><span>1%</span><span>100%</span><span>200%</span></div>
+        </div>
+
+        <div id="resize-px" style="display:none">
+          <div class="px-row">
+            <input class="px-inp" id="px-w" type="number" placeholder="Width (px)" oninput="pxChanged('w')">
+            <div class="px-sep">×</div>
+            <input class="px-inp" id="px-h" type="number" placeholder="Height (px)" oninput="pxChanged('h')">
+            <button type="button" class="lock-btn locked" id="lock-btn" onclick="toggleLock()" title="Maintain proportions">🔒</button>
+          </div>
+          <div style="font-size:.75rem; color:var(--text3); margin-top:8px; font-family:var(--mono)" id="px-hint">Proportions are locked.</div>
+        </div>
+
+        <div id="resize-size" style="display:none">
+          <div class="size-row">
+            <input class="size-inp" id="target-size" type="number" placeholder="Enter target threshold" min="1">
+            <select class="size-unit" id="size-unit">
+              <option value="kb">KB</option>
+              <option value="mb">MB</option>
+            </select>
+          </div>
+          <div style="font-size:.75rem; color:var(--text3); margin-top:8px;">The layout algorithm dynamically tunes quality steps to fit your target size constraint.</div>
+        </div>
+      </div>
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Output Extension</div>
+        <div class="fmt-row">
+          <button type="button" class="fmt-btn active" id="fmt-jpg" onclick="setFmt('jpg')">JPG</button>
+          <button type="button" class="fmt-btn" id="fmt-png" onclick="setFmt('png')">PNG</button>
+          <button type="button" class="fmt-btn" id="fmt-webp" onclick="setFmt('webp')">WEBP</button>
+        </div>
+      </div>
+
+      <div class="ctrl-section" id="quality-row">
+        <div class="ctrl-label">Target Quality Factor <span id="quality-val">85%</span></div>
+        <input type="range" class="range" id="quality-slider" min="1" max="100" value="85" oninput="updateQuality(this.value)">
+        <div class="range-labels"><span>High Compress (1%)</span><span>Balanced</span><span>Max Fidelity (100%)</span></div>
+      </div>
+
+      <button id="compress-btn" type="button" onclick="compress()" disabled>Execute Compression</button>
+    </div>
+  </div>
+
+  <div id="output-panel" class="panel">
+    <div class="panel-title">✨ Optimized Results</div>
+    <img id="output-preview" alt="Output Optimization Matrix Target">
+
+    <div class="compare-bar">
+      <div class="compare-row">
+        <div>
+          <div class="compare-label">ORIGINAL SIZE</div>
+          <div class="compare-val" id="orig-size-label">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="compare-label">OPTIMIZED SIZE</div>
+          <div class="compare-val green" id="new-size-label">—</div>
+        </div>
+      </div>
+      <div class="saving-bar-wrap">
+        <div class="saving-bar" id="saving-bar"></div>
+      </div>
+      <div style="text-align:center;margin-top:12px;font-family:var(--mono);font-size:.8rem;color:var(--green);font-weight:700" id="saving-label">—</div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div style="font-size:.72rem;color:var(--text2);font-family:var(--mono);margin-bottom:6px">OUTPUT GEOMETRY</div>
+      <div style="font-family:var(--mono);font-size:.95rem; font-weight: 600;" id="out-dims">—</div>
+    </div>
+
+    <button id="download-btn" type="button" onclick="downloadResult()">⬇ Save Optimized Image</button>
+    <button type="button" class="retry-btn" onclick="compress()">↺ Recompile Settings</button>
+  </div>
+
+</div>
+
+<div id="progress-overlay">
+  <div class="progress-box">
+    <div class="prog-icon">⚙️</div>
+    <div class="prog-text" id="prog-text">Processing image data locally...</div>
+    <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+var srcFile=null, srcImg=null, srcUrl=null;
+var outputBlob=null, outputUrl=null;
+var hasImage=false;
+var resizeMode='none';
+var fmt='jpg';
+var quality=85;
+var aspectLocked=true;
+var origW=0,origH=0;
+
+function handleDropzoneClick(e) {
+  if (hasImage) return;
+  document.getElementById('file-input').click();
+}
+window.handleDropzoneClick = handleDropzoneClick;
+
+function triggerFileInput(e) {
+  e.stopPropagation();
+  document.getElementById('file-input').click();
+}
+window.triggerFileInput = triggerFileInput;
+
+function loadFile(input){
+  var file=input.files[0];
+  if(!file) return;
+  if(file.size>52428800){alert('File constraints warning: Max threshold limit is 50MB');return;}
+  srcFile=file;
+  
+  if(srcUrl) URL.revokeObjectURL(srcUrl);
+  srcUrl=URL.createObjectURL(file);
+  
+  var img=new Image();
+  img.onload=function(){
+    srcImg=img;
+    origW=img.width; origH=img.height;
+    showPreview();
+    fillInfo();
+    document.getElementById('compress-btn').disabled=false;
+    document.getElementById('px-w').value=origW;
+    document.getElementById('px-h').value=origH;
+    document.getElementById('px-hint').textContent='Original resolution metrics: ' + origW+' x '+origH+' px';
+  };
+  img.src=srcUrl;
+  input.value='';
+}
+window.loadFile = loadFile;
+
+function showPreview(){
+  hasImage=true;
+  document.getElementById('dz-empty').style.display='none';
+  var pw=document.getElementById('preview-wrap');
+  pw.style.display='block';
+  document.getElementById('preview-img').src=srcUrl;
+  document.getElementById('drop-zone').classList.add('has-image');
+}
+
+function clearImage(e){
+  if(e) e.stopPropagation();
+  hasImage=false;
+  srcFile=null; srcImg=null;
+  if(srcUrl) URL.revokeObjectURL(srcUrl);
+  srcUrl=null;
+  document.getElementById('dz-empty').style.display='block';
+  document.getElementById('preview-wrap').style.display='none';
+  document.getElementById('drop-zone').classList.remove('has-image');
+  document.getElementById('compress-btn').disabled=true;
+  document.getElementById('output-panel').style.display='none';
+  resetInfo();
+}
+window.clearImage=clearImage;
+
+function fillInfo(){
+  var name=srcFile.name;
+  if(name.length>22) name=name.slice(0,18)+'...';
+  document.getElementById('inf-name').textContent=name;
+  document.getElementById('inf-size').textContent=fmtBytes(srcFile.size);
+  document.getElementById('inf-dims').textContent=origW+' x '+origH;
+  document.getElementById('inf-fmt').textContent=srcFile.type.split('/')[1].toUpperCase();
+}
+
+function resetInfo(){
+  ['inf-name','inf-size','inf-dims','inf-fmt'].forEach(function(id){
+    document.getElementById(id).textContent='—';
+  });
+}
+
+function dzOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('dragover');}
+function dzLeave(){document.getElementById('drop-zone').classList.remove('dragover');}
+function dzDrop(e){
+  e.preventDefault();
+  dzLeave();
+  var file=e.dataTransfer.files[0];
+  if(!file||!file.type.startsWith('image/')) return;
+  var fakeInput={files:[file]};
+  loadFile(fakeInput);
+}
+window.dzOver=dzOver; window.dzLeave=dzLeave; window.dzDrop=dzDrop;
+
+function setResizeMode(mode){
+  resizeMode=mode;
+  ['none','pct','px','size'].forEach(function(m){
+    document.getElementById('tab-'+m).classList.toggle('active',m===mode);
+    var el=document.getElementById('resize-'+m);
+    if(el) el.style.display=m===mode&&mode!=='none'?'block':'none';
+  });
+  var labels={none:'Off',pct:'Scaling mode active',px:'Pixel dimensions scaling tracking',size:'Target size dynamic cap'};
+  document.getElementById('resize-mode-label').textContent=labels[mode]||'';
+  document.getElementById('quality-row').style.display=mode==='size'?'none':'block';
+  if(fmt==='png') document.getElementById('quality-row').style.display='none';
+}
+window.setResizeMode=setResizeMode;
+
+function updatePct(v){document.getElementById('pct-val').textContent=v+'%';}
+window.updatePct=updatePct;
+
+// Quality configuration logic
+function updateQuality(v){
+  quality=parseInt(v);
+  document.getElementById('quality-val').textContent=v+'%';
+}
+window.updateQuality=updateQuality;
+
+function toggleLock(){
+  aspectLocked=!aspectLocked;
+  var btn=document.getElementById('lock-btn');
+  btn.classList.toggle('locked',aspectLocked);
+  btn.textContent=aspectLocked?'🔒':'🔓';
+}
+window.toggleLock=toggleLock;
+
+function pxChanged(which){
+  if(!aspectLocked||!origW||!origH) return;
+  var ratio=origW/origH;
+  if(which==='w'){
+    var w=parseInt(document.getElementById('px-w').value)||0;
+    if(w>0) document.getElementById('px-h').value=Math.round(w/ratio);
+  } else {
+    var h=parseInt(document.getElementById('px-h').value)||0;
+    if(h>0) document.getElementById('px-w').value=Math.round(h*ratio);
+  }
+}
+window.pxChanged=pxChanged;
+
+function setFmt(f){
+  fmt=f;
+  ['jpg','png','webp'].forEach(function(x){
+    document.getElementById('fmt-'+x).classList.toggle('active',x===f);
+  });
+  document.getElementById('quality-row').style.display=(f==='png'||resizeMode==='size')?'none':'block';
+}
+window.setFmt=setFmt;
+
+function compress(){
+  if(!srcImg) return;
+  if(resizeMode==='size'){
+    compressToTargetSize();
+  } else {
+    doCompress();
+  }
+}
+window.compress=compress;
+
+function doCompress(){
+  showProgress('Executing canvas pixel raster transformation setup...', 20);
+  setTimeout(function(){
+    try{
+      var outW=origW, outH=origH;
+      if(resizeMode==='pct'){
+        var pct=parseInt(document.getElementById('pct-slider').value)/100;
+        outW=Math.max(1,Math.round(origW*pct));
+        outH=Math.max(1,Math.round(origH*pct));
+      } else if(resizeMode==='px'){
+        outW=parseInt(document.getElementById('px-w').value)||origW;
+        outH=parseInt(document.getElementById('px-h').value)||origH;
+      }
+
+      setProgress(50);
+      var cv=document.createElement('canvas');
+      cv.width=outW; cv.height=outH;
+      var ctx=cv.getContext('2d');
+      ctx.imageSmoothingEnabled=true;
+      ctx.imageSmoothingQuality='high';
+      ctx.drawImage(srcImg,0,0,outW,outH);
+
+      setProgress(80);
+      var mime=fmt==='jpg'?'image/jpeg':fmt==='png'?'image/png':'image/webp';
+      var q=fmt==='png'?undefined:quality/100;
+
+      cv.toBlob(function(blob){
+        setProgress(100);
+        setTimeout(function(){
+          hideProgress();
+          if(!blob){alert('Transformation matrix compression failure');return;}
+          outputBlob=blob;
+          if(outputUrl) URL.revokeObjectURL(outputUrl);
+          outputUrl=URL.createObjectURL(blob);
+          showResult(outW,outH);
+        },200);
+      }, mime, q);
+    } catch(e){
+      hideProgress();
+      alert('Error context exception: '+e.message);
+    }
+  },50);
+}
+
+function compressToTargetSize(){
+  if(!srcImg) return;
+  var targetRaw=parseFloat(document.getElementById('target-size').value);
+  if(!targetRaw||targetRaw<=0){alert('Validation constraint error: Enter a target configuration value');return;}
+  var unit=document.getElementById('size-unit').value;
+  var targetBytes=unit==='mb'?targetRaw*1048576:targetRaw*1024;
+
+  if(targetBytes>=srcFile.size){
+    alert('Target parameters collision: Specified size exceeds the input file bounds ('+fmtBytes(srcFile.size)+'). Close down target.');
+    return;
+  }
+
+  showProgress('Initiating search array algorithm for parameter matrix calibration...', 10);
+  var cv=document.createElement('canvas');
+  cv.width=origW; cv.height=origH;
+  var ctx=cv.getContext('2d');
+  ctx.drawImage(srcImg,0,0,origW,origH);
+
+  var mime=fmt==='jpg'?'image/jpeg':fmt==='png'?'image/png':'image/webp';
+  if(fmt==='png'){
+    cv.toBlob(function(blob){
+      hideProgress();
+      if(blob.size>targetBytes){
+        alert('PNG codec transparency notice: Lossless formatting cannot compress safely below threshold limit '+fmtBytes(targetBytes)+'. Recompiling using JPG/WEBP matrices suggested.');
+        return;
+      }
+      outputBlob=blob;
+      outputUrl=URL.createObjectURL(blob);
+      showResult(origW,origH);
+    },'image/png');
+    return;
+  }
+
+  var lo=1,hi=100,best=null,iter=0;
+  function step(){
+    if(iter>12||lo>hi){
+      hideProgress();
+      if(!best){alert('The binary optimizer algorithm could not isolate compression steps beneath target parameter. Scale target up.');return;}
+      outputBlob=best;
+      outputUrl=URL.createObjectURL(best);
+      showResult(origW,origH);
+      return;
+    }
+    var mid=Math.round((lo+hi)/2);
+    setProgress(10+iter*7,'Optimizing factor iteration matrix at '+mid+'%...');
+    cv.toBlob(function(blob){
+      iter++;
+      if(blob.size<=targetBytes){
+        best=blob; lo=mid+1;
+      } else {
+        hi=mid-1;
+      }
+      step();
+    }, mime, mid/100);
+  }
+  step();
+}
+
+function showResult(outW,outH){
+  var panel=document.getElementById('output-panel');
+  panel.style.display='block';
+  document.getElementById('output-preview').src=outputUrl;
+  document.getElementById('out-dims').textContent=outW+' x '+outH+' px';
+
+  var origSize=srcFile.size;
+  var newSize=outputBlob.size;
+  var saving=Math.round((1-newSize/origSize)*100);
+
+  document.getElementById('orig-size-label').textContent=fmtBytes(origSize);
+  document.getElementById('new-size-label').textContent=fmtBytes(newSize);
+  document.getElementById('new-size-label').className='compare-val '+(newSize<origSize?'green':'red');
+
+  if(saving>0){
+    document.getElementById('saving-label').textContent='Compression successfully optimized down by '+saving+'% ('+fmtBytes(origSize-newSize)+' delta saved)';
+    document.getElementById('saving-bar').style.width=Math.min(saving,100)+'%';
+  } else {
+    document.getElementById('saving-label').textContent='Matrix scale expansion detected (+'+fmtBytes(newSize-origSize)+'). Lower parameters factor recommended.';
+    document.getElementById('saving-label').style.color='var(--red)';
+    document.getElementById('saving-bar').style.width='0%';
+  }
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function downloadResult(){
+  if(!outputBlob) return;
+  var ext=fmt==='jpg'?'.jpg':fmt==='png'?'.png':'.webp';
+  var base=(srcFile?srcFile.name.replace(/\.[^.]+$/,''):'image')+'_optimized';
+  var a=document.createElement('a');
+  a.href=outputUrl;
+  a.download=base+ext;
+  a.click();
+}
+window.downloadResult=downloadResult;
+
+function showProgress(msg,pct){
+  document.getElementById('prog-text').textContent=msg;
+  document.getElementById('prog-bar').style.width=pct+'%';
+  document.getElementById('progress-overlay').classList.add('show');
+}
+function setProgress(pct,msg){
+  document.getElementById('prog-bar').style.width=pct+'%';
+  if(msg) document.getElementById('prog-text').textContent=msg;
+}
+function hideProgress(){document.getElementById('progress-overlay').classList.remove('show');}
+
+function fmtBytes(b){
+  if(b>=1048576) return (b/1048576).toFixed(2)+' MB';
+  if(b>=1024) return (b/1024).toFixed(1)+' KB';
+  return b+' B';
+}
+
+})();
+</script>
+</body>
+</html>

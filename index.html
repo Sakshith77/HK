@@ -431,27 +431,7 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
   <h2 class="sec-heading">Free Tools</h2>
   <p class="sec-sub">Handy utilities — always expanding</p>
   <div class="tools-grid">
-    <div class="tool-card">
-      <div class="tool-head"><div class="tool-icon">📝</div><div class="tool-title">Word Counter</div></div>
-      <div class="tool-sub">Words, characters, lines</div>
-      <textarea class="inp" id="wc-text" rows="4" placeholder="Paste text here..." style="width:100%;resize:vertical;margin-bottom:9px" oninput="countWords()"></textarea>
-      <div class="tool-output" id="wc-out">—</div>
-    </div>
-    <div class="tool-card">
-      <div class="tool-head"><div class="tool-icon">🎨</div><div class="tool-title">Color Picker</div></div>
-      <div class="tool-sub">HEX · RGB · HSL values</div>
-      <input type="color" id="cp-color" value="#E8821A" style="width:100%;height:46px;border:none;border-radius:8px;cursor:pointer;margin-bottom:9px" oninput="updateColor()">
-      <div class="tool-output" id="cp-out">Pick a color above</div>
-    </div>
-    <div class="tool-card">
-      <div class="tool-head"><div class="tool-icon">⏱️</div><div class="tool-title">Meditation Timer</div></div>
-      <div class="tool-sub">Japa or meditation countdown</div>
-      <div class="tools-row">
-        <input class="inp" id="timer-min" type="number" min="1" max="120" value="16" style="max-width:80px">
-        <button class="btn btn-primary" onclick="startTimer()" id="timer-btn">Start</button>
-        <button class="btn btn-outline" onclick="resetTimer()">Reset</button>
-      </div>
-      <div class="tool-output" id="timer-out" style="font-size:1.55rem;text-align:center;font-family:'Cinzel',serif">—</div>
+   
     </div>
     <div class="tool-card">
       <div class="tool-head"><div class="tool-icon">🕉️</div><div class="tool-title">Gita Verse</div></div>
@@ -459,17 +439,8 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
       <button class="btn btn-primary" onclick="randomVerse()" style="margin-bottom:9px">Get verse 🙏</button>
       <div class="tool-output" id="verse-out" style="font-size:.82rem;line-height:1.7">Click to receive wisdom</div>
     </div>
-    <div class="tool-card">
-      <div class="tool-head"><div class="tool-icon">📿</div><div class="tool-title">Japa Counter</div></div>
-      <div class="tool-sub">Count beads — 108 per mala</div>
-      <div style="text-align:center;margin-bottom:11px">
-        <div style="font-size:2.8rem;font-family:'Cinzel',serif;color:var(--saffron)" id="japa-count">0</div>
-        <div style="font-size:.74rem;color:var(--text-muted)" id="japa-malas">0 malas</div>
-      </div>
-      <div class="tools-row">
-        <button class="btn btn-primary" onclick="japaClick()" style="flex:1">+1 Hare Krishna</button>
-        <button class="btn btn-outline" onclick="resetJapa()">Reset</button>
-      </div>
+    
+    
       <!----slide_tool-->
     </div>
     <div class="tool-card">
@@ -495,6 +466,22 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
   <div class="other-icon">🤖</div>
   <div class="other-title">video/audio-editor Tool</div>
   <div class="other-desc">Editor.</div>
+</div>
+</div>
+
+<div class="tool-card">
+ <div class="other-card" onclick="window.location.href='pdf_reader.html'" style="cursor:pointer">
+  <div class="other-icon">📜</div>
+  <div class="other-title">PDF Reader Tool</div>
+  <div class="other-desc">PDF.</div>
+</div>
+</div>
+
+<div class="tool-card">
+ <div class="other-card" onclick="window.location.href='image_compresser.html'" style="cursor:pointer">
+  <div class="other-icon">🗜️</div>
+  <div class="other-title">Image Compressor Tool</div>
+  <div class="other-desc">COMPRESSOR.</div>
 </div>
 </div>
 
@@ -539,16 +526,7 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
 </div>
 </div>
 
-    <div class="tool-card">
-      <div class="tool-head"><div class="tool-icon">🔗</div><div class="tool-title">URL Encoder</div></div>
-      <div class="tool-sub">Encode / decode URLs instantly</div>
-      <input class="inp" id="url-in" placeholder="Paste URL or text..." style="width:100%;margin-bottom:7px">
-      <div class="tools-row">
-        <button class="btn btn-outline" onclick="encodeUrl()">Encode</button>
-        <button class="btn btn-outline" onclick="decodeUrl()">Decode</button>
-      </div>
-      <div class="tool-output" id="url-out" style="margin-top:7px">—</div>
-    </div>
+   
   </div>
 </section>
 

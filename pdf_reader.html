@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>PDF Viewer & Merger</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+:root{
+  --bg: #f4f5f9;
+  --surface: #ffffff;
+  --panel-bg: #f8fafc;
+  --border: #e2e8f0;
+  --border2: #cbd5e1;
+  --accent: #ff6b35;
+  --accent2: #ff8552;
+  --accent-light: #fff2ec;
+  --blue: #3b82f6;
+  --green: #10b981;
+  --red: #ef4444;
+  --text: #0f172a;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --sans: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --r: 14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100dvh;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;line-height:1.5;}
+@media(max-width:850px){html,body{overflow:auto;height:auto;}}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(circle at 80% 10%, rgba(255,107,53,0.06) 0%, transparent 50%);
+}
+
+/* ── TOOLBAR (LARGER & MODERN) ── */
+#toolbar{
+  position:relative;z-index:10;
+  height:68px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;padding:0 24px;
+  flex-shrink:0;overflow-x:auto;scrollbar-width:none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+#toolbar::-webkit-scrollbar{display:none;}
+.tb-logo{font-size:1.3rem;font-weight:700;color:var(--text);margin-right:16px;white-space:nowrap;letter-spacing:-.02em;}
+.tb-logo span{color:var(--accent);}
+.tb-sep{width:1px;height:32px;background:var(--border);margin:0 4px;flex-shrink:0;}
+.tb-btn{
+  display:flex;align-items:center;gap:6px;padding:10px 18px;border-radius:8px;
+  border:1px solid var(--border2);background:var(--surface);color:var(--text2);
+  font-family:var(--sans);font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.tb-btn:hover{background:var(--panel-bg);color:var(--text);border-color:var(--text3);}
+.tb-btn.primary{
+  background:var(--accent);color:#fff;border:none;
+  box-shadow:0 4px 12px rgba(255,107,53,0.25);
+}
+.tb-btn.primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.tb-btn.success{
+  background:var(--green);color:#fff;border:none;
+  box-shadow: 0 4px 12px rgba(16,185,129,0.2);
+}
+.tb-btn.success:hover{background:#059669;transform:translateY(-1px);}
+.tb-btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+
+/* ── MAIN LAYOUT HUB ── */
+#layout{
+  display:flex;height:calc(100dvh - 68px);
+  position:relative;z-index:1;
+}
+@media(max-width:850px){
+  #layout{flex-direction:column;height:auto;}
+  #sidebar{width:100%!important;height:auto;border-right:none;border-bottom:1px solid var(--border);}
+}
+
+/* ── SIDEBAR EXPANSION ── */
+#sidebar{
+  width:320px;flex-shrink:0;
+  background:var(--panel-bg);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-head{
+  padding:20px 24px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sb-title{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);font-family:var(--mono);}
+.sb-count{font-family:var(--mono);font-size:.75rem;color:var(--accent);font-weight:700;}
+
+/* Workspace Interactive Drop Zone */
+#sb-drop{
+  border:2px dashed var(--border2);border-radius:12px;margin:20px;padding:32px 16px;
+  text-align:center;cursor:pointer;transition:all .2s ease;flex-shrink:0;
+  background:var(--surface);box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+#sb-drop:hover,#sb-drop.dragover{
+  border-color:var(--accent);background:var(--accent-light);
+}
+#sb-drop-icon{font-size:2.2rem;margin-bottom:8px;}
+#sb-drop-text{font-size:.82rem;color:var(--text2);font-weight:500;}
+
+/* Modernized List Matrix */
+#pdf-list{
+  flex:1;overflow-y:auto;padding:0 20px 20px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.pdf-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin-bottom:10px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:all .18s;position:relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+}
+.pdf-item:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 4px 6px rgba(0,0,0,0.03);}
+.pdf-item.active{border-color:var(--accent);background:var(--accent-light);box-shadow:none;}
+.pdf-item.dragging{opacity:.4;}
+.pdf-drag{color:var(--text3);cursor:grab;font-size:1.1rem;flex-shrink:0;padding:4px;}
+.pdf-icon{font-size:1.5rem;flex-shrink:0;}
+.pdf-info{flex:1;min-width:0;}
+.pdf-name{font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pdf-meta{font-size:.72rem;color:var(--text2);font-family:var(--mono);margin-top:2px;}
+.pdf-del{
+  background:none;border:none;color:var(--text3);cursor:pointer;
+  font-size:.9rem;padding:4px 6px;border-radius:6px;transition:all .15s;
+}
+.pdf-item:hover .pdf-del{color:var(--text2);}
+.pdf-del:hover{background:rgba(239,68,68,0.1)!important;color:var(--red)!important;}
+.pdf-order{
+  width:22px;height:22px;border-radius:6px;
+  background:var(--panel-bg);color:var(--text2);
+  font-family:var(--mono);font-size:.68rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  border:1px solid var(--border);
+}
+
+.sb-footer{padding:20px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);}
+.merge-btn{
+  width:100%;padding:14px;border-radius:10px;border:none;
+  background:var(--accent);
+  color:#fff;font-family:var(--sans);font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 14px rgba(255,107,53,0.25);
+}
+.merge-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,53,0.35);}
+.merge-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* ── INTERACTIVE CANVAS VIEWER ── */
+#viewer{
+  flex:1;overflow-y:auto;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;
+  padding:40px 24px 80px;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+
+/* Empty State Canvas */
+#viewer-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--text2);text-align:center;gap:14px;
+}
+.ve-icon{font-size:4rem;opacity:.4;}
+.ve-text{font-size:1.1rem;font-weight:600;color:var(--text);}
+.ve-sub{font-size:.88rem;color:var(--text3);}
+
+/* Render Wrap Elements */
+.page-wrap{
+  margin-bottom:32px;position:relative;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.05);
+  border-radius:8px;overflow:hidden;border:1px solid var(--border);
+  background:white;
+}
+.page-wrap canvas{display:block;max-width:100%;}
+.page-num{
+  position:absolute;bottom:12px;right:12px;
+  background:rgba(15, 23, 42, 0.75);color:#fff;
+  backdrop-filter:blur(4px);
+  font-family:var(--mono);font-size:.68rem;
+  padding:4px 10px;border-radius:6px;pointer-events:none;
+}
+
+/* Floating Zoom Mechanics */
+#zoom-bar{
+  position:fixed;bottom:24px;right:24px;z-index:20;
+  display:flex;gap:6px;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:12px;padding:6px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+.zoom-btn{
+  width:36px;height:36px;border-radius:8px;border:none;
+  background:transparent;color:var(--text2);font-size:1.1rem;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;
+}
+.zoom-btn:hover{background:var(--panel-bg);color:var(--text);}
+#zoom-val{
+  padding:0 10px;font-family:var(--mono);font-size:.78rem;
+  color:var(--text);font-weight:600;display:flex;align-items:center;
+}
+
+/* ── SYSTEM MODAL OVERLAYS ── */
+#progress-overlay{
+  display:none;position:fixed;inset:0;z-index:100;
+  background:rgba(15,23,42,0.3);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;
+}
+#progress-overlay.show{display:flex;}
+.prog-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:40px;text-align:center;min-width:320px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+.prog-icon{font-size:2.5rem;margin-bottom:14px;animation:spin 2s linear infinite;}
+@keyframes spin{100%{transform:rotate(360deg);}}
+.prog-msg{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:16px;}
+.prog-bar-wrap{height:6px;background:var(--border);border-radius:4px;overflow:hidden;}
+.prog-bar{height:100%;background:var(--accent);width:0%;border-radius:4px;transition:width .3s;}
+.prog-sub{font-size:.75rem;color:var(--text2);font-family:var(--mono);margin-top:12px;}
+
+/* Custom Micro-Toast notifications */
+#toast{
+  position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--text);border-radius:10px;
+  padding:12px 24px;font-size:.85rem;color:var(--surface);
+  opacity:0;transition:all .25s cubic-bezier(0.16, 1, 0.3, 1);z-index:200;white-space:nowrap;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);font-weight:500;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <div class="tb-logo">PDF <span>Studio</span></div>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="triggerAdd()">＋ Add Document</button>
+  <button class="tb-btn" id="btn-prev" onclick="prevPage()" disabled>‹ Previous Page</button>
+  <button class="tb-btn" id="btn-next" onclick="nextPage()" disabled>Next Page ›</button>
+  <span id="page-indicator" style="font-family:var(--mono);font-size:.8rem;color:var(--text2);font-weight:600;white-space:nowrap;flex-shrink:0;padding:0 8px;">—</span>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="btn-merge" onclick="mergePDFs()" disabled>⊕ Merge Pipelines</button>
+  <div class="tb-right">
+    <button class="tb-btn success" id="btn-dl" onclick="downloadMerged()" disabled style="display:none">⬇ Save Combined Document</button>
+  </div>
+</div>
+
+<div id="layout">
+
+  <div id="sidebar">
+    <div class="sb-head">
+      <div class="sb-title">Staging Matrix</div>
+      <div class="sb-count" id="sb-count">0 files active</div>
+    </div>
+
+    <div id="sb-drop"
+      onclick="triggerAdd()"
+      ondragover="sbDragOver(event)" ondragleave="sbDragLeave()" ondrop="sbDrop(event)">
+      <div id="sb-drop-icon">📂</div>
+      <div id="sb-drop-text">Drag PDFs here or browse system data</div>
+    </div>
+    <input type="file" id="file-input" accept=".pdf" multiple style="display:none" onchange="addFiles(this)">
+
+    <div id="pdf-list"></div>
+
+    <div class="sb-footer">
+      <button class="merge-btn" id="merge-btn" onclick="mergePDFs()" disabled>⊕ Execute File Compilation</button>
+    </div>
+  </div>
+
+  <div id="viewer">
+    <div id="viewer-empty">
+      <div class="ve-icon">📄</div>
+      <div class="ve-text">No active document pipeline rendered</div>
+      <div class="ve-sub">Upload staging data vectors from the sidebar workspace matrices to initialize display matrix modules</div>
+    </div>
+    <div id="pages-container" style="width:100%;max-width:850px;display:none;"></div>
+  </div>
+
+</div>
+
+<div id="zoom-bar">
+  <button class="zoom-btn" onclick="zoomOut()">－</button>
+  <div id="zoom-val">100%</div>
+  <button class="zoom-btn" onclick="zoomIn()">＋</button>
+  <button class="zoom-btn" onclick="zoomFit()" title="Fit layout tracking width">⤢</button>
+</div>
+
+<div id="progress-overlay">
+  <div class="prog-box">
+    <div class="prog-icon">⚙️</div>
+    <div class="prog-msg" id="prog-msg">Executing backend array transformations...</div>
+    <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+    <div class="prog-sub" id="prog-sub"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+var pdfFiles=[];  
+var activeId=null;
+var currentPdfDoc=null;
+var currentPage=1;
+var totalPages=0;
+var zoomScale=1.2;
+var mergedBlob=null;
+var uid=0;
+var renderTask=null;
+
+function triggerAdd(){document.getElementById('file-input').click();}
+window.triggerAdd=triggerAdd;
+
+function addFiles(input){
+  var files=Array.prototype.slice.call(input.files);
+  files.forEach(function(f){
+    if(f.type!=='application/pdf'&&!f.name.endsWith('.pdf')){toast('Unsupported type format constraints error');return;}
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var ab=e.target.result;
+      var item={id:++uid,name:f.name,size:f.size,arrayBuffer:ab,pageCount:0};
+      pdfjsLib.getDocument({data:ab.slice(0)}).promise.then(function(doc){
+        item.pageCount=doc.numPages;
+        item.pdfjsDoc=doc;
+        pdfFiles.push(item);
+        renderSidebar();
+        if(pdfFiles.length===1) openPDF(item.id);
+        toast('Staged source array allocation success');
+      }).catch(function(err){
+        toast('Parse engine initialization failure: '+err.message);
+      });
+    };
+    reader.readAsArrayBuffer(f);
+  });
+  input.value='';
+}
+window.addFiles=addFiles;
+
+function renderSidebar(){
+  var list=document.getElementById('pdf-list');
+  document.getElementById('sb-count').textContent=pdfFiles.length+' file'+(pdfFiles.length!==1?'s':'')+' active';
+  document.getElementById('merge-btn').disabled=pdfFiles.length<2;
+  document.getElementById('btn-merge').disabled=pdfFiles.length<2;
+
+  if(!pdfFiles.length){list.innerHTML='';return;}
+
+  list.innerHTML=pdfFiles.map(function(f,i){
+    var name=f.name.length>22?f.name.slice(0,19)+'...':f.name;
+    return '<div class="pdf-item'+(f.id===activeId?' active':'')+'" id="pi-'+f.id+'" '+
+      'draggable="true" '+
+      'ondragstart="itemDragStart(event,'+i+')" '+
+      'ondragover="itemDragOver(event,'+i+')" '+
+      'ondrop="itemDrop(event,'+i+')" '+
+      'ondragend="itemDragEnd()" '+
+      'onclick="openPDF('+f.id+')">' +
+      '<div class="pdf-drag" title="Reorder tracking array indexing">⠿</div>'+
+      '<div class="pdf-order">'+(i+1)+'</div>'+
+      '<div class="pdf-icon">📄</div>'+
+      '<div class="pdf-info">'+
+        '<div class="pdf-name">'+name+'</div>'+
+        '<div class="pdf-meta">'+f.pageCount+' pages · '+fmtBytes(f.size)+'</div>'+
+      '</div>'+
+      '<button class="pdf-del" onclick="event.stopPropagation();removePDF('+f.id+')" title="Purge block node element">✕</button>'+
+    '</div>';
+  }).join('');
+}
+
+function removePDF(id){
+  pdfFiles=pdfFiles.filter(function(f){return f.id!==id;});
+  if(activeId===id){
+    activeId=null;currentPdfDoc=null;currentPage=1;totalPages=0;
+    document.getElementById('viewer-empty').style.display='flex';
+    document.getElementById('pages-container').style.display='none';
+    updatePageNav();
+  }
+  mergedBlob=null;
+  document.getElementById('btn-dl').style.display='none';
+  renderSidebar();
+}
+window.removePDF=removePDF;
+
+var dragIdx=-1;
+
+function itemDragStart(e,i){
+  dragIdx=i;
+  e.dataTransfer.effectAllowed='move';
+  setTimeout(function(){
+    var el=document.getElementById('pi-'+pdfFiles[i].id);
+    if(el) el.classList.add('dragging');
+  },0);
+}
+function itemDragOver(e,i){
+  e.preventDefault();e.dataTransfer.dropEffect='move';
+}
+function itemDrop(e,i){
+  e.preventDefault();
+  if(dragIdx<0||dragIdx===i) return;
+  var moved=pdfFiles.splice(dragIdx,1)[0];
+  pdfFiles.splice(i,0,moved);
+  dragIdx=-1;
+  renderSidebar();
+}
+function itemDragEnd(){
+  dragIdx=-1;
+  document.querySelectorAll('.pdf-item').forEach(function(el){el.classList.remove('dragging');});
+}
+window.itemDragStart=itemDragStart;
+window.itemDragOver=itemDragOver;
+window.itemDrop=itemDrop;
+window.itemDragEnd=itemDragEnd;
+
+function sbDragOver(e){e.preventDefault();document.getElementById('sb-drop').classList.add('dragover');}
+function sbDragLeave(){document.getElementById('sb-drop').classList.remove('dragover');}
+function sbDrop(e){
+  e.preventDefault();sbDragLeave();
+  var files=Array.prototype.slice.call(e.dataTransfer.files);
+  var fakeInput={files:files,value:''};
+  addFiles(fakeInput);
+}
+window.sbDragOver=sbDragOver;window.sbDragLeave=sbDragLeave;window.sbDrop=sbDrop;
+
+function openPDF(id){
+  var item=pdfFiles.find(function(f){return f.id===id;});
+  if(!item) return;
+  activeId=id;
+  currentPdfDoc=item.pdfjsDoc;
+  currentPage=1;
+  totalPages=item.pageCount;
+  renderSidebar();
+  document.getElementById('viewer-empty').style.display='none';
+  document.getElementById('pages-container').style.display='block';
+  renderAllPages();
+  updatePageNav();
+}
+window.openPDF=openPDF;
+
+function renderAllPages(){
+  var container=document.getElementById('pages-container');
+  container.innerHTML='';
+  if(!currentPdfDoc) return;
+  showProgress('Compiling viewport tracking matrices...',0);
+  var total=currentPdfDoc.numPages;
+  var rendered=0;
+
+  function renderPage(pageNum){
+    currentPdfDoc.getPage(pageNum).then(function(page){
+      var viewport=page.getViewport({scale:zoomScale});
+      var wrap=document.createElement('div');
+      wrap.className='page-wrap';
+      wrap.id='pw-'+pageNum;
+      var canvas=document.createElement('canvas');
+      canvas.width=viewport.width;
+      canvas.height=viewport.height;
+      var numLabel=document.createElement('div');
+      numLabel.className='page-num';
+      numLabel.textContent='Page '+pageNum+' / '+total;
+      wrap.appendChild(canvas);
+      wrap.appendChild(numLabel);
+      container.appendChild(wrap);
+      page.render({canvasContext:canvas.getContext('2d'),viewport:viewport}).promise.then(function(){
+        rendered++;
+        setProgress(Math.round(rendered/total*100));
+        if(rendered===total) hideProgress();
+      });
+    });
+  }
+
+  for(var i=1;i<=total;i++) renderPage(i);
+}
+
+function prevPage(){
+  if(currentPage>1){currentPage--;scrollToPage(currentPage);updatePageNav();}
+}
+function nextPage(){
+  if(currentPage<totalPages){currentPage++;scrollToPage(currentPage);updatePageNav();}
+}
+function scrollToPage(n){
+  var el=document.getElementById('pw-'+n);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function updatePageNav(){
+  var hasPdf=!!currentPdfDoc;
+  document.getElementById('btn-prev').disabled=!hasPdf||currentPage<=1;
+  document.getElementById('btn-next').disabled=!hasPdf||currentPage>=totalPages;
+  document.getElementById('page-indicator').textContent=hasPdf?(currentPage+' / '+totalPages):'—';
+}
+window.prevPage=prevPage;window.nextPage=nextPage;
+
+document.getElementById('viewer').addEventListener('scroll',function(){
+  if(!currentPdfDoc) return;
+  for(var i=1;i<=totalPages;i++){
+    var el=document.getElementById('pw-'+i);
+    if(el){
+      var rect=el.getBoundingClientRect();
+      if(rect.top>=0&&rect.top<window.innerHeight/2){currentPage=i;break;}
+    }
+  }
+  updatePageNav();
+});
+
+function zoomIn(){zoomScale=Math.min(3,zoomScale+0.2);applyZoom();}
+function zoomOut(){zoomScale=Math.max(0.4,zoomScale-0.2);applyZoom();}
+function zoomFit(){
+  var vw=document.getElementById('viewer').clientWidth-48;
+  if(currentPdfDoc){
+    currentPdfDoc.getPage(1).then(function(page){
+      var vp=page.getViewport({scale:1});
+      zoomScale=Math.min(2,vw/vp.width);
+      applyZoom();
+    });
+  }
+}
+function applyZoom(){
+  document.getElementById('zoom-val').textContent=Math.round(zoomScale*100)+'%';
+  if(currentPdfDoc) renderAllPages();
+}
+window.zoomIn=zoomIn;window.zoomOut=zoomOut;window.zoomFit=zoomFit;
+
+async function mergePDFs(){
+  if(pdfFiles.length<2){toast('Operation failure constraint tracking setup array notice');return;}
+  showProgress('Compiling system target array arrays allocations data...',0);
+  try{
+    var mergedPdf=await PDFLib.PDFDocument.create();
+    for(var i=0;i<pdfFiles.length;i++){
+      setProgress(Math.round(i/pdfFiles.length*90),'Reindexing tracking index: '+pdfFiles[i].name);
+      var src=await PDFLib.PDFDocument.load(pdfFiles[i].arrayBuffer.slice(0));
+      var pages=await mergedPdf.copyPages(src,src.getPageIndices());
+      pages.forEach(function(p){mergedPdf.addPage(p);});
+    }
+    setProgress(95,'Writing matrix elements block array sequences...');
+    var bytes=await mergedPdf.save();
+    mergedBlob=new Blob([bytes],{type:'application/pdf'});
+    setProgress(100,'Compilation completely established successfully!');
+    setTimeout(function(){
+      hideProgress();
+      document.getElementById('btn-dl').style.display='block';
+      toast('Dynamic file mapping link generation successfully loaded');
+      var url=URL.createObjectURL(mergedBlob);
+      openMergedPreview(url,bytes);
+    },400);
+  }catch(e){
+    hideProgress();
+    toast('Compilation array transformation failure exception catch notice: '+e.message);
+  }
+}
+window.mergePDFs=mergePDFs;
+
+function openMergedPreview(url,bytes){
+  var ab=bytes.buffer||bytes;
+  pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise.then(function(doc){
+    var mergedItem={id:++uid,name:'merged_output.pdf',size:mergedBlob.size,arrayBuffer:ab,pageCount:doc.numPages,pdfjsDoc:doc,isMerged:true};
+    pdfFiles=pdfFiles.filter(function(f){return !f.isMerged;});
+    pdfFiles.push(mergedItem);
+    renderSidebar();
+    openPDF(mergedItem.id);
+  });
+}
+
+function downloadMerged(){
+  if(!mergedBlob){toast('No executable compilation cache buffer block array present');return;}
+  var url=URL.createObjectURL(mergedBlob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='merged_output.pdf';
+  a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);},2000);
+}
+window.downloadMerged=downloadMerged;
+
+function showProgress(msg,pct){
+  document.getElementById('prog-msg').textContent=msg||'Processing...';
+  document.getElementById('prog-bar').style.width=(pct||0)+'%';
+  document.getElementById('prog-sub').textContent='';
+  document.getElementById('progress-overlay').classList.add('show');
+}
+function setProgress(pct,sub){
+  document.getElementById('prog-bar').style.width=pct+'%';
+  if(sub) document.getElementById('prog-sub').textContent=sub;
+}
+function hideProgress(){document.getElementById('progress-overlay').classList.remove('show');}
+
+var toastTimer=null;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},3000);
+}
+
+function fmtBytes(b){
+  if(b>=1048576)return(b/1048576).toFixed(1)+' MB';
+  if(b>=1024)return(b/1024).toFixed(0)+' KB';
+  return b+' B';
+}
+
+})();
+</script>
+</body>
+</html>
