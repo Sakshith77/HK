@@ -54,15 +54,17 @@
             position: relative; overflow: hidden;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             min-height: 160px; text-decoration: none; color: inherit;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
         .tool-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); border-color: var(--primary); }
+        .tool-card:active { transform: scale(0.98); }
         .tool-badge {
             position: absolute; top: 8px; right: 8px; font-size: 0.65rem;
             padding: 3px 8px; border-radius: 10px; font-weight: 700; text-transform: uppercase;
         }
         .badge-live { background: var(--success); color: white; }
-        .badge-soon { background: var(--warning); color: white; }
-        .tool-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+        .tool-icon { font-size: 3rem; margin-bottom: 12px; display: block; line-height: 1; }
         .tool-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
         .tool-desc { font-size: 0.85rem; color: #7f8c8d; }
 
@@ -80,6 +82,7 @@
             background: rgba(255,255,255,0.2); border: none; color: white;
             width: 44px; height: 44px; border-radius: 50%; font-size: 1.5rem;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
         .tool-content { padding: 25px 15px; max-width: 800px; margin: 0 auto; }
         .drop-zone {
@@ -182,17 +185,6 @@
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .hidden { display: none !important; }
-        .status-badge {
-            display: inline-block; padding: 4px 12px; border-radius: 20px;
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-left: 10px;
-        }
-        .status-real { background: #e8f5e9; color: #2e7d32; }
-        .status-soon { background: #fce4ec; color: #c62828; }
-        .warning-box {
-            background: #fff3e0; border-left: 4px solid var(--warning);
-            padding: 15px; border-radius: 0 12px 12px 0; margin-bottom: 20px; font-size: 0.9rem;
-        }
-        .warning-box strong { color: #e65100; }
         .checkbox-group {
             display: flex; align-items: center; gap: 12px; padding: 12px 0; cursor: pointer;
         }
@@ -212,56 +204,37 @@
 
         <div class="category">
             <div class="category-title">📂 Organize PDF</div>
-            <div class="tools-grid">
-                <a href="#" class="tool-card" onclick="openTool('merge')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">➕</span><div class="tool-name">Merge PDF</div><div class="tool-desc">Combine PDFs</div></a>
-                <a href="#" class="tool-card" onclick="openTool('split')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">✂️</span><div class="tool-name">Split PDF</div><div class="tool-desc">Extract pages</div></a>
-                <a href="#" class="tool-card" onclick="openTool('remove')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">🗑️</span><div class="tool-name">Remove Pages</div><div class="tool-desc">Delete pages</div></a>
-                <a href="#" class="tool-card" onclick="openTool('extract')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">📤</span><div class="tool-name">Extract Pages</div><div class="tool-desc">Get specific pages</div></a>
-                <a href="#" class="tool-card" onclick="openTool('rotate')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">🔄</span><div class="tool-name">Rotate PDF</div><div class="tool-desc">Rotate pages</div></a>
-            </div>
+            <div class="tools-grid" id="grid-organize"></div>
         </div>
 
         <div class="category">
             <div class="category-title">⚡ Optimize PDF</div>
-            <div class="tools-grid">
-                <a href="#" class="tool-card" onclick="openTool('compress')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">🗜️</span><div class="tool-name">Compress PDF</div><div class="tool-desc">Strip metadata</div></a>
-            </div>
+            <div class="tools-grid" id="grid-optimize"></div>
         </div>
 
         <div class="category">
             <div class="category-title">📥 Convert to PDF</div>
-            <div class="tools-grid">
-                <a href="#" class="tool-card" onclick="openTool('jpg-to-pdf')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">🖼️</span><div class="tool-name">JPG to PDF</div><div class="tool-desc">Images to PDF</div></a>
-            </div>
+            <div class="tools-grid" id="grid-convert-to"></div>
         </div>
 
         <div class="category">
             <div class="category-title">📤 Convert from PDF</div>
-            <div class="tools-grid">
-                <a href="#" class="tool-card" onclick="openTool('pdf-to-jpg')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">🖼️</span><div class="tool-name">PDF to JPG</div><div class="tool-desc">First page to image</div></a>
-            </div>
+            <div class="tools-grid" id="grid-convert-from"></div>
         </div>
 
         <div class="category">
             <div class="category-title">✏️ Edit PDF</div>
-            <div class="tools-grid">
-                <a href="#" class="tool-card" onclick="openTool('edit')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">📝</span><div class="tool-name">Edit PDF</div><div class="tool-desc">Add text</div></a>
-                <a href="#" class="tool-card" onclick="openTool('watermark')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">💧</span><div class="tool-name">Watermark</div><div class="tool-desc">Add text watermark</div></a>
-                <a href="#" class="tool-card" onclick="openTool('page-numbers')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">🔢</span><div class="tool-name">Page Numbers</div><div class="tool-desc">Add numbering</div></a>
-            </div>
+            <div class="tools-grid" id="grid-edit"></div>
         </div>
 
         <div class="category">
             <div class="category-title">🔒 PDF Security</div>
-            <div class="tools-grid">
-                <a href="#" class="tool-card" onclick="openTool('protect')"><span class="tool-badge badge-live">Live</span><span class="tool-icon">🔐</span><div class="tool-name">Protect PDF</div><div class="tool-desc">Password protect</div></a>
-            </div>
+            <div class="tools-grid" id="grid-security"></div>
         </div>
 
         <div class="footer">
             <h3>🔒 Secure & Private</h3>
             <p>All processing happens locally in your browser using PDF-LIB. No files uploaded.</p>
-            <p style="font-size:0.8rem;opacity:0.6;margin-top:10px;">Tools marked "Live" work fully. Others need server-side processing.</p>
         </div>
     </div>
 
@@ -274,36 +247,36 @@
         const tools = {
             merge: {
                 name: 'Merge PDF', icon: '➕', desc: 'Combine multiple PDFs',
-                multiple: true, accept: '.pdf', working: true,
+                multiple: true, accept: '.pdf', working: true, category: 'organize',
                 options: [{ type: 'checkbox', label: 'Add page numbers', id: 'add-nums' }]
             },
             split: {
                 name: 'Split PDF', icon: '✂️', desc: 'Split into multiple files',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'organize',
                 options: [
                     { type: 'select', label: 'Split Mode', id: 'split-mode', options: ['Every page', 'Every 2 pages', 'First half / Second half'] }
                 ]
             },
             remove: {
                 name: 'Remove Pages', icon: '🗑️', desc: 'Delete specific pages',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'organize',
                 options: [{ type: 'text', label: 'Pages to remove (e.g., 1,3,5-7)', id: 'remove-pages', placeholder: '1, 3, 5-7' }]
             },
             extract: {
                 name: 'Extract Pages', icon: '📤', desc: 'Extract specific pages',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'organize',
                 options: [{ type: 'text', label: 'Pages to extract (e.g., 1-3,5)', id: 'extract-pages', placeholder: '1-3, 5' }]
             },
             rotate: {
                 name: 'Rotate PDF', icon: '🔄', desc: 'Rotate pages',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'organize',
                 options: [
                     { type: 'select', label: 'Rotation', id: 'rotation', options: ['90° clockwise', '90° counter', '180°'] }
                 ]
             },
             compress: {
                 name: 'Compress PDF', icon: '🗜️', desc: 'Remove metadata to reduce size',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'optimize',
                 options: [
                     { type: 'checkbox', label: 'Remove metadata', id: 'remove-meta', checked: true },
                     { type: 'checkbox', label: 'Remove outlines', id: 'remove-outlines' }
@@ -311,7 +284,7 @@
             },
             'jpg-to-pdf': {
                 name: 'JPG to PDF', icon: '🖼️', desc: 'Convert images to PDF',
-                multiple: true, accept: 'image/*', working: true,
+                multiple: true, accept: 'image/*', working: true, category: 'convert-to',
                 options: [
                     { type: 'select', label: 'Page Size', id: 'page-size', options: ['Fit to image', 'A4', 'Letter'] },
                     { type: 'select', label: 'DPI', id: 'dpi', options: ['72', '150', '300'] }
@@ -319,12 +292,12 @@
             },
             'pdf-to-jpg': {
                 name: 'PDF to JPG', icon: '🖼️', desc: 'Convert first page to image',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'convert-from',
                 options: [{ type: 'select', label: 'Quality', id: 'quality', options: ['Low', 'Medium', 'High'] }]
             },
             edit: {
                 name: 'Edit PDF', icon: '📝', desc: 'Add text to PDF',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'edit',
                 options: [
                     { type: 'text', label: 'Text to add', id: 'edit-text', placeholder: 'Your text here' },
                     { type: 'select', label: 'Page', id: 'edit-page', options: ['All pages', 'First page', 'Last page'] },
@@ -333,7 +306,7 @@
             },
             watermark: {
                 name: 'Watermark', icon: '💧', desc: 'Add text watermark',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'edit',
                 options: [
                     { type: 'text', label: 'Watermark Text', id: 'watermark-text', placeholder: 'CONFIDENTIAL' },
                     { type: 'select', label: 'Font Size', id: 'font-size', options: ['24pt', '48pt', '72pt', '96pt'] },
@@ -342,7 +315,7 @@
             },
             'page-numbers': {
                 name: 'Page Numbers', icon: '🔢', desc: 'Add page numbers',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'edit',
                 options: [
                     { type: 'select', label: 'Position', id: 'num-pos', options: ['Bottom center', 'Bottom left', 'Bottom right'] },
                     { type: 'number', label: 'Start from', id: 'start-num', value: 1 }
@@ -350,7 +323,7 @@
             },
             protect: {
                 name: 'Protect PDF', icon: '🔐', desc: 'Password protect PDF',
-                accept: '.pdf', working: true,
+                accept: '.pdf', working: true, category: 'security',
                 options: [
                     { type: 'password', label: 'Password', id: 'password', placeholder: 'Enter password' },
                     { type: 'password', label: 'Confirm', id: 'confirm-password', placeholder: 'Confirm password' }
@@ -360,9 +333,42 @@
 
         let currentFiles = [];
         let currentTool = null;
-        let generatedPDF = null;
         let generatedBlob = null;
 
+        // ==================== RENDER TOOL CARDS ====================
+        function renderToolCards() {
+            Object.keys(tools).forEach(key => {
+                const tool = tools[key];
+                const grid = document.getElementById('grid-' + tool.category);
+                if (!grid) return;
+
+                const card = document.createElement('div');
+                card.className = 'tool-card';
+                card.setAttribute('data-tool', key);
+                card.innerHTML = 
+                    '<span class="tool-badge badge-live">Live</span>' +
+                    '<span class="tool-icon">' + tool.icon + '</span>' +
+                    '<div class="tool-name">' + tool.name + '</div>' +
+                    '<div class="tool-desc">' + tool.desc + '</div>';
+
+                // Add click event listener instead of inline onclick
+                card.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openTool(key);
+                });
+
+                // Also handle touch for mobile
+                card.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    openTool(key);
+                });
+
+                grid.appendChild(card);
+            });
+        }
+
+        // ==================== GENERATE TOOL PAGES ====================
         function generateToolPages() {
             const container = document.getElementById('tool-pages');
             Object.keys(tools).forEach(key => {
@@ -388,26 +394,96 @@
                     optionsHTML += '</div>';
                 }
 
-                page.innerHTML = '<div class="tool-header"><button class="back-btn" onclick="closeTool()">←</button><h2>' + tool.icon + ' ' + tool.name + '</h2></div><div class="tool-content"><div class="info-cards"><div class="info-card"><div class="info-card-icon">🔒</div><div class="info-card-text"><h4>Secure</h4><p>Processed locally</p></div></div><div class="info-card"><div class="info-card-icon">⚡</div><div class="info-card-text"><h4>Fast</h4><p>No upload needed</p></div></div></div><div class="drop-zone" id="dropZone-' + key + '" onclick="document.getElementById('fileInput-' + key + '').click()"><span class="upload-icon">📤</span><p>Select ' + (tool.accept === 'image/*' ? 'image' : 'PDF') + ' file' + (tool.multiple ? 's' : '') + '</p><span class="sub-text">or drag and drop here</span></div><input type="file" class="file-input" id="fileInput-' + key + '" accept="' + (tool.accept || '.pdf') + '" ' + (tool.multiple ? 'multiple' : '') + ' onchange="handleFiles(this, '' + key + '')"><div class="file-list" id="fileList-' + key + '" style="display:none"></div>' + optionsHTML + '<div class="progress-container hidden" id="progress-' + key + '"><div class="spinner"></div><p style="font-weight:600;">Processing...</p></div><div class="result-container hidden" id="result-' + key + '"><div class="result-icon">✅</div><div class="result-title">Done!</div><div class="result-desc" id="resultDesc-' + key + '">Your file is ready</div><button class="btn btn-success" onclick="downloadResult()">⬇️ Download File</button></div><button class="btn btn-primary" id="processBtn-' + key + '" onclick="processTool('' + key + '')" disabled>' + tool.icon + ' ' + tool.name + '</button><button class="btn btn-secondary" onclick="closeTool()">← Back to Tools</button></div>';
+                page.innerHTML = 
+                    '<div class="tool-header">' +
+                        '<button class="back-btn" id="back-btn-' + key + '">←</button>' +
+                        '<h2>' + tool.icon + ' ' + tool.name + '</h2>' +
+                    '</div>' +
+                    '<div class="tool-content">' +
+                        '<div class="info-cards">' +
+                            '<div class="info-card"><div class="info-card-icon">🔒</div><div class="info-card-text"><h4>Secure</h4><p>Processed locally</p></div></div>' +
+                            '<div class="info-card"><div class="info-card-icon">⚡</div><div class="info-card-text"><h4>Fast</h4><p>No upload needed</p></div></div>' +
+                        '</div>' +
+                        '<div class="drop-zone" id="dropZone-' + key + '">' +
+                            '<span class="upload-icon">📤</span>' +
+                            '<p>Select ' + (tool.accept === 'image/*' ? 'image' : 'PDF') + ' file' + (tool.multiple ? 's' : '') + '</p>' +
+                            '<span class="sub-text">or drag and drop here</span>' +
+                        '</div>' +
+                        '<input type="file" class="file-input" id="fileInput-' + key + '" accept="' + (tool.accept || '.pdf') + '" ' + (tool.multiple ? 'multiple' : '') + '>' +
+                        '<div class="file-list" id="fileList-' + key + '" style="display:none"></div>' +
+                        optionsHTML +
+                        '<div class="progress-container hidden" id="progress-' + key + '">' +
+                            '<div class="spinner"></div>' +
+                            '<p style="font-weight:600;">Processing...</p>' +
+                        '</div>' +
+                        '<div class="result-container hidden" id="result-' + key + '">' +
+                            '<div class="result-icon">✅</div>' +
+                            '<div class="result-title">Done!</div>' +
+                            '<div class="result-desc" id="resultDesc-' + key + '">Your file is ready</div>' +
+                            '<button class="btn btn-success" id="download-btn-' + key + '">⬇️ Download File</button>' +
+                        '</div>' +
+                        '<button class="btn btn-primary" id="processBtn-' + key + '" disabled>' + tool.icon + ' ' + tool.name + '</button>' +
+                        '<button class="btn btn-secondary" id="back-bottom-' + key + '">← Back to Tools</button>' +
+                    '</div>';
 
                 container.appendChild(page);
-                setupDragDrop(key);
+
+                // Setup all event listeners after DOM insertion
+                setupToolPageEvents(key);
             });
+        }
+
+        function setupToolPageEvents(key) {
+            // Back buttons
+            document.getElementById('back-btn-' + key).addEventListener('click', closeTool);
+            document.getElementById('back-bottom-' + key).addEventListener('click', closeTool);
+
+            // Drop zone click
+            document.getElementById('dropZone-' + key).addEventListener('click', function() {
+                document.getElementById('fileInput-' + key).click();
+            });
+
+            // File input change
+            document.getElementById('fileInput-' + key).addEventListener('change', function() {
+                handleFiles(this, key);
+            });
+
+            // Process button
+            document.getElementById('processBtn-' + key).addEventListener('click', function() {
+                processTool(key);
+            });
+
+            // Download button
+            document.getElementById('download-btn-' + key).addEventListener('click', downloadResult);
+
+            // Drag and drop
+            setupDragDrop(key);
         }
 
         function setupDragDrop(key) {
             const dropZone = document.getElementById('dropZone-' + key);
             if (!dropZone) return;
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-                dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); }, false);
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
             });
-            ['dragenter', 'dragover'].forEach(e => {
-                dropZone.addEventListener(e, () => dropZone.classList.add('dragover'), false);
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function() {
+                    this.classList.add('dragover');
+                }, false);
             });
-            ['dragleave', 'drop'].forEach(e => {
-                dropZone.addEventListener(e, () => dropZone.classList.remove('dragover'), false);
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function() {
+                    this.classList.remove('dragover');
+                }, false);
             });
-            dropZone.addEventListener('drop', (e) => {
+
+            dropZone.addEventListener('drop', function(e) {
                 handleFiles({ files: e.dataTransfer.files }, key);
             }, false);
         }
@@ -415,20 +491,36 @@
         function handleFiles(input, key) {
             const files = Array.from(input.files);
             const tool = tools[key];
+
             if (!tool.multiple && files.length > 1) {
                 showToast('Please select only one file'); return;
             }
+
             currentFiles = files;
             currentTool = key;
+
             const fileList = document.getElementById('fileList-' + key);
             fileList.innerHTML = '';
             fileList.style.display = 'block';
+
             files.forEach((file, index) => {
                 const item = document.createElement('div');
                 item.className = 'file-item';
-                item.innerHTML = '<div class="file-icon">' + getFileIcon(file.name) + '</div><div class="file-info"><div class="file-name">' + file.name + '</div><div class="file-size">' + formatFileSize(file.size) + '</div></div><button class="file-remove" onclick="removeFile(' + index + ', '' + key + '')">✕</button>';
+                item.innerHTML = 
+                    '<div class="file-icon">' + getFileIcon(file.name) + '</div>' +
+                    '<div class="file-info">' +
+                        '<div class="file-name">' + file.name + '</div>' +
+                        '<div class="file-size">' + formatFileSize(file.size) + '</div>' +
+                    '</div>' +
+                    '<button class="file-remove" data-index="' + index + '">✕</button>';
                 fileList.appendChild(item);
+
+                const removeBtn = item.querySelector('.file-remove');
+                removeBtn.addEventListener('click', function() {
+                    removeFile(parseInt(this.getAttribute('data-index')), key);
+                });
             });
+
             document.getElementById('processBtn-' + key).disabled = false;
         }
 
@@ -458,31 +550,37 @@
 
         function openTool(key) {
             const page = document.getElementById('page-' + key);
-            if (page) { page.classList.add('active'); document.body.style.overflow = 'hidden'; }
+            if (page) {
+                page.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
         }
 
         function closeTool() {
             document.querySelectorAll('.tool-page').forEach(p => p.classList.remove('active'));
             document.body.style.overflow = '';
-            currentFiles = []; currentTool = null; generatedBlob = null; generatedPDF = null;
+            currentFiles = [];
+            currentTool = null;
+            generatedBlob = null;
         }
 
         function filterTools() {
             const query = document.getElementById('searchBox').value.toLowerCase();
             const cards = document.querySelectorAll('.tool-card');
             const categories = document.querySelectorAll('.category');
+
             cards.forEach(card => {
                 const name = card.querySelector('.tool-name').textContent.toLowerCase();
                 const desc = card.querySelector('.tool-desc').textContent.toLowerCase();
                 card.style.display = (name.includes(query) || desc.includes(query)) ? 'flex' : 'none';
             });
+
             categories.forEach(cat => {
                 const visible = cat.querySelectorAll('.tool-card[style*="flex"], .tool-card:not([style*="none"])');
                 cat.style.display = visible.length > 0 ? 'block' : 'none';
             });
         }
 
-        // ==================== REAL PDF PROCESSING ====================
         async function processTool(key) {
             if (currentFiles.length === 0) { showToast('Please select a file first'); return; }
             const tool = tools[key];
@@ -552,11 +650,12 @@
                 }
 
                 generatedBlob = result;
+                generatedBlob.name = filename;
 
                 progressDiv.classList.add('hidden');
                 resultDiv.classList.remove('hidden');
                 document.getElementById('resultDesc-' + key).textContent = 
-                    'Processed ' + currentFiles.length + ' file(s) • ' + formatFileSize(result.size);
+                    'Processed ' + currentFiles.length + ' file(s) | ' + formatFileSize(result.size);
 
                 showToast('Done! Click Download to save.');
             } catch (err) {
@@ -580,7 +679,6 @@
             showToast('Downloading...');
         }
 
-        // ==================== PDF OPERATIONS ====================
         async function mergePDFs(files) {
             const mergedPdf = await PDFDocument.create();
             for (const file of files) {
@@ -708,10 +806,8 @@
         async function imagesToPDF(files) {
             const pageSize = document.getElementById('page-size')?.value || 'Fit to image';
             const dpi = parseInt(document.getElementById('dpi')?.value || '72');
-            const onePerPage = document.getElementById('one-per-page')?.checked ?? true;
 
             const pdf = await PDFDocument.create();
-            const font = await pdf.embedFont(StandardFonts.Helvetica);
 
             for (const file of files) {
                 const imgBytes = await file.arrayBuffer();
@@ -721,7 +817,6 @@
                 } else if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
                     img = await pdf.embedJpg(imgBytes);
                 } else {
-                    // Convert other formats via canvas
                     const bitmap = await createImageBitmap(file);
                     const canvas = document.createElement('canvas');
                     canvas.width = bitmap.width;
@@ -734,7 +829,6 @@
 
                 let pageWidth, pageHeight;
                 if (pageSize === 'Fit to image') {
-                    // Calculate size based on DPI: mm = pixels * 25.4 / DPI
                     pageWidth = img.width * 25.4 / dpi;
                     pageHeight = img.height * 25.4 / dpi;
                 } else if (pageSize === 'A4') {
@@ -744,8 +838,6 @@
                 }
 
                 const page = pdf.addPage([pageWidth, pageHeight]);
-
-                // Scale image to fit page while maintaining aspect ratio
                 const scale = Math.min(pageWidth / img.width, pageHeight / img.height);
                 const imgWidth = img.width * scale;
                 const imgHeight = img.height * scale;
@@ -764,11 +856,8 @@
             const bytes = await file.arrayBuffer();
             const pdf = await PDFDocument.load(bytes);
             const page = pdf.getPage(0);
-
-            // Get page dimensions
             const { width, height } = page.getSize();
 
-            // Create canvas for rendering
             const canvas = document.createElement('canvas');
             const scale = quality === 'High' ? 2 : (quality === 'Medium' ? 1.5 : 1);
             canvas.width = width * scale;
@@ -777,8 +866,6 @@
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Since PDF-LIB doesn't render to canvas directly, we'll create a simple representation
-            // For real rendering, you'd need pdf.js, but this creates a placeholder
             ctx.fillStyle = '#333';
             ctx.font = 'bold 30px Arial';
             ctx.textAlign = 'center';
@@ -789,8 +876,7 @@
 
             const jpgData = canvas.toDataURL('image/jpeg', 0.9);
             const response = await fetch(jpgData);
-            const blob = await response.blob();
-            return blob;
+            return await response.blob();
         }
 
         async function editPDF(file) {
@@ -811,16 +897,11 @@
                 const { width, height } = page.getSize();
                 let x = width / 2;
                 let y = height - 40;
-
                 if (position === 'Bottom center') y = 40;
                 if (position === 'Center') y = height / 2;
 
                 page.drawText(text, {
-                    x, y,
-                    size: 18,
-                    font,
-                    color: rgb(0.2, 0.2, 0.2),
-                    opacity: 0.7
+                    x, y, size: 18, font, color: rgb(0.2, 0.2, 0.2), opacity: 0.7
                 });
             });
 
@@ -872,10 +953,8 @@
             pages.forEach((page, index) => {
                 const { width, height } = page.getSize();
                 const numText = String(startNum + index);
-
                 let x = width / 2 - 10;
                 let y = 20;
-
                 if (position === 'Bottom left') x = 30;
                 if (position === 'Bottom right') x = width - 40;
 
@@ -920,7 +999,10 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        document.addEventListener('DOMContentLoaded', generateToolPages);
+        document.addEventListener('DOMContentLoaded', function() {
+            renderToolCards();
+            generateToolPages();
+        });
     </script>
 </body>
 </html>

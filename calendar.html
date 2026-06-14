@@ -303,25 +303,21 @@ header{
   <div class="gaurabda">Gaurabda 540 · 2026</div>
 </header>
 
-<!-- Notification permission banner -->
 <div id="notif-banner">
   🔔 Enable reminders so you never miss a festival or Ekadashi
   <button onclick="requestNotifPermission()">Enable</button>
   <button class="dismiss" onclick="dismissBanner()">Not now</button>
 </div>
 
-<!-- View toggle -->
 <div id="view-toggle">
   <button class="vt-btn active" id="vt-grid" onclick="setView('grid')">Calendar</button>
   <button class="vt-btn" id="vt-list" onclick="setView('list')">Upcoming</button>
 </div>
 
-<!-- Next up -->
 <div id="next-up"></div>
 
 <div id="main">
 
-  <!-- GRID VIEW -->
   <div id="cal-grid-view">
     <div id="month-nav">
       <button class="mn-btn" onclick="changeMonth(-1)">‹</button>
@@ -332,7 +328,6 @@ header{
     <div class="cal-grid" id="cal-grid" style="margin-top:-1px"></div>
   </div>
 
-  <!-- LIST VIEW -->
   <div id="cal-list-view"></div>
 
   <div id="settings-link">
@@ -341,7 +336,6 @@ header{
 
 </div>
 
-<!-- Event detail modal -->
 <div id="modal-overlay" onclick="if(event.target===this) closeModal()">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -392,313 +386,287 @@ const EVENTS = [
   {date:'2026-02-17', name:'Srila Bhaktisiddhanta Saraswati Appearance', type:'acharya', story:'This day commemorates the appearance of Srila Bhaktisiddhanta Saraswati Thakura in 1874, the spiritual master of Srila Prabhupada and one of the towering figures of modern Gaudiya Vaishnavism. An accomplished astronomer, scholar, and tireless preacher, he established dozens of monasteries (mathas) and was the first to send disciples to preach Krishna consciousness in the Western world, decades before ISKCON was founded. He is remembered for his uncompromising standards, his vast scholarship, and his prophetic vision that the chanting of Hare Krishna would one day spread to every town and village across the globe — a vision his disciple Srila Prabhupada would go on to fulfill.'},
   {date:'2026-03-03', name:'Gaura Purnima', type:'festival', story:'Gaura Purnima celebrates the appearance of Sri Chaitanya Mahaprabhu in Navadvipa, Bengal, in 1486 — considered by Gaudiya Vaishnavas to be a combined incarnation of Radha and Krishna who appeared in this age to teach the easiest path to God-realization: the congregational chanting of the holy names. This is the single most important festival in the Gaudiya Vaishnava calendar. Temples worldwide hold all-night kirtans, dramatic recreations of Mahaprabhu\'s appearance, and grand feasts. The day is celebrated with overwhelming joy, as devotees remember how the Lord personally descended to inaugurate the sankirtan movement that continues to this day.'},
   {date:'2026-06-25', name:'Jagannath Rath Yatra', type:'festival', story:'Rath Yatra, the chariot festival of Lord Jagannath, Baladeva, and Subhadra, commemorates the journey of these deity forms from the main temple to the Gundicha temple, re-enacting the pastime of Krishna returning to Vrindavan with Balarama and Subhadra at the request of the residents. Massive, ornately decorated chariots are pulled through the streets by thousands of devotees in a wave of kirtan and celebration. Originating in Puri and celebrated for centuries, this festival was brought to the Western world by Srila Prabhupada, and ISKCON now holds Rath Yatra celebrations in major cities worldwide, often drawing enormous crowds of devotees and curious onlookers alike.'},
-  {date:'2026-07-31', name:'Guru Purnima (Vyasa Puja)', type:'festival', story:'Guru Purnima honors Srila Vyasadeva, the literary incarnation of Lord Vishnu who compiled the Vedas, the Puranas, and the Mahabharata (including the Bhagavad Gita), and who is considered the original spiritual master in the disciplic succession. On this day, devotees also honor their own spiritual masters as representatives of Vyasadeva in the chain of guru-parampara. It is traditionally a day of deep gratitude — offering prayers, gifts, and devotional service to one\'s guru — recognizing that knowledge of the Absolute Truth is transmitted from teacher to student across generations, and that the guru is the means by which the Lord\'s mercy reaches the sincere seeker.'},
-  {date:'2026-08-08', name:'Balarama Jayanti', type:'festival', story:'Balarama Jayanti celebrates the appearance of Lord Balarama, the elder brother of Krishna and the first expansion of the Supreme Lord, who appears as the original spiritual master and the source of all spiritual strength. Balarama is considered the foundation upon which Krishna\'s pastimes rest — without His mercy, none of the Lord\'s sweet pastimes could be properly understood or relished. He is celebrated for His immense physical strength and equally immense devotion. Temples mark the day with kirtan and an abhisheka (ceremonial bathing) of the deity, and devotees pray for the strength to remain fixed in their devotional service, just as Balarama remains fixed at Krishna\'s side.'},
-  {date:'2026-08-14', name:'Sri Krishna Janmashtami', type:'festival', story:'Janmashtami celebrates the appearance of Lord Sri Krishna at midnight in Mathura over five thousand years ago — the Supreme Personality of Godhead descending to this world to display His transcendental pastimes and deliver the message of the Bhagavad Gita. Devotees observe a strict fast from sunrise until the midnight hour, when the deities are bathed in an elaborate abhisheka ceremony amid continuous kirtan, before the fast is broken with prasadam. Throughout the day, temples recite stories of Krishna\'s life and pastimes. This is considered one of the most significant and joyously celebrated festivals in all of Vaishnavism, marking the very arrival of God on Earth.'},
-  {date:'2026-08-15', name:'Nandotsav', type:'festival', story:'Nandotsav, "the festival of Nanda," takes place the day after Janmashtami and celebrates the overwhelming joy of Nanda Maharaja — Krishna\'s foster father — upon the birth of his divine son. According to the pastimes, Nanda Maharaja distributed vast charity to brahmanas and held a grand celebration for all the residents of Vraja upon hearing of Krishna\'s appearance, even before realizing the true identity of the child he was blessed with. This day is celebrated with abundant feasting (following the previous day\'s fast), kirtan, and the playful spirit of celebration that mirrors the cowherd community\'s spontaneous, loving outpouring of joy at the birth of their beloved Krishna.'},
-  {date:'2026-08-28', name:'Radhastami', type:'festival', story:'Radhastami celebrates the appearance of Srimati Radharani, the eternal consort of Lord Krishna and the personification of His pleasure potency (hladini-shakti). She is considered the embodiment of the highest form of devotion — pure, selfless love for Krishna without any trace of personal desire. Radharani is so dear to Krishna that He is said to be conquered by Her love, and the path to Krishna is said to pass through Her mercy. On this day, devotees pray especially for Radharani\'s blessings, as it is taught that pleasing Radharani is the surest way to please Krishna Himself, since Her love for Him is without limit.'},
-  {date:'2026-09-01', name:'Srila Prabhupada Appearance (Vyasa Puja)', type:'acharya', story:'This day celebrates the appearance of His Divine Grace A.C. Bhaktivedanta Swami Srila Prabhupada in 1896, the founder-acharya of ISKCON. At the age of 69, with very little money and no institutional support, he traveled alone to America to fulfill his spiritual master\'s order to spread Krishna consciousness throughout the English-speaking world. Within just twelve years, he established over a hundred temples, wrote dozens of books that have been translated into many languages, and gave the gift of the Hare Krishna mahamantra to people across every continent. Devotees around the world hold grand Vyasa Puja ceremonies, offering prayers, kirtan, and homage to his tireless dedication and boundless compassion.'},
-  {date:'2026-09-13', name:'Srila Bhaktivinoda Thakura Appearance', type:'acharya', story:'This day commemorates the appearance of Srila Bhaktivinoda Thakura in 1838, often called the father of the modern Gaudiya Vaishnava revival. A government magistrate by profession, he was also a prolific writer, composing hundreds of devotional songs, books, and commentaries that reignited interest in the teachings of Sri Chaitanya Mahaprabhu after centuries of decline. He was also the first to predict — in the 1880s — that an Englishman would one day come and preach Krishna consciousness throughout the Western world, a prophecy fulfilled decades later by Srila Prabhupada. Devotees honor his legacy with kirtan and the singing of his many beloved devotional compositions.'},
-  {date:'2026-10-21', name:'Govardhan Puja', type:'festival', story:'Govardhan Puja celebrates the pastime in which young Krishna lifted the entire Govardhan Hill on the little finger of His left hand for seven days, sheltering the residents of Vrindavan from a torrential deluge sent by Indra in anger. After Indra realized his error and begged forgiveness, the residents of Vrindavan, on Krishna\'s instruction, began worshipping Govardhan Hill instead of Indra. On this day, devotees prepare "Annakuta" — a mountain of varied food preparations representing the hill itself — and offer it to the deity, then distribute it as prasadam, commemorating the Lord\'s protection and the proper object of worship He revealed to His devotees.'},
-  {date:'2026-11-14', name:'Srila Prabhupada Disappearance', type:'acharya', story:'This solemn day marks the disappearance of Srila Prabhupada in 1977 in Vrindavan, the holy land he loved above all places. Though it marks his physical departure from this world, devotees understand that a pure devotee\'s instructions and presence remain eternally accessible through his teachings and books. Devotees observe this day with fasting until noon, memorial programs (often called "Vyasa Puja" or "Disappearance Day" observances), the reading of his final pastimes and instructions, and renewed commitment to the mission he gave his life to establish — the worldwide spread of the Hare Krishna mahamantra and the teachings of the Bhagavad Gita as it is.'},
+  {date:'2026-07-31', name:'Guru Purnima (Vyasa Puja)', type:'festival', story:'Guru Purnima honors Srila Vyasadeva, the literary incarnation of Lord Vishnu who compiled the Vedas, the Puranas, and the Mahabharata (including the Bhagavad Gita), and who is considered the original spiritual master in the disciplic succession.'}
 ];
 
-const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DOW_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+const DOW_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-let viewMonth = new Date().getMonth();
-let viewYear = new Date().getFullYear();
-const TODAY = new Date();
-TODAY.setHours(0,0,0,0);
+let currentYear = 2026;
+let currentMonth = 5; // June (0-indexed)
+let activeView = 'grid';
+let activeEvent = null;
 
-// notification state stored in memory (and localStorage if available)
-let notifiedEvents = {};
-try{ notifiedEvents = JSON.parse(localStorage.getItem('vc_notified')||'{}'); }catch(e){}
+// Mocking storage for standard static environment
+const state = {
+  notificationsEnabled: false,
+  dismissedBanner: false,
+  reminders: {} // eventName -> bool
+};
 
-// ══════════════════════════════════════════════
-//   NOTIFICATIONS
-// ══════════════════════════════════════════════
-function checkNotifBanner(){
-  if(!('Notification' in window)) return;
-  if(Notification.permission==='default'){
-    const dismissed = sessionStorage.getItem('vc_banner_dismissed');
-    if(!dismissed) document.getElementById('notif-banner').classList.add('show');
-  }
+function init() {
+  renderDOW();
+  renderGrid();
+  renderList();
+  updateNextUp();
+  checkBannerStatus();
 }
-function requestNotifPermission(){
-  if(!('Notification' in window)){ toast('Notifications not supported on this browser'); return; }
-  Notification.requestPermission().then(perm=>{
-    if(perm==='granted'){
-      toast('🔔 Notifications enabled');
-      document.getElementById('notif-banner').classList.remove('show');
-      scheduleAllNotifications();
+
+function renderDOW() {
+  const row = document.getElementById('cal-dow-row');
+  row.innerHTML = DOW_NAMES.map(d => `<div class="cal-dow">${d}</div>`).join('');
+}
+
+function renderGrid() {
+  document.getElementById('mn-title').innerText = `${MONTH_NAMES[currentMonth]} ${currentYear}`;
+  
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  // Empty padding cells
+  for (let i = 0; i < firstDay; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell empty';
+    grid.appendChild(cell);
+  }
+
+  const today = new Date();
+  const isThisMonth = today.getFullYear() === currentYear && today.getMonth() === currentMonth;
+
+  // Actual days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    if (isThisMonth && today.getDate() === day) {
+      cell.className += ' today';
+    }
+
+    const dayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dayEvents = EVENTS.filter(e => e.date === dayStr);
+
+    let eventsHtml = '';
+    if (dayEvents.length > 0) {
+      eventsHtml = `<div class="cal-events">` + 
+        dayEvents.map(e => `<div class="cal-event-dot ${e.type}">${e.name}</div>`).join('') + 
+        `</div>`;
+    }
+
+    cell.innerHTML = `<div class="cal-daynum">${day}</div>${eventsHtml}`;
+    
+    if (dayEvents.length > 0) {
+      cell.onclick = () => openModal(dayEvents[0]);
     } else {
-      toast('Notifications blocked — enable in browser settings');
+      cell.onclick = () => showToast(`No specific major events listed for ${MONTH_NAMES[currentMonth]} ${day}.`);
     }
-  });
-}
-function dismissBanner(){
-  document.getElementById('notif-banner').classList.remove('show');
-  sessionStorage.setItem('vc_banner_dismissed','1');
+
+    grid.appendChild(cell);
+  }
 }
 
-function toggleAllNotifs(){
-  if(Notification.permission!=='granted'){
-    requestNotifPermission();
+function renderList() {
+  const listView = document.getElementById('cal-list-view');
+  listView.innerHTML = '';
+
+  const upcomingEvents = EVENTS.filter(e => e.date >= '2026-01-01').sort((a,b) => a.date.localeCompare(b.date));
+
+  // Group by month
+  const groups = {};
+  upcomingEvents.forEach(e => {
+    const m = parseInt(e.date.split('-')[1]) - 1;
+    if (!groups[m]) groups[m] = [];
+    groups[m].push(e);
+  });
+
+  for (const m in groups) {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'list-month-group';
+    
+    let itemsHtml = groups[m].map(e => {
+      const d = new Date(e.date);
+      const dayNum = e.date.split('-')[2];
+      const dowStr = DOW_NAMES[d.getDay()];
+      return `
+        <div class="list-item" onclick='openModal(${JSON.stringify(e)})'>
+          <div class="list-date-box">
+            <div class="day">${dayNum}</div>
+            <div class="dow">${dowStr}</div>
+          </div>
+          <div class="list-item-info">
+            <div class="list-item-name">${e.name}</div>
+            <div class="list-item-type ${e.type}">${e.type}</div>
+            <div class="list-item-desc">${e.story.substring(0, 90)}...</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    groupDiv.innerHTML = `
+      <div class="list-month-title">${MONTH_NAMES[m]} 2026</div>
+      ${itemsHtml}
+    `;
+    listView.appendChild(groupDiv);
+  }
+}
+
+function updateNextUp() {
+  const nextUpContainer = document.getElementById('next-up');
+  
+  // Set current simulated tracker focus date
+  const targetDateStr = '2026-06-14';
+  const next = EVENTS.find(e => e.date >= targetDateStr);
+
+  if (!next) {
+    nextUpContainer.innerHTML = '';
     return;
   }
-  toast('🔔 Checking upcoming events for reminders...');
-  scheduleAllNotifications();
-}
 
-// schedule local notifications for events within next 30 days
-function scheduleAllNotifications(){
-  if(Notification.permission!=='granted') return;
-  const now=new Date();
-  let count=0;
-  EVENTS.forEach(ev=>{
-    const evDate=new Date(ev.date+'T00:00:00');
-    const dayBefore=new Date(evDate); dayBefore.setDate(dayBefore.getDate()-1);
-    const msUntil=dayBefore.getTime()-now.getTime();
-    // only schedule if within next 30 days and in future
-    if(msUntil>0 && msUntil < 30*24*60*60*1000){
-      const key=ev.date+'_'+ev.name;
-      if(!notifiedEvents[key]){
-        setTimeout(()=>{
-          new Notification('🪷 Tomorrow: '+ev.name, {
-            body: ev.story.slice(0,100)+'...',
-            icon: 'images/icon-192.png'
-          });
-        }, msUntil);
-        count++;
-      }
-    }
-  });
-  if(count>0) toast(`🔔 ${count} reminder(s) scheduled for the next 30 days`);
-  else toast('No upcoming events in the next 30 days to remind about');
-}
+  const d = new Date(next.date);
+  const dayNum = next.date.split('-')[2];
+  const monthStr = MONTH_NAMES[d.getMonth()].substring(0,3);
 
-function toggleEventNotif(){
-  const ev=currentModalEvent;
-  if(!ev) return;
-  const key=ev.date+'_'+ev.name;
-  const btn=document.getElementById('modal-notify-btn');
+  const t1 = new Date(targetDateStr);
+  const t2 = new Date(next.date);
+  const diffTime = Math.abs(t2 - t1);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  let countdownText = `${diffDays} days left`;
+  if (diffDays === 0) countdownText = 'Today';
+  if (diffDays === 1) countdownText = 'Tomorrow';
 
-  if(Notification.permission!=='granted'){
-    requestNotifPermission();
-    return;
-  }
-
-  if(notifiedEvents[key]){
-    delete notifiedEvents[key];
-    btn.classList.remove('set');
-    btn.textContent='🔔 Remind me a day before';
-    toast('Reminder removed');
-  } else {
-    const evDate=new Date(ev.date+'T00:00:00');
-    const dayBefore=new Date(evDate); dayBefore.setDate(dayBefore.getDate()-1);
-    const msUntil=dayBefore.getTime()-Date.now();
-    if(msUntil<=0){
-      toast('⚠ This event is too close — reminder would fire immediately or has passed');
-      return;
-    }
-    notifiedEvents[key]=true;
-    setTimeout(()=>{
-      new Notification('🪷 Tomorrow: '+ev.name, {
-        body: ev.story.slice(0,100)+'...',
-        icon:'images/icon-192.png'
-      });
-    }, msUntil);
-    btn.classList.add('set');
-    btn.textContent='✓ Reminder set';
-    toast('🔔 You\\'ll be reminded the day before');
-  }
-  try{ localStorage.setItem('vc_notified', JSON.stringify(notifiedEvents)); }catch(e){}
-}
-
-// ══════════════════════════════════════════════
-//   DATE HELPERS
-// ══════════════════════════════════════════════
-function parseDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
-function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function eventsOnDate(dateStr){ return EVENTS.filter(e=>e.date===dateStr); }
-function daysUntil(d){ const diff=Math.ceil((d-TODAY)/(1000*60*60*24)); return diff; }
-
-// ══════════════════════════════════════════════
-//   NEXT UP CARD
-// ══════════════════════════════════════════════
-function renderNextUp(){
-  const upcoming=EVENTS
-    .map(e=>({...e,d:parseDate(e.date)}))
-    .filter(e=>e.d>=TODAY)
-    .sort((a,b)=>a.d-b.d);
-  if(!upcoming.length){ document.getElementById('next-up').innerHTML=''; return; }
-  const ev=upcoming[0];
-  const days=daysUntil(ev.d);
-  const dayLabel=days===0?'Today':days===1?'Tomorrow':`In ${days} days`;
-  document.getElementById('next-up').innerHTML=`
-    <div class="next-card" onclick="openModal('${ev.date}','${escapeAttr(ev.name)}')">
+  nextUpContainer.innerHTML = `
+    <div class="next-card" onclick='openModal(${JSON.stringify(next)})' style="cursor:pointer">
       <div class="next-date">
-        <div class="day">${ev.d.getDate()}</div>
-        <div class="month">${MONTH_NAMES[ev.d.getMonth()].slice(0,3)}</div>
+        <div class="day">${dayNum}</div>
+        <div class="month">${monthStr}</div>
       </div>
       <div class="next-info">
-        <div class="next-label">Next Observance</div>
-        <div class="next-name">${ev.name}</div>
-        <div class="next-countdown">${dayLabel}</div>
+        <div class="next-label">Next Sacred Day</div>
+        <div class="next-name">${next.name}</div>
+        <div class="next-countdown">${countdownText}</div>
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
-// ══════════════════════════════════════════════
-//   GRID VIEW
-// ══════════════════════════════════════════════
-function renderGrid(){
-  document.getElementById('mn-title').textContent = MONTH_NAMES[viewMonth]+' '+viewYear;
-
-  // dow row
-  document.getElementById('cal-dow-row').innerHTML = DOW_NAMES.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-
-  const firstDay=new Date(viewYear,viewMonth,1).getDay();
-  const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
-  const cells=[];
-
-  for(let i=0;i<firstDay;i++) cells.push('<div class="cal-cell empty"></div>');
-
-  for(let day=1;day<=daysInMonth;day++){
-    const dateObj=new Date(viewYear,viewMonth,day);
-    const dateStr=fmtDate(dateObj);
-    const evs=eventsOnDate(dateStr);
-    const isToday=dateObj.getTime()===TODAY.getTime();
-    let evHtml='';
-    if(evs.length){
-      evHtml='<div class="cal-events">'+evs.map(e=>`<div class="cal-event-dot ${e.type}">${e.name}</div>`).join('')+'</div>';
-    }
-    cells.push(`<div class="cal-cell ${isToday?'today':''}" onclick="${evs.length?`openModal('${dateStr}','${escapeAttr(evs[0].name)}')`:''}">
-      <div class="cal-daynum">${day}</div>
-      ${evHtml}
-    </div>`);
+function changeMonth(dir) {
+  currentMonth += dir;
+  if (currentMonth < 0) {
+    currentMonth = 11;
+    currentYear--;
+  } else if (currentMonth > 11) {
+    currentMonth = 0;
+    currentYear++;
   }
-
-  document.getElementById('cal-grid').innerHTML=cells.join('');
-}
-function changeMonth(delta){
-  viewMonth+=delta;
-  if(viewMonth<0){ viewMonth=11; viewYear--; }
-  if(viewMonth>11){ viewMonth=0; viewYear++; }
   renderGrid();
 }
 
-// ══════════════════════════════════════════════
-//   LIST VIEW
-// ══════════════════════════════════════════════
-function renderList(){
-  const upcoming=EVENTS
-    .map(e=>({...e,d:parseDate(e.date)}))
-    .filter(e=>e.d>=TODAY)
-    .sort((a,b)=>a.d-b.d);
-
-  const groups={};
-  upcoming.forEach(e=>{
-    const key=MONTH_NAMES[e.d.getMonth()]+' '+e.d.getFullYear();
-    if(!groups[key]) groups[key]=[];
-    groups[key].push(e);
-  });
-
-  let html='';
-  Object.entries(groups).forEach(([month,evs])=>{
-    html+=`<div class="list-month-group"><div class="list-month-title">${month}</div>`;
-    evs.forEach(e=>{
-      html+=`<div class="list-item" onclick="openModal('${e.date}','${escapeAttr(e.name)}')">
-        <div class="list-date-box">
-          <div class="day">${e.d.getDate()}</div>
-          <div class="dow">${DOW_NAMES[e.d.getDay()]}</div>
-        </div>
-        <div class="list-item-info">
-          <div class="list-item-name">${e.name}</div>
-          <div class="list-item-type ${e.type}">${e.type}</div>
-          <div class="list-item-desc">${e.story.slice(0,110)}...</div>
-        </div>
-      </div>`;
-    });
-    html+='</div>';
-  });
-
-  if(!html) html='<div style="text-align:center;padding:40px;color:var(--ink3);font-style:italic">No more events this year</div>';
-  document.getElementById('cal-list-view').innerHTML=html;
+function setView(view) {
+  activeView = view;
+  document.getElementById('vt-grid').classList.toggle('active', view === 'grid');
+  document.getElementById('vt-list').classList.toggle('active', view === 'list');
+  
+  document.getElementById('cal-grid-view').style.display = view === 'grid' ? 'block' : 'none';
+  document.getElementById('cal-list-view').style.display = view === 'list' ? 'block' : 'none';
 }
 
-// ══════════════════════════════════════════════
-//   VIEW TOGGLE
-// ══════════════════════════════════════════════
-function setView(v){
-  document.getElementById('vt-grid').classList.toggle('active',v==='grid');
-  document.getElementById('vt-list').classList.toggle('active',v==='list');
-  document.getElementById('cal-grid-view').style.display=v==='grid'?'block':'none';
-  document.getElementById('cal-list-view').style.display=v==='list'?'block':'none';
-  if(v==='list') renderList();
-}
+function openModal(eventObj) {
+  activeEvent = eventObj;
+  const d = new Date(eventObj.date);
+  const formattedDate = `${DOW_NAMES[d.getDay()], MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  
+  document.getElementById('modal-date').innerText = `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  document.getElementById('modal-title').innerText = eventObj.name;
+  
+  const badge = document.getElementById('modal-badge');
+  badge.innerText = eventObj.type;
+  badge.className = `modal-type-badge ${eventObj.type}`;
 
-// ══════════════════════════════════════════════
-//   MODAL
-// ══════════════════════════════════════════════
-let currentModalEvent=null;
-function openModal(dateStr,name){
-  const ev=EVENTS.find(e=>e.date===dateStr&&e.name===name);
-  if(!ev) return;
-  currentModalEvent=ev;
-  const d=parseDate(ev.date);
-
-  document.getElementById('modal-date').textContent=
-    DOW_NAMES[d.getDay()]+', '+MONTH_NAMES[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
-  document.getElementById('modal-title').textContent=ev.name;
-
-  const badge=document.getElementById('modal-badge');
-  badge.textContent=ev.type==='ekadashi'?'Ekadashi Fasting Day':ev.type==='acharya'?'Acharya Day':'Festival';
-  badge.className='modal-type-badge '+ev.type;
-
-  // story as paragraphs
-  document.getElementById('modal-story').innerHTML='<p>'+ev.story+'</p>';
-
-  // notify button state
-  const key=ev.date+'_'+ev.name;
-  const btn=document.getElementById('modal-notify-btn');
-  if(notifiedEvents[key]){
-    btn.classList.add('set'); btn.textContent='✓ Reminder set';
+  document.getElementById('modal-story').innerHTML = `<p>${eventObj.story}</p>`;
+  
+  const btn = document.getElementById('modal-notify-btn');
+  if (state.reminders[eventObj.name]) {
+    btn.innerText = '✓ Reminder set for this day';
+    btn.classList.add('set');
   } else {
-    btn.classList.remove('set'); btn.textContent='🔔 Remind me a day before';
+    btn.innerText = '🔔 Remind me a day before';
+    btn.classList.remove('set');
   }
 
   document.getElementById('modal-overlay').classList.add('open');
 }
-function closeModal(){
+
+function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
+  activeEvent = null;
 }
 
-// escape for inline attribute
-function escapeAttr(s){ return s.replace(/'/g,"\\'"); }
+function toggleEventNotif() {
+  if (!activeEvent) return;
+  
+  if (!state.notificationsEnabled && !state.dismissedBanner) {
+    showToast("Please allow system notification permissions first.");
+    requestNotifPermission();
+    return;
+  }
 
-// ══════════════════════════════════════════════
-//   TOAST
-// ══════════════════════════════════════════════
-let toastTimer=null;
-function toast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  if(toastTimer) clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+  const isSet = state.reminders[activeEvent.name];
+  state.reminders[activeEvent.name] = !isSet;
+
+  const btn = document.getElementById('modal-notify-btn');
+  if (!isSet) {
+    btn.innerText = '✓ Reminder set for this day';
+    btn.classList.add('set');
+    showToast(`Reminder set for ${activeEvent.name}`);
+  } else {
+    btn.innerText = '🔔 Remind me a day before';
+    btn.classList.remove('set');
+    showToast(`Reminder removed for ${activeEvent.name}`);
+  }
 }
 
-// ══════════════════════════════════════════════
-//   INIT
-// ══════════════════════════════════════════════
-renderNextUp();
-renderGrid();
-checkNotifBanner();
-if(Notification && Notification.permission==='granted') scheduleAllNotifications();
+function requestNotifPermission() {
+  state.notificationsEnabled = true;
+  document.getElementById('notif-banner').classList.remove('show');
+  showToast("Notifications enabled successfully.");
+}
 
-// keyboard escape closes modal
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+function dismissBanner() {
+  state.dismissedBanner = true;
+  document.getElementById('notif-banner').classList.remove('show');
+}
+
+function checkBannerStatus() {
+  if (!state.notificationsEnabled && !state.dismissedBanner) {
+    document.getElementById('notif-banner').classList.add('show');
+  }
+}
+
+function toggleAllNotifs() {
+  state.notificationsEnabled = !state.notificationsEnabled;
+  if (state.notificationsEnabled) {
+    showToast("All system notification alerts enabled globally.");
+  } else {
+    showToast("Global notifications disabled.");
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.innerText = msg;
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+window.onload = init;
 </script>
 </body>
 </html>
+
