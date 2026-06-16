@@ -291,12 +291,12 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
 
 /* TOOLS */
 .tools-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:17px; }
-.tool-card { background:#fff; border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); transition:all .22s; }
-.tool-card:hover { transform:translateY(-3px); border-color:var(--saffron); }
+.tool-card { background:#a752f6; border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); transition:all .22s; }
+.tool-card:hover { transform:translateY(-3px); border-color:white;  }
 .tool-head { display:flex; align-items:center; gap:11px; margin-bottom:13px; }
 .tool-icon { font-size:1.7rem; }
 .tool-title { font-weight:700; font-size:.93rem; }
-.tool-sub { font-size:.77rem; color:var(--text-muted); margin-bottom:13px; }
+.tool-sub { font-size:.77rem; color:#FFFEF9; margin-bottom:13px; }
 .tool-output { background:var(--cream); border-radius:8px; padding:11px; font-size:.83rem; min-height:38px; color:var(--text); word-break:break-all; line-height:1.6; border:1px solid rgba(212,175,55,.14); font-family:monospace; }
 .tools-row { display:flex; gap:7px; margin-bottom:9px; flex-wrap:wrap; }
 .inp { flex:1; padding:9px 14px; border:1.5px solid rgba(212,175,55,.28); border-radius:9px; font-size:.86rem; font-family:'Nunito',sans-serif; color:var(--text); background:#FFFEF9; outline:none; transition:border-color .2s; }
@@ -312,10 +312,10 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
 
 /* OTHER */
 .other-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:18px; }
-.other-card { background:#fff; border-radius:var(--radius); padding:26px 22px; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); text-align:center; }
+.other-card { background:#f696f9; border-radius:var(--radius); padding:26px 22px; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); text-align:center; }
 .other-icon { font-size:2.4rem; margin-bottom:13px; }
-.other-title { font-family:'Cinzel',serif; font-size:.98rem; color:var(--text); margin-bottom:7px; }
-.other-desc { font-size:.8rem; color:var(--text-muted); line-height:1.6; }
+.other-title { font-family:'Cinzel',serif; font-size:.98rem; color:#ffffff; margin-bottom:7px; }
+.other-desc { font-size:.8rem; color:#e3d7b6; line-height:1.6; }
 
 /* SCROLLBAR */
 ::-webkit-scrollbar { width:5px; }
@@ -1074,6 +1074,22 @@ section { animation: hk-sec-in .28s cubic-bezier(0.25,1,0.5,1) both; }
 
 
   <!-- Audio sticker — dancing musical blob -->
+   
+
+    <img
+  id="audio-bg-img"
+  src="img/pleasure of namasmaran.jpg"
+  style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    opacity: 1;
+    pointer-events: none;
+  "
+>
+
   <div class="hk-sticker-wrap" style="padding:16px 0 4px; position:relative; z-index:12;">
     <svg class="hk-sticker hk-sticker-audio" width="82" height="82" viewBox="0 0 82 82" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -1121,6 +1137,9 @@ section { animation: hk-sec-in .28s cubic-bezier(0.25,1,0.5,1) both; }
       <circle cx="72" cy="60" r="2" fill="#FFD700" opacity="0.8"/>
       <circle cx="10" cy="20" r="2.2" fill="#a7f3d0" opacity="0.7"/>
     </svg>
+
+
+
   </div>
   <!-- Slide panel -->
   <div id="audio-panel">
@@ -1497,7 +1516,7 @@ const MY_AUDIO = [
   { title: "Kishori-Ladali", src: "audio/Kishori-Ladali.m4a" },
   { title: "Nadiya-Godrume-Nityananda-Mahajana", src: "audio/Nadiya-Godrume-Nityananda-Mahajana.mp3" },
   { title: "Narasimha-Kavacha", src: "audio/Narasimha Kavacha Stotram - POWERFUL PRAYER FOR PROTECTION.mp3" },
-  { title: "Mayapur-Narasimha-Aarti", src: "audio/Narasimha-Aarti-(June 08, 2019).m4a" },
+  { title: "Mayapur-Narasimha-Aarti", src: "audio/Narasimha Aarti (June 08, 2019).m4a" },
   { title: "Hare-Krishna-Maha-Mantra-kirtan-by-Srila-Prabhupada", src: "audio/Original Hare Krishna Maha Mantra kirtan by Srila Prabhupada.mp3" },
   { title: "Govindam-Prayers-by-Her-Grace-Yamuna-Devi", src: "audio/PARTICIPATE-Govindam-Prayers-along-with-Her-Grace-Yamuna-Devi.m4a" },
   { title: "Radha-Gori-Gori", src: "audio/Radha Gori Gori (Lyrical Video) _ Indresh Upadhyay _ B Praak _ Kripa Records.m4a" },
