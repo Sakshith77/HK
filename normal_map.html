@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Normal Map Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a10;
+  --s1:#10101a;
+  --s2:#171722;
+  --s3:#1e1e2e;
+  --s4:#252538;
+  --border:#252540;
+  --border2:#303050;
+  --accent:#a78bfa;
+  --accent2:#c4b5fd;
+  --blue:#4d9fff;
+  --green:#2ecc71;
+  --red:#ff4d6d;
+  --text:#e8e8f5;
+  --text2:#8888aa;
+  --text3:#44445a;
+  --sans:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--sans);}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 70% 20%,rgba(167,139,250,.06) 0%,transparent 55%);
+}
+
+/* ── HEADER ── */
+header{
+  position:relative;z-index:2;
+  padding:26px 28px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.logo{font-size:1.15rem;font-weight:700;letter-spacing:-.01em;}
+.logo span{color:var(--accent);}
+.logo-sub{font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:3px;}
+.header-tip{
+  font-size:.72rem;color:var(--text3);
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:7px;padding:7px 14px;max-width:320px;line-height:1.5;
+}
+.header-tip strong{color:var(--accent2);}
+
+/* ── MAIN GRID ── */
+#app{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:300px 1fr;
+  grid-template-rows:auto 1fr;
+  gap:20px;
+  max-width:1100px;
+  margin:0 auto;
+  padding:24px 20px 60px;
+}
+@media(max-width:720px){
+  #app{grid-template-columns:1fr;}
+}
+
+/* ── LEFT PANEL ── */
+#left{display:flex;flex-direction:column;gap:16px;}
+
+/* drop zone */
+#drop-zone{
+  border:2px dashed var(--border2);border-radius:var(--r);
+  padding:32px 16px;text-align:center;cursor:pointer;
+  transition:all .2s;background:var(--s1);
+  position:relative;overflow:hidden;
+}
+#drop-zone:hover,#drop-zone.dragover{
+  border-color:var(--accent);background:rgba(167,139,250,.05);
+}
+#drop-zone.has-img{padding:0;cursor:default;border-style:solid;}
+.dz-icon{font-size:2.5rem;margin-bottom:10px;opacity:.35;}
+.dz-title{font-size:.88rem;font-weight:600;margin-bottom:5px;}
+.dz-sub{font-size:.7rem;color:var(--text3);}
+.dz-btn{
+  display:inline-block;margin-top:14px;
+  padding:8px 20px;border-radius:7px;
+  background:var(--accent);color:#fff;
+  font-family:var(--sans);font-size:.78rem;font-weight:700;
+  cursor:pointer;border:none;transition:all .18s;
+}
+.dz-btn:hover{background:var(--accent2);}
+#file-input{display:none;}
+#src-preview{
+  width:100%;height:180px;object-fit:contain;
+  display:none;border-radius:8px;background:#000;
+}
+#src-preview.show{display:block;}
+.src-actions{
+  display:none;padding:8px;gap:6px;
+}
+.src-actions.show{display:flex;}
+.sa-btn{
+  flex:1;padding:6px;border-radius:6px;border:1px solid var(--border2);
+  background:transparent;color:var(--text2);
+  font-family:var(--sans);font-size:.7rem;cursor:pointer;transition:all .15s;
+}
+.sa-btn:hover{background:var(--s3);color:var(--text);}
+
+/* controls panel */
+.ctrl-panel{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px;
+}
+.cp-title{
+  font-size:.68rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text3);
+  font-family:var(--mono);margin-bottom:16px;
+}
+.ctrl-row{margin-bottom:16px;}
+.ctrl-label{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.75rem;font-weight:600;color:var(--text2);
+  margin-bottom:8px;
+}
+.ctrl-label span{font-family:var(--mono);color:var(--accent2);}
+.ctrl-range{width:100%;accent-color:var(--accent);cursor:pointer;}
+.range-labels{
+  display:flex;justify-content:space-between;
+  font-size:.6rem;color:var(--text3);font-family:var(--mono);margin-top:3px;
+}
+
+/* checkboxes */
+.check-row{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:10px;cursor:pointer;
+}
+.check-row input{accent-color:var(--accent);cursor:pointer;width:14px;height:14px;}
+.check-label{font-size:.78rem;color:var(--text2);}
+
+/* generate button */
+#gen-btn{
+  width:100%;padding:12px;border-radius:8px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-family:var(--sans);font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 16px rgba(167,139,250,.3);
+  letter-spacing:.02em;
+}
+#gen-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(167,139,250,.4);}
+#gen-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;}
+
+/* info box */
+.info-box{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:8px;padding:12px 14px;
+}
+.info-box-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);margin-bottom:8px;}
+.info-row{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:4px;}
+.info-key{color:var(--text3);}
+.info-val{font-family:var(--mono);color:var(--text);}
+
+/* ── RIGHT: OUTPUT ── */
+#right{
+  display:flex;flex-direction:column;gap:16px;
+}
+
+/* output tabs */
+.out-tabs{display:flex;gap:4px;background:var(--s2);border-radius:8px;padding:3px;border:1px solid var(--border);}
+.out-tab{
+  flex:1;padding:8px;border-radius:6px;border:none;
+  background:transparent;color:var(--text3);
+  font-family:var(--sans);font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:all .15s;text-align:center;
+}
+.out-tab.active{background:var(--accent);color:#fff;}
+
+/* output views */
+.out-view{display:none;}
+.out-view.active{display:block;}
+
+/* normal map canvas */
+#normal-canvas-wrap{
+  background:#000;border-radius:10px;overflow:hidden;
+  border:1px solid var(--border);
+  position:relative;min-height:280px;
+  display:flex;align-items:center;justify-content:center;
+}
+#normal-canvas{max-width:100%;max-height:500px;display:block;margin:0 auto;}
+
+/* 3D sphere preview using WebGL */
+#sphere-wrap{
+  background:#111;border-radius:10px;overflow:hidden;
+  border:1px solid var(--border);
+  position:relative;
+  aspect-ratio:1;max-height:460px;
+}
+#sphere-canvas{width:100%;height:100%;display:block;}
+.sphere-hint{
+  position:absolute;bottom:8px;left:0;right:0;text-align:center;
+  font-size:.62rem;color:rgba(255,255,255,.3);pointer-events:none;
+  font-family:var(--mono);
+}
+
+/* download row */
+.dl-row{display:flex;gap:8px;flex-wrap:wrap;}
+.dl-btn{
+  flex:1;min-width:120px;padding:10px;border-radius:8px;border:none;
+  font-family:var(--sans);font-size:.78rem;font-weight:700;
+  cursor:pointer;transition:all .15s;
+}
+.dl-normal{background:rgba(167,139,250,.2);color:var(--accent2);border:1px solid rgba(167,139,250,.3);}
+.dl-normal:hover{background:var(--accent);color:#fff;}
+
+/* placeholder */
+.out-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:280px;color:var(--text3);gap:10px;text-align:center;
+}
+.op-icon{font-size:2.5rem;opacity:.2;}
+.op-text{font-size:.82rem;}
+
+/* progress */
+#gen-progress{
+  display:none;background:var(--s2);border-radius:7px;padding:12px 16px;
+  border:1px solid var(--border);
+}
+#gen-progress.show{display:block;}
+.gp-label{font-size:.75rem;color:var(--text2);margin-bottom:8px;}
+.gp-bar-wrap{height:4px;background:var(--s3);border-radius:4px;overflow:hidden;}
+.gp-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;border-radius:4px;transition:width .3s;}
+
+/* toast */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--s3);border:1px solid var(--border2);border-radius:7px;
+  padding:10px 22px;font-size:.78rem;color:var(--text);
+  opacity:0;transition:all .25s;z-index:100;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Normal Map <span>Generator</span></div>
+    <div class="logo-sub">photo → normal map · Sobel edge detection · WebGL preview</div>
+  </div>
+  <div class="header-tip">
+    <strong>Tip for Blender:</strong> Set image node to <strong>Non-Color</strong> · plug into Normal Map node · connect to BSDF Normal input
+  </div>
+</header>
+
+<div id="app">
+
+  <!-- LEFT PANEL -->
+  <div id="left">
+
+    <!-- Drop zone -->
+    <div id="drop-zone"
+      ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)"
+      onclick="if(!hasImg) document.getElementById('file-input').click()">
+      <div id="dz-empty">
+        <div class="dz-icon">🖼️</div>
+        <div class="dz-title">Drop your texture here</div>
+        <div class="dz-sub">Photo, diffuse texture, or any image<br>JPG · PNG · WEBP</div>
+        <button class="dz-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Browse Image</button>
+      </div>
+      <img id="src-preview" alt="Source">
+      <div class="src-actions" id="src-actions">
+        <button class="sa-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Change</button>
+        <button class="sa-btn" onclick="event.stopPropagation();clearImg()" style="color:var(--red)">Remove</button>
+      </div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" onchange="loadImg(this)">
+
+    <!-- Controls -->
+    <div class="ctrl-panel">
+      <div class="cp-title">⚙ Settings</div>
+
+      <div class="ctrl-row">
+        <div class="ctrl-label">Strength <span id="strength-val">3.0×</span></div>
+        <input type="range" class="ctrl-range" id="strength" min="0.5" max="10" step="0.1" value="3"
+          oninput="document.getElementById('strength-val').textContent=parseFloat(this.value).toFixed(1)+'×'">
+        <div class="range-labels"><span>Subtle</span><span>Medium</span><span>Strong</span></div>
+      </div>
+
+      <div class="ctrl-row">
+        <div class="ctrl-label">Blur (smooth noise) <span id="blur-val">1px</span></div>
+        <input type="range" class="ctrl-range" id="blur-amt" min="0" max="8" step="1" value="1"
+          oninput="document.getElementById('blur-val').textContent=this.value+'px'">
+        <div class="range-labels"><span>0px</span><span>4px</span><span>8px</span></div>
+      </div>
+
+      <label class="check-row">
+        <input type="checkbox" id="invert-y">
+        <div class="check-label">Invert Y (flip green channel — for DirectX style)</div>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" id="invert-x">
+        <div class="check-label">Invert X (flip red channel)</div>
+      </label>
+
+      <button id="gen-btn" onclick="generate()" disabled>⚡ Generate Normal Map</button>
+    </div>
+
+    <!-- Image info -->
+    <div class="info-box" id="img-info" style="display:none">
+      <div class="info-box-title">Source Image</div>
+      <div class="info-row"><div class="info-key">Size</div><div class="info-val" id="inf-size">—</div></div>
+      <div class="info-row"><div class="info-key">Dimensions</div><div class="info-val" id="inf-dims">—</div></div>
+      <div class="info-row"><div class="info-key">Format</div><div class="info-val" id="inf-fmt">—</div></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT OUTPUT -->
+  <div id="right">
+
+    <!-- Tabs -->
+    <div class="out-tabs">
+      <button class="out-tab active" onclick="setOutTab('normal')">🟣 Normal Map</button>
+      <button class="out-tab" onclick="setOutTab('sphere')">🌐 3D Preview</button>
+    </div>
+
+    <!-- Normal map view -->
+    <div class="out-view active" id="view-normal">
+      <div id="normal-canvas-wrap">
+        <div class="out-placeholder" id="normal-placeholder">
+          <div class="op-icon">🟣</div>
+          <div class="op-text">Normal map will appear here</div>
+        </div>
+        <canvas id="normal-canvas" style="display:none"></canvas>
+      </div>
+
+      <div id="gen-progress" style="margin-top:12px">
+        <div class="gp-label" id="gp-label">Generating...</div>
+        <div class="gp-bar-wrap"><div class="gp-bar" id="gp-bar"></div></div>
+      </div>
+
+      <div class="dl-row" style="margin-top:14px">
+        <button class="dl-btn dl-normal" id="dl-normal-btn" onclick="downloadNormal()" disabled>⬇ Download Normal Map (.png)</button>
+      </div>
+    </div>
+
+    <!-- Sphere preview -->
+    <div class="out-view" id="view-sphere">
+      <div id="sphere-wrap">
+        <canvas id="sphere-canvas"></canvas>
+        <div class="sphere-hint">🖱 Drag to rotate sphere</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+
+// ══ STATE ══════════════════════════════════════
+var srcImg=null, srcFile=null;
+var hasImg=false;
+var normalImageData=null;  // pixel data of generated normal map
+var normalCanvas=document.getElementById('normal-canvas');
+var normalCtx=normalCanvas.getContext('2d');
+var activeTab='normal';
+
+// WebGL sphere state
+var gl=null, sphereProg=null, sphereTex=null, normalTex=null;
+var sphereRotX=0.4, sphereRotY=0.3;
+var sphereDragging=false, sphereLastX=0, sphereLastY=0;
+var sphereRAF=null;
+
+// ══ FILE LOADING ══════════════════════════════
+function loadImg(input){
+  var f=input.files[0]; if(!f) return;
+  if(!f.type.startsWith('image/')){toast('Please use an image file');return;}
+  srcFile=f;
+  var url=URL.createObjectURL(f);
+  var img=new Image();
+  img.onload=function(){
+    srcImg=img;
+    hasImg=true;
+    document.getElementById('src-preview').src=url;
+    document.getElementById('src-preview').classList.add('show');
+    document.getElementById('src-actions').classList.add('show');
+    document.getElementById('dz-empty').style.display='none';
+    document.getElementById('drop-zone').classList.add('has-img');
+    document.getElementById('gen-btn').disabled=false;
+    document.getElementById('img-info').style.display='block';
+    document.getElementById('inf-size').textContent=fmtBytes(f.size);
+    document.getElementById('inf-dims').textContent=img.width+'×'+img.height;
+    document.getElementById('inf-fmt').textContent=f.type.split('/')[1].toUpperCase();
+  };
+  img.src=url;
+  input.value='';
+}
+window.loadImg=loadImg;
+
+function clearImg(){
+  srcImg=null; srcFile=null; hasImg=false;
+  document.getElementById('src-preview').classList.remove('show');
+  document.getElementById('src-actions').classList.remove('show');
+  document.getElementById('dz-empty').style.display='block';
+  document.getElementById('drop-zone').classList.remove('has-img');
+  document.getElementById('gen-btn').disabled=true;
+  document.getElementById('img-info').style.display='none';
+  document.getElementById('dl-normal-btn').disabled=true;
+  normalCanvas.style.display='none';
+  document.getElementById('normal-placeholder').style.display='flex';
+}
+window.clearImg=clearImg;
+
+function dzOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('dragover');}
+function dzLeave(){document.getElementById('drop-zone').classList.remove('dragover');}
+function dzDrop(e){
+  e.preventDefault();dzLeave();
+  var f=e.dataTransfer.files[0];
+  if(!f||!f.type.startsWith('image/')) return;
+  loadImg({files:[f],value:''});
+}
+window.dzOver=dzOver;window.dzLeave=dzLeave;window.dzDrop=dzDrop;
+
+// ══ OUTPUT TABS ════════════════════════════════
+function setOutTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.out-tab').forEach(function(b,i){
+    b.classList.toggle('active',i===(tab==='normal'?0:1));
+  });
+  document.querySelectorAll('.out-view').forEach(function(v,i){
+    v.classList.toggle('active',i===(tab==='normal'?0:1));
+  });
+  if(tab==='sphere'&&normalImageData) initOrUpdateSphere();
+}
+window.setOutTab=setOutTab;
+
+// ══ GENERATE ══════════════════════════════════
+function generate(){
+  if(!srcImg){toast('Load an image first');return;}
+  setProgress(5,'Converting to grayscale...');
+
+  setTimeout(function(){
+    // draw source to offscreen canvas
+    var W=srcImg.width, H=srcImg.height;
+    var src=document.createElement('canvas');
+    src.width=W; src.height=H;
+    var sCtx=src.getContext('2d');
+    sCtx.drawImage(srcImg,0,0);
+    var srcData=sCtx.getImageData(0,0,W,H).data;
+
+    setProgress(20,'Extracting luminance...');
+
+    // build grayscale + apply gaussian blur
+    var blur=parseInt(document.getElementById('blur-amt').value)||0;
+    var gray=new Float32Array(W*H);
+    for(var i=0;i<W*H;i++){
+      var r=srcData[i*4], g=srcData[i*4+1], b=srcData[i*4+2];
+      gray[i]=(0.299*r+0.587*g+0.114*b)/255;
+    }
+
+    setProgress(35,'Applying blur...');
+
+    if(blur>0) gray=gaussianBlur(gray,W,H,blur);
+
+    setProgress(55,'Running Sobel filter...');
+
+    var strength=parseFloat(document.getElementById('strength').value)||3;
+    var invertY=document.getElementById('invert-y').checked;
+    var invertX=document.getElementById('invert-x').checked;
+
+    // Sobel convolution → normals
+    var out=new Uint8ClampedArray(W*H*4);
+
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        // sample 3x3 neighbourhood (clamped to edges)
+        function s(dx,dy){
+          var nx=Math.max(0,Math.min(W-1,x+dx));
+          var ny=Math.max(0,Math.min(H-1,y+dy));
+          return gray[ny*W+nx];
+        }
+        // Sobel kernels
+        var gx=(s(1,-1)+2*s(1,0)+s(1,1))-(s(-1,-1)+2*s(-1,0)+s(-1,1));
+        var gy=(s(-1,1)+2*s(0,1)+s(1,1))-(s(-1,-1)+2*s(0,-1)+s(1,-1));
+
+        gx*=strength; gy*=strength;
+
+        // normal from gradient
+        var nx2=-gx, ny2=-gy, nz=1.0;
+        // normalize
+        var len=Math.sqrt(nx2*nx2+ny2*ny2+nz*nz);
+        nx2/=len; ny2/=len; nz/=len;
+
+        if(invertX) nx2=-nx2;
+        if(invertY) ny2=-ny2;
+
+        // pack into RGB: (n+1)/2 * 255
+        var idx=(y*W+x)*4;
+        out[idx]  =Math.round((nx2+1)/2*255);  // R = X
+        out[idx+1]=Math.round((ny2+1)/2*255);  // G = Y
+        out[idx+2]=Math.round((nz +1)/2*255);  // B = Z
+        out[idx+3]=255;
+      }
+    }
+
+    setProgress(85,'Rendering...');
+
+    normalCanvas.width=W; normalCanvas.height=H;
+    normalImageData=new ImageData(out,W,H);
+    normalCtx.putImageData(normalImageData,0,0);
+    normalCanvas.style.display='block';
+    document.getElementById('normal-placeholder').style.display='none';
+    document.getElementById('dl-normal-btn').disabled=false;
+
+    setProgress(100,'Done!');
+    setTimeout(function(){
+      hideProgress();
+      toast('Normal map generated — '+W+'×'+H);
+      if(activeTab==='sphere') initOrUpdateSphere();
+    },300);
+
+  },30);
+}
+window.generate=generate;
+
+// ══ GAUSSIAN BLUR ══════════════════════════════
+function gaussianBlur(data,W,H,radius){
+  var kernel=makeGaussianKernel(radius);
+  var tmp=new Float32Array(W*H);
+  var kl=kernel.length, half=Math.floor(kl/2);
+
+  // horizontal pass
+  for(var y=0;y<H;y++){
+    for(var x=0;x<W;x++){
+      var sum=0,wsum=0;
+      for(var k=0;k<kl;k++){
+        var sx=x+k-half;
+        if(sx<0||sx>=W) continue;
+        sum+=data[y*W+sx]*kernel[k];
+        wsum+=kernel[k];
+      }
+      tmp[y*W+x]=sum/wsum;
+    }
+  }
+  // vertical pass
+  var out=new Float32Array(W*H);
+  for(var y=0;y<H;y++){
+    for(var x=0;x<W;x++){
+      var sum=0,wsum=0;
+      for(var k=0;k<kl;k++){
+        var sy=y+k-half;
+        if(sy<0||sy>=H) continue;
+        sum+=tmp[sy*W+x]*kernel[k];
+        wsum+=kernel[k];
+      }
+      out[y*W+x]=sum/wsum;
+    }
+  }
+  return out;
+}
+function makeGaussianKernel(r){
+  var size=r*2+1, sigma=r/2, k=[], sum=0;
+  for(var i=0;i<size;i++){
+    var x=i-r;
+    var v=Math.exp(-(x*x)/(2*sigma*sigma));
+    k.push(v); sum+=v;
+  }
+  return k.map(function(v){return v/sum;});
+}
+
+// ══ PROGRESS ═══════════════════════════════════
+function setProgress(pct,msg){
+  var prog=document.getElementById('gen-progress');
+  prog.classList.add('show');
+  document.getElementById('gp-label').textContent=msg||'Processing...';
+  document.getElementById('gp-bar').style.width=pct+'%';
+}
+function hideProgress(){
+  document.getElementById('gen-progress').classList.remove('show');
+}
+
+// ══ DOWNLOAD ═══════════════════════════════════
+function downloadNormal(){
+  if(!normalImageData){toast('Generate normal map first');return;}
+  normalCanvas.toBlob(function(blob){
+    var base=srcFile?srcFile.name.replace(/\.[^.]+$/,''):'texture';
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=base+'_normal.png';
+    a.click();
+  },'image/png');
+}
+window.downloadNormal=downloadNormal;
+
+// ══ WEBGL SPHERE PREVIEW ═══════════════════════
+function initOrUpdateSphere(){
+  var canvas=document.getElementById('sphere-canvas');
+  if(!gl){
+    gl=canvas.getContext('webgl')||canvas.getContext('experimental-webgl');
+    if(!gl){
+      document.getElementById('sphere-wrap').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:.82rem;padding:20px;text-align:center">WebGL not supported — view normal map in the Normal Map tab</div>';
+      return;
+    }
+    initSphereGL();
+    setupSphereEvents(canvas);
+    renderSphere();
+  }
+  updateNormalTex();
+}
+
+function initSphereGL(){
+  // vertex shader
+  var vsSource=
+    'attribute vec3 aPos;attribute vec3 aNorm;attribute vec2 aUV;'+
+    'uniform mat4 uMVP;uniform mat3 uNM;'+
+    'varying vec3 vNorm;varying vec2 vUV;varying vec3 vPos;'+
+    'void main(){gl_Position=uMVP*vec4(aPos,1.0);vNorm=uNM*aNorm;vUV=aUV;vPos=aPos;}';
+
+  // fragment shader — Blinn-Phong with normal map
+  var fsSource=
+    'precision mediump float;'+
+    'uniform sampler2D uNormalMap;'+
+    'uniform sampler2D uDiffuse;'+
+    'uniform bool uHasDiffuse;'+
+    'varying vec3 vNorm;varying vec2 vUV;varying vec3 vPos;'+
+    'void main(){'+
+      'vec4 nmSample=texture2D(uNormalMap,vUV);'+
+      'vec3 N;'+
+      'if(nmSample.r>0.0||nmSample.g>0.0||nmSample.b>0.0){'+
+        'N=normalize(nmSample.rgb*2.0-1.0);'+
+      '}else{'+
+        'N=normalize(vNorm);'+
+      '}'+
+      'vec3 L=normalize(vec3(1.0,1.5,2.0));'+
+      'vec3 V=normalize(vec3(0.0,0.0,1.0)-vPos);'+
+      'vec3 H=normalize(L+V);'+
+      'float diff=max(dot(N,L),0.0);'+
+      'float spec=pow(max(dot(N,H),0.0),64.0);'+
+      'float amb=0.15;'+
+      'vec3 base=uHasDiffuse?texture2D(uDiffuse,vUV).rgb:vec3(0.5,0.5,1.0);'+
+      'vec3 col=base*(amb+diff)+vec3(1.0)*spec*0.6;'+
+      'gl_FragColor=vec4(col,1.0);'+
+    '}';
+
+  sphereProg=createProgram(vsSource,fsSource);
+  gl.useProgram(sphereProg);
+
+  // build sphere geometry
+  var verts=[], idxs=[];
+  var stacks=48, slices=48;
+  for(var i=0;i<=stacks;i++){
+    var phi=Math.PI*i/stacks;
+    for(var j=0;j<=slices;j++){
+      var theta=2*Math.PI*j/slices;
+      var x=Math.sin(phi)*Math.cos(theta);
+      var y=Math.cos(phi);
+      var z=Math.sin(phi)*Math.sin(theta);
+      verts.push(x,y,z, x,y,z, j/slices, i/stacks);
+    }
+  }
+  for(var i=0;i<stacks;i++){
+    for(var j=0;j<slices;j++){
+      var a=i*(slices+1)+j;
+      var b=a+slices+1;
+      idxs.push(a,b,a+1, b,b+1,a+1);
+    }
+  }
+
+  var vbo=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,vbo);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);
+
+  var ebo=gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ebo);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(idxs),gl.STATIC_DRAW);
+
+  var stride=8*4;
+  var aPos=gl.getAttribLocation(sphereProg,'aPos');
+  var aNorm=gl.getAttribLocation(sphereProg,'aNorm');
+  var aUV=gl.getAttribLocation(sphereProg,'aUV');
+  gl.enableVertexAttribArray(aPos);  gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,stride,0);
+  gl.enableVertexAttribArray(aNorm); gl.vertexAttribPointer(aNorm,3,gl.FLOAT,false,stride,12);
+  gl.enableVertexAttribArray(aUV);   gl.vertexAttribPointer(aUV,2,gl.FLOAT,false,stride,24);
+
+  sphereProg._indexCount=idxs.length;
+  sphereProg._vbo=vbo; sphereProg._ebo=ebo;
+
+  // create empty normal texture
+  normalTex=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,normalTex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([128,128,255,255]));
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+
+  // diffuse texture slot
+  sphereTex=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,sphereTex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([128,128,200,255]));
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+
+  // upload source image as diffuse if available
+  if(srcImg){
+    gl.bindTexture(gl.TEXTURE_2D,sphereTex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,srcImg);
+    gl.generateMipmap(gl.TEXTURE_2D);
+  }
+
+  gl.enable(gl.DEPTH_TEST);
+  gl.clearColor(0.05,0.05,0.1,1);
+}
+
+function updateNormalTex(){
+  if(!gl||!normalCanvas) return;
+  gl.bindTexture(gl.TEXTURE_2D,normalTex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,normalCanvas);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  // also update diffuse
+  if(srcImg){
+    gl.bindTexture(gl.TEXTURE_2D,sphereTex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,srcImg);
+    gl.generateMipmap(gl.TEXTURE_2D);
+  }
+}
+
+function renderSphere(){
+  sphereRAF=requestAnimationFrame(renderSphere);
+  if(!gl||!sphereProg) return;
+  var canvas=document.getElementById('sphere-canvas');
+  var w=canvas.offsetWidth, h=canvas.offsetHeight;
+  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+  gl.viewport(0,0,w,h);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+
+  // MVP matrix
+  var aspect=w/h;
+  var proj=perspective(45,aspect,0.1,10);
+  var view=lookAt([0,0,2.5],[0,0,0],[0,1,0]);
+  var model=matMul(rotateY(sphereRotY),rotateX(sphereRotX));
+  var mv=matMul(view,model);
+  var mvp=matMul(proj,mv);
+  // normal matrix (upper 3x3 of mv, transposed inverse)
+  var nm=[mv[0],mv[1],mv[2],mv[4],mv[5],mv[6],mv[8],mv[9],mv[10]];
+
+  gl.useProgram(sphereProg);
+  gl.uniformMatrix4fv(gl.getUniformLocation(sphereProg,'uMVP'),false,new Float32Array(mvp));
+  gl.uniformMatrix3fv(gl.getUniformLocation(sphereProg,'uNM'),false,new Float32Array(nm));
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D,normalTex);
+  gl.uniform1i(gl.getUniformLocation(sphereProg,'uNormalMap'),0);
+
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D,sphereTex);
+  gl.uniform1i(gl.getUniformLocation(sphereProg,'uDiffuse'),1);
+  gl.uniform1i(gl.getUniformLocation(sphereProg,'uHasDiffuse'),srcImg?1:0);
+
+  gl.drawElements(gl.TRIANGLES,sphereProg._indexCount,gl.UNSIGNED_SHORT,0);
+}
+
+function setupSphereEvents(canvas){
+  canvas.addEventListener('mousedown',function(e){sphereDragging=true;sphereLastX=e.clientX;sphereLastY=e.clientY;});
+  window.addEventListener('mouseup',function(){sphereDragging=false;});
+  window.addEventListener('mousemove',function(e){
+    if(!sphereDragging) return;
+    sphereRotY+=(e.clientX-sphereLastX)*0.01;
+    sphereRotX+=(e.clientY-sphereLastY)*0.01;
+    sphereLastX=e.clientX;sphereLastY=e.clientY;
+  });
+  canvas.addEventListener('touchstart',function(e){sphereDragging=true;sphereLastX=e.touches[0].clientX;sphereLastY=e.touches[0].clientY;});
+  canvas.addEventListener('touchend',function(){sphereDragging=false;});
+  canvas.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    if(!sphereDragging) return;
+    sphereRotY+=(e.touches[0].clientX-sphereLastX)*0.01;
+    sphereRotX+=(e.touches[0].clientY-sphereLastY)*0.01;
+    sphereLastX=e.touches[0].clientX;sphereLastY=e.touches[0].clientY;
+  },{passive:false});
+}
+
+// ══ MINIMAL GL MATH ════════════════════════════
+function createShader(type,src){
+  var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;
+}
+function createProgram(vs,fs){
+  var p=gl.createProgram();
+  gl.attachShader(p,createShader(gl.VERTEX_SHADER,vs));
+  gl.attachShader(p,createShader(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(p);return p;
+}
+function perspective(fovDeg,aspect,near,far){
+  var f=1/Math.tan(fovDeg*Math.PI/360);
+  var nf=1/(near-far);
+  return[f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,2*far*near*nf,0];
+}
+function lookAt(eye,center,up){
+  var z=norm(sub3(eye,center));
+  var x=norm(cross3(up,z));
+  var y=cross3(z,x);
+  return[x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
+    -dot3(x,eye),-dot3(y,eye),-dot3(z,eye),1];
+}
+function rotateY(a){var c=Math.cos(a),s=Math.sin(a);return[c,0,s,0,0,1,0,0,-s,0,c,0,0,0,0,1];}
+function rotateX(a){var c=Math.cos(a),s=Math.sin(a);return[1,0,0,0,0,c,-s,0,0,s,c,0,0,0,0,1];}
+function matMul(a,b){
+  var r=[];
+  for(var i=0;i<4;i++) for(var j=0;j<4;j++){
+    var s=0;for(var k=0;k<4;k++) s+=a[i+k*4]*b[k+j*4];r[i+j*4]=s;
+  }return r;
+}
+function sub3(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+function cross3(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+function dot3(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+function norm(v){var l=Math.sqrt(dot3(v,v));return[v[0]/l,v[1]/l,v[2]/l];}
+
+// ══ UTILS ═════════════════════════════════════
+function fmtBytes(b){
+  if(b>=1048576)return(b/1048576).toFixed(1)+' MB';
+  if(b>=1024)return(b/1024).toFixed(0)+' KB';
+  return b+' B';
+}
+var toastTimer=null;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},3000);
+}
+
+})();
+</script>
+</body>
+</html>

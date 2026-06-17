@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Image Format Converter</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090e;
+  --s1:#111118;
+  --s2:#17171f;
+  --s3:#1e1e28;
+  --s4:#252532;
+  --border:#242438;
+  --border2:#303048;
+  --accent:#00c896;
+  --accent2:#00e8ae;
+  --blue:#4d9fff;
+  --red:#ff4d6d;
+  --gold:#f5c542;
+  --text:#e8e8f5;
+  --text2:#8888aa;
+  --text3:#44445a;
+  --sans:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--sans);}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 30% 0%,rgba(0,200,150,.06) 0%,transparent 55%);
+}
+
+/* ── HEADER ── */
+header{
+  position:relative;z-index:2;
+  padding:26px 28px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.logo{font-size:1.15rem;font-weight:700;letter-spacing:-.01em;}
+.logo span{color:var(--accent);}
+.logo-sub{font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-top:3px;}
+
+/* ── MAIN ── */
+#app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:24px 20px 60px;}
+
+/* ── DROP ZONE ── */
+#drop-zone{
+  border:2px dashed var(--border2);border-radius:16px;
+  padding:52px 24px;text-align:center;cursor:pointer;
+  transition:all .2s;background:var(--s1);margin-bottom:24px;
+  position:relative;
+}
+#drop-zone:hover,#drop-zone.dragover{
+  border-color:var(--accent);background:rgba(0,200,150,.04);
+}
+.dz-icon{font-size:3rem;margin-bottom:12px;opacity:.35;}
+.dz-title{font-size:1rem;font-weight:600;margin-bottom:6px;}
+.dz-sub{font-size:.78rem;color:var(--text3);line-height:1.6;}
+.dz-btn{
+  display:inline-block;margin-top:16px;
+  padding:10px 24px;border-radius:8px;
+  background:var(--accent);color:#000;
+  font-family:var(--sans);font-size:.82rem;font-weight:700;
+  cursor:pointer;transition:all .18s;border:none;
+}
+.dz-btn:hover{background:var(--accent2);}
+#file-input{display:none;}
+
+/* ── FORMAT SELECTOR BAR ── */
+#format-bar{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px 20px;
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.fb-label{
+  font-size:.68rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text3);
+  font-family:var(--mono);flex-shrink:0;
+}
+.fmt-grid{display:flex;flex-wrap:wrap;gap:6px;flex:1;}
+.fmt-chip{
+  padding:7px 14px;border-radius:7px;
+  border:1px solid var(--border2);background:var(--s2);
+  color:var(--text2);font-family:var(--mono);font-size:.72rem;font-weight:600;
+  cursor:pointer;transition:all .15s;letter-spacing:.04em;
+}
+.fmt-chip:hover{border-color:var(--accent);color:var(--accent);}
+.fmt-chip.active{background:var(--accent);color:#000;border-color:var(--accent);}
+.fmt-chip.active:hover{background:var(--accent2);}
+
+/* convert all button */
+#convert-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-bottom:20px;
+}
+#convert-all-btn{
+  padding:11px 24px;border-radius:8px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#000;font-family:var(--sans);font-size:.88rem;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 14px rgba(0,200,150,.25);
+}
+#convert-all-btn:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,200,150,.35);}
+#convert-all-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+#dl-all-btn{
+  padding:11px 24px;border-radius:8px;border:none;
+  background:var(--blue);color:#fff;
+  font-family:var(--sans);font-size:.88rem;font-weight:700;
+  cursor:pointer;transition:all .18s;display:none;
+}
+#dl-all-btn:hover{background:#3d8fff;}
+.cb-count{font-size:.78rem;color:var(--text3);}
+
+/* ── IMAGE GRID ── */
+#img-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:14px;
+}
+
+/* image card */
+.img-card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;
+  transition:border-color .15s;
+  position:relative;
+}
+.img-card.done{border-color:rgba(0,200,150,.4);}
+.img-card.error{border-color:rgba(255,77,109,.4);}
+
+.ic-thumb{
+  width:100%;height:140px;object-fit:contain;
+  display:block;background:#000;
+}
+.ic-body{padding:10px 12px;}
+.ic-name{
+  font-size:.72rem;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:3px;
+}
+.ic-meta{font-size:.62rem;color:var(--text3);font-family:var(--mono);}
+.ic-status{
+  display:flex;align-items:center;gap:6px;
+  margin-top:8px;font-size:.68rem;font-family:var(--mono);
+}
+.ic-badge{
+  padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em;font-size:.6rem;
+}
+.ic-badge.waiting{background:var(--s3);color:var(--text3);}
+.ic-badge.converting{background:rgba(245,197,66,.15);color:var(--gold);}
+.ic-badge.done{background:rgba(0,200,150,.15);color:var(--accent);}
+.ic-badge.error{background:rgba(255,77,109,.15);color:var(--red);}
+
+.ic-actions{display:flex;gap:5px;margin-top:8px;}
+.ic-dl{
+  flex:1;padding:6px;border-radius:6px;border:none;
+  background:var(--accent);color:#000;
+  font-family:var(--sans);font-size:.68rem;font-weight:700;
+  cursor:pointer;transition:all .15s;display:none;
+}
+.ic-dl:hover{background:var(--accent2);}
+.ic-del{
+  width:28px;height:28px;border-radius:5px;border:1px solid var(--border2);
+  background:transparent;color:var(--text3);font-size:.75rem;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;
+}
+.ic-del:hover{background:rgba(255,77,109,.15);color:var(--red);border-color:var(--red);}
+
+/* converting spinner */
+.spinner{
+  width:14px;height:14px;border:2px solid var(--s4);
+  border-top-color:var(--gold);border-radius:50%;
+  animation:spin .7s linear infinite;display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* progress bar on card */
+.ic-prog-wrap{height:2px;background:var(--s3);margin-top:6px;border-radius:2px;overflow:hidden;display:none;}
+.ic-prog{height:100%;background:var(--accent);width:0%;border-radius:2px;transition:width .2s;}
+
+/* empty state */
+#empty-state{
+  text-align:center;padding:60px 20px;color:var(--text3);
+  display:none;
+}
+#empty-state.show{display:block;}
+.es-icon{font-size:2.5rem;opacity:.2;margin-bottom:10px;}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--s3);border:1px solid var(--border2);border-radius:7px;
+  padding:10px 22px;font-size:.78rem;color:var(--text);
+  opacity:0;transition:all .25s;z-index:100;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Format <span>Converter</span></div>
+    <div class="logo-sub">batch convert images · 100% in browser · no upload</div>
+  </div>
+</header>
+
+<div id="app">
+
+  <!-- DROP ZONE -->
+  <div id="drop-zone"
+    ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)"
+    onclick="document.getElementById('file-input').click()">
+    <div class="dz-icon">🖼️</div>
+    <div class="dz-title">Drop images here</div>
+    <div class="dz-sub">
+      JPG · PNG · WEBP · BMP · GIF · TIFF · SVG · ICO<br>
+      Drop multiple files at once for batch conversion
+    </div>
+    <button class="dz-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">
+      Browse Images
+    </button>
+  </div>
+  <input type="file" id="file-input" accept="image/*" multiple onchange="addImages(this)">
+
+  <!-- FORMAT BAR -->
+  <div id="format-bar">
+    <div class="fb-label">Convert to</div>
+    <div class="fmt-grid">
+      <button class="fmt-chip active" data-fmt="image/jpeg" data-ext="jpg" onclick="setFmt(this)">JPG</button>
+      <button class="fmt-chip" data-fmt="image/png" data-ext="png" onclick="setFmt(this)">PNG</button>
+      <button class="fmt-chip" data-fmt="image/webp" data-ext="webp" onclick="setFmt(this)">WEBP</button>
+      <button class="fmt-chip" data-fmt="image/bmp" data-ext="bmp" onclick="setFmt(this)">BMP</button>
+      <button class="fmt-chip" data-fmt="image/gif" data-ext="gif" onclick="setFmt(this)">GIF</button>
+      <button class="fmt-chip" data-fmt="image/tiff" data-ext="tiff" onclick="setFmt(this)">TIFF</button>
+      <button class="fmt-chip" data-fmt="image/avif" data-ext="avif" onclick="setFmt(this)">AVIF</button>
+      <button class="fmt-chip" data-fmt="image/svg+xml" data-ext="svg" onclick="setFmt(this)">SVG*</button>
+    </div>
+  </div>
+
+  <!-- CONVERT BAR -->
+  <div id="convert-bar">
+    <button id="convert-all-btn" onclick="convertAll()" disabled>⚡ Convert All</button>
+    <button id="dl-all-btn" onclick="downloadAll()">⬇ Download All</button>
+    <div class="cb-count" id="cb-count">Add images to begin</div>
+  </div>
+
+  <!-- EMPTY -->
+  <div id="empty-state" class="show">
+    <div class="es-icon">📂</div>
+    <div>No images yet — drop some above</div>
+  </div>
+
+  <!-- IMAGE GRID -->
+  <div id="img-grid"></div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+
+var images=[];  // {id, name, origExt, size, url, blob, outBlob, outUrl, status, w, h}
+var uid=0;
+var targetFmt='image/jpeg';
+var targetExt='jpg';
+
+// ══ FORMAT ═══════════════════════════════════════
+function setFmt(btn){
+  document.querySelectorAll('.fmt-chip').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  targetFmt=btn.getAttribute('data-fmt');
+  targetExt=btn.getAttribute('data-ext');
+  // reset converted state
+  images.forEach(function(img){
+    img.status='waiting';
+    img.outBlob=null;
+    img.outUrl=null;
+  });
+  renderGrid();
+  document.getElementById('dl-all-btn').style.display='none';
+  updateCount();
+}
+window.setFmt=setFmt;
+
+// ══ ADD IMAGES ════════════════════════════════════
+function addImages(input){
+  var files=Array.prototype.slice.call(input.files);
+  files.forEach(function(f){
+    if(!f.type.startsWith('image/')){toast('Skipped: '+f.name+' (not an image)');return;}
+    var url=URL.createObjectURL(f);
+    var img2=new Image();
+    img2.onload=function(){
+      images.push({
+        id:++uid,
+        name:f.name,
+        origExt:f.name.split('.').pop().toUpperCase(),
+        size:f.size,
+        url:url,
+        blob:f,
+        outBlob:null,
+        outUrl:null,
+        status:'waiting',
+        w:img2.width,
+        h:img2.height
+      });
+      renderGrid();
+      updateCount();
+      document.getElementById('empty-state').classList.remove('show');
+    };
+    img2.src=url;
+  });
+  input.value='';
+}
+window.addImages=addImages;
+
+function removeImage(id){
+  images=images.filter(function(i){return i.id!==id;});
+  renderGrid();
+  updateCount();
+  if(!images.length) document.getElementById('empty-state').classList.add('show');
+}
+window.removeImage=removeImage;
+
+// ══ RENDER GRID ════════════════════════════════════
+function renderGrid(){
+  var grid=document.getElementById('img-grid');
+  document.getElementById('convert-all-btn').disabled=!images.length;
+
+  if(!images.length){grid.innerHTML='';return;}
+
+  grid.innerHTML=images.map(function(img){
+    var statusBadge='';
+    var dlBtn='';
+    var prog='';
+    var cardClass='img-card';
+    if(img.status==='waiting'){
+      statusBadge='<span class="ic-badge waiting">WAITING</span>';
+    } else if(img.status==='converting'){
+      statusBadge='<span class="ic-badge converting"><span class="spinner"></span> Converting...</span>';
+      prog='<div class="ic-prog-wrap" id="prog-'+img.id+'" style="display:block"><div class="ic-prog" id="progbar-'+img.id+'"></div></div>';
+      cardClass='img-card';
+    } else if(img.status==='done'){
+      statusBadge='<span class="ic-badge done">✓ Done</span>';
+      dlBtn='<button class="ic-dl" style="display:block" onclick="downloadOne('+img.id+')">⬇ Download '+targetExt.toUpperCase()+'</button>';
+      cardClass='img-card done';
+    } else if(img.status==='error'){
+      statusBadge='<span class="ic-badge error">✗ Error</span>';
+      cardClass='img-card error';
+    }
+    var shortName=img.name.length>22?img.name.slice(0,19)+'...':img.name;
+    return '<div class="'+cardClass+'" id="card-'+img.id+'">'+
+      '<img class="ic-thumb" src="'+img.url+'" alt="'+img.name+'">'+
+      '<div class="ic-body">'+
+        '<div class="ic-name" title="'+img.name+'">'+shortName+'</div>'+
+        '<div class="ic-meta">'+img.w+'×'+img.h+' · '+fmtBytes(img.size)+' · '+img.origExt+'</div>'+
+        '<div class="ic-status">'+statusBadge+'</div>'+
+        prog+
+        '<div class="ic-actions">'+
+          dlBtn+
+          '<button class="ic-del" onclick="removeImage('+img.id+')" title="Remove">✕</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ══ CONVERT ALL ════════════════════════════════════
+function convertAll(){
+  if(!images.length) return;
+  if(targetFmt==='image/svg+xml'){
+    toast('SVG is a vector format — raster conversion not supported in browser');
+    return;
+  }
+  // reset all
+  images.forEach(function(img){
+    img.status='converting';
+    img.outBlob=null;
+    img.outUrl=null;
+  });
+  renderGrid();
+  document.getElementById('dl-all-btn').style.display='none';
+
+  var queue=images.slice();
+  var doneCount=0;
+
+  function processNext(){
+    if(!queue.length){
+      document.getElementById('dl-all-btn').style.display='block';
+      toast('All '+images.length+' images converted to '+targetExt.toUpperCase());
+      return;
+    }
+    var item=queue.shift();
+    convertOne(item,function(){
+      doneCount++;
+      updateCount();
+      renderGrid();
+      processNext();
+    });
+  }
+  processNext();
+}
+window.convertAll=convertAll;
+
+function convertOne(item, cb){
+  var cvs=document.createElement('canvas');
+  var img2=new Image();
+  img2.onload=function(){
+    cvs.width=img2.width;
+    cvs.height=img2.height;
+    var ctx=cvs.getContext('2d');
+    // white bg for JPG (removes transparency)
+    if(targetFmt==='image/jpeg'){
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(0,0,cvs.width,cvs.height);
+    }
+    ctx.drawImage(img2,0,0);
+    var quality=targetFmt==='image/png'?undefined:0.95;
+    cvs.toBlob(function(blob){
+      if(!blob){
+        item.status='error';
+        if(cb) cb();
+        return;
+      }
+      if(item.outUrl) URL.revokeObjectURL(item.outUrl);
+      item.outBlob=blob;
+      item.outUrl=URL.createObjectURL(blob);
+      item.status='done';
+      if(cb) cb();
+    }, targetFmt, quality);
+  };
+  img2.onerror=function(){
+    item.status='error';
+    if(cb) cb();
+  };
+  img2.src=item.url;
+}
+
+// ══ DOWNLOAD ══════════════════════════════════════
+function downloadOne(id){
+  var item=images.find(function(i){return i.id===id;});
+  if(!item||!item.outUrl) return;
+  var base=item.name.replace(/\.[^.]+$/,'');
+  var a=document.createElement('a');
+  a.href=item.outUrl;
+  a.download=base+'_converted.'+targetExt;
+  a.click();
+}
+window.downloadOne=downloadOne;
+
+function downloadAll(){
+  var done=images.filter(function(i){return i.status==='done'&&i.outBlob;});
+  if(!done.length){toast('Convert images first');return;}
+  // download one by one with small delay so browser doesn't block
+  done.forEach(function(item,idx){
+    setTimeout(function(){
+      var base=item.name.replace(/\.[^.]+$/,'');
+      var a=document.createElement('a');
+      a.href=item.outUrl;
+      a.download=base+'_converted.'+targetExt;
+      a.click();
+    },idx*300);
+  });
+  toast('Downloading '+done.length+' files...');
+}
+window.downloadAll=downloadAll;
+
+// ══ UPDATE COUNT ══════════════════════════════════
+function updateCount(){
+  var total=images.length;
+  var done=images.filter(function(i){return i.status==='done';}).length;
+  var el=document.getElementById('cb-count');
+  if(!total){el.textContent='Add images to begin';}
+  else if(done===total&&done>0){el.textContent=done+'/'+total+' converted';}
+  else{el.textContent=total+' image'+(total!==1?'s':'')+' ready'+(done?' · '+done+' done':'');}
+}
+
+// ══ DRAG & DROP ═══════════════════════════════════
+function dzOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('dragover');}
+function dzLeave(){document.getElementById('drop-zone').classList.remove('dragover');}
+function dzDrop(e){
+  e.preventDefault();dzLeave();
+  var files=Array.prototype.slice.call(e.dataTransfer.files);
+  var fakeInput={files:files,value:''};
+  addImages(fakeInput);
+}
+window.dzOver=dzOver;window.dzLeave=dzLeave;window.dzDrop=dzDrop;
+
+// ══ UTILS ══════════════════════════════════════════
+function fmtBytes(b){
+  if(b>=1048576)return(b/1048576).toFixed(1)+' MB';
+  if(b>=1024)return(b/1024).toFixed(0)+' KB';
+  return b+' B';
+}
+
+var toastTimer=null;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},3000);
+}
+
+})();
+</script>
+</body>
+</html>

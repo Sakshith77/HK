@@ -21,23 +21,51 @@
   --radius-sm: 10px;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Nunito',sans-serif; background:#FDF3E0; color:var(--text); min-height:100vh; overflow-x:hidden; }
+body { font-family:'Nunito',sans-serif; background:#FDF3E0; color:var(--text); min-height:100vh; overflow-x:hidden; 
+}
 
-/* LOADER */
+/* LOADER — Tilak Portal Reveal */
 #loader {
   position:fixed; inset:0; z-index:9999;
-  background:linear-gradient(135deg,#FFF8E7,#FFE5B4,#FFD580);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  transition:opacity 0.7s ease;
+  background-color:#05030a;
+  display:flex; justify-content:center; align-items:center;
+  perspective:1000px;
+  transition:opacity .5s ease;
 }
 #loader.hide { opacity:0; pointer-events:none; }
-.loader-lotus { width:88px; height:88px; animation:lotusFloat 2s ease-in-out infinite; }
-@keyframes lotusFloat {
-  0%,100%{ transform:translateY(0) scale(1); filter:drop-shadow(0 8px 16px rgba(212,107,138,.4)); }
-  50%{ transform:translateY(-14px) scale(1.06); filter:drop-shadow(0 22px 28px rgba(212,107,138,.22)); }
+ 
+.tilak-svg {
+  position:absolute; width:100%; height:100%;
+  z-index:5; pointer-events:none;
 }
-.loader-text { margin-top:22px; font-family:'Cinzel',serif; font-size:1.25rem; color:var(--deep-saffron); letter-spacing:.12em; animation:pulse 1.5s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+ 
+/* Laser stroke drawing mechanism */
+.tilak-line {
+  stroke-dasharray:1000;
+  stroke-dashoffset:1000;
+  animation: hk-draw-stroke 1.5s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+ 
+/* Core color glow expansion */
+.tilak-fill {
+  opacity:0;
+  animation: hk-core-glow-fill 0.6s ease-out forwards;
+  animation-delay:1.2s;
+}
+ 
+/* Master structural container — hardware-accelerated dissolve */
+#tilak-portal-group {
+  transform-origin:250px 220px;
+  animation: hk-portal-dissolve-fade 1.2s cubic-bezier(0.25,1,0.5,1) forwards;
+  animation-delay:2.2s;
+}
+ 
+@keyframes hk-draw-stroke { to { stroke-dashoffset:0; } }
+@keyframes hk-core-glow-fill { to { opacity:1; filter:drop-shadow(0 0 20px #ffd24d); } }
+@keyframes hk-portal-dissolve-fade {
+  0%   { transform:translateZ(0);    opacity:1; filter:blur(0px); }
+  100% { transform:translateZ(300px); opacity:0; filter:blur(15px); }
+}
 
 /* NAV */
 nav {
@@ -291,7 +319,7 @@ section { display:none; min-height:calc(100vh - var(--nav-h)); padding:36px 20px
 
 /* TOOLS */
 .tools-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:17px; }
-.tool-card { background:#a752f6; border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); transition:all .22s; }
+.tool-card { background:#a752f6; border-radius:var(--radius); padding:25px; box-shadow:var(--shadow); border:1px solid rgba(212,175,55,.14); transition:all .22s; }
 .tool-card:hover { transform:translateY(-3px); border-color:white;  }
 .tool-head { display:flex; align-items:center; gap:11px; margin-bottom:13px; }
 .tool-icon { font-size:1.7rem; }
@@ -571,29 +599,35 @@ section { animation: hk-sec-in .28s cubic-bezier(0.25,1,0.5,1) both; }
 
 <!-- LOADER -->
 <div id="loader">
-  <div class="loader-lotus">
-    <svg viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="45" cy="73" rx="20" ry="6" fill="rgba(212,107,138,.16)"/>
-      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F7A8C0" opacity=".9" transform="rotate(0 45 52)"/>
-      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F48FB1" opacity=".85" transform="rotate(45 45 52)"/>
-      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F7A8C0" opacity=".9" transform="rotate(90 45 52)"/>
-      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F48FB1" opacity=".85" transform="rotate(135 45 52)"/>
-      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F7A8C0" opacity=".9" transform="rotate(180 45 52)"/>
-      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F48FB1" opacity=".85" transform="rotate(225 45 52)"/>
-      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F7A8C0" opacity=".9" transform="rotate(270 45 52)"/>
-      <ellipse cx="45" cy="28" rx="10" ry="22" fill="#F48FB1" opacity=".85" transform="rotate(315 45 52)"/>
-      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#E91E8C" opacity=".9" transform="rotate(0 45 52)"/>
-      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#C2185B" opacity=".85" transform="rotate(60 45 52)"/>
-      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#E91E8C" opacity=".9" transform="rotate(120 45 52)"/>
-      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#C2185B" opacity=".85" transform="rotate(180 45 52)"/>
-      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#E91E8C" opacity=".9" transform="rotate(240 45 52)"/>
-      <ellipse cx="45" cy="33" rx="7" ry="15" fill="#C2185B" opacity=".85" transform="rotate(300 45 52)"/>
-      <circle cx="45" cy="52" r="10" fill="#FFD700"/>
-      <circle cx="45" cy="52" r="6" fill="#FFA000"/>
-      <circle cx="45" cy="52" r="3" fill="#FF6F00"/>
-    </svg>
-  </div>
-  <div class="loader-text">Hare Krishna 🪷</div>
+  <svg class="tilak-svg" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="gopiGoldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#fff5b3" />
+        <stop offset="40%" stop-color="#ffd24d" />
+        <stop offset="80%" stop-color="#d4af37" />
+        <stop offset="100%" stop-color="#735300" />
+      </linearGradient>
+      <linearGradient id="neonLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" />
+        <stop offset="60%" stop-color="#ffd24d" />
+        <stop offset="100%" stop-color="#ff8c00" />
+      </linearGradient>
+      <filter id="divineAmbientGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#ffd24d" flood-opacity="0.4"/>
+      </filter>
+    </defs>
+    <g id="tilak-portal-group" filter="url(#divineAmbientGlow)">
+      <g class="tilak-fill">
+        <path d="M 215 80 L 215 220 C 215 255, 285 255, 285 220 L 285 80 L 265 80 L 265 215 C 265 230, 235 230, 235 215 L 235 80 Z" fill="url(#gopiGoldGrad)" />
+        <path d="M 250 240 C 225 270, 250 310, 250 325 C 250 310, 275 270, 250 240 Z" fill="url(#gopiGoldGrad)" />
+        <circle cx="250" cy="241" r="7" fill="url(#gopiGoldGrad)" />
+      </g>
+      <g class="tilak-line" stroke="url(#neonLineGrad)" stroke-width="4.5" stroke-linecap="round" fill="none">
+        <path d="M 215 80 L 215 220 C 215 255, 285 255, 285 220 L 285 80 L 265 80 L 265 215 C 265 230, 235 230, 235 215 L 235 80 Z" />
+        <path d="M 250 240 C 225 270, 250 310, 250 325 C 250 310, 275 270, 250 240 Z" />
+      </g>
+    </g>
+  </svg>
 </div>
 
 <!-- NAV -->
@@ -792,7 +826,7 @@ section { animation: hk-sec-in .28s cubic-bezier(0.25,1,0.5,1) both; }
   <circle cx="8" cy="10" r="2" fill="#a7f3d0" class="hk-csparkle1"/>
   <circle cx="48" cy="22" r="1.5" fill="#FFD700" class="hk-csparkle2"/>
 </svg>
-      <div class="ql-icon">🎵</div><div class="ql-label">Bhajans</div>
+      <div class="ql-icon">🎵</div><div class="ql-label">Kirtans</div>
     </div>
     <div class="ql-card" onclick="show('games')">
       <svg class="ql-card-sticker hk-cs-d" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1324,6 +1358,22 @@ section { animation: hk-sec-in .28s cubic-bezier(0.25,1,0.5,1) both; }
 </div>
 </div>
 
+<div class="tool-card">
+<div class="other-card" onclick="window.location.href='converter.html'" style="cursor:pointer">
+  <div class="other-icon">♾️</div>
+  <div class="other-title">Img formate converter</div>
+  <div class="other-desc">Converter.</div>
+</div>
+</div>
+
+<div class="tool-card">
+<div class="other-card" onclick="window.location.href='normal_map.html'" style="cursor:pointer">
+  <div class="other-icon">🛞</div>
+  <div class="other-title">Normal Map Maker</div>
+  <div class="other-desc">Texture.</div>
+</div>
+</div>
+
    
   </div>
 </section>
@@ -1578,18 +1628,17 @@ function hideLoader() {
   el.style.pointerEvents = 'none';
   setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 700);
 }
-
+ 
 // Wait for DOM then show home
 document.addEventListener('DOMContentLoaded', function() {
   show('home');
-  setTimeout(hideLoader, 1200);
+  setTimeout(hideLoader, 2980); // matches Tilak portal-reveal animation length
 });
 // Fallback if DOMContentLoaded already fired
 if (document.readyState !== 'loading') {
   show('home');
-  setTimeout(hideLoader, 400);
+  setTimeout(hideLoader, 2980);
 }
-
 // ── STORIES ──
 const stories = [
   {
