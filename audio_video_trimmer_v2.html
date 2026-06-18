@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Media Studio Trimmer</title>
+<title>Media Studio Trimmer – Precision Frame Engine</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
+
 <style>
 :root{
   --bg: #f4f5f9;
@@ -29,23 +32,15 @@ body{
   background:var(--bg);color:var(--text);font-family:var(--sans);
   padding:16px;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
 }
-
 .app{
   width:100%;max-width:680px;background:var(--surface);
   border-radius:var(--radius);border:1px solid var(--border);
   padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);
 }
-
-/* TOP HEADER BAR */
 .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
 .brand{font-size:1.1rem;font-weight:700;letter-spacing:-.02em;}
 .brand span{color:var(--accent);}
-.shortcut-toggle{
-  background:var(--panel-bg);border:1px solid var(--border2);border-radius:8px;
-  color:var(--text2);font-size:13px;padding:6px 14px;cursor:pointer;font-weight:500;
-}
 
-/* DRAG DROP LOADING VECTOR */
 .drop-zone{
   border:2.5px dashed var(--border2);border-radius:var(--radius);
   padding:40px 20px;text-align:center;cursor:pointer;background:var(--panel-bg);
@@ -55,7 +50,6 @@ body{
 .dz-title{font-weight:600;font-size:1rem;margin-bottom:4px;}
 .dz-sub{font-size:0.85rem;color:var(--text3);}
 
-/* MEDIA CONTAINER MODULES */
 .media-container{
   background:#000;border-radius:var(--radius);overflow:hidden;
   margin-bottom:20px;display:none;position:relative;aspect-ratio:16/9;
@@ -63,22 +57,6 @@ body{
 video, audio{width:100%;height:100%;display:block;}
 audio{background:var(--panel-bg);height:64px;}
 
-/* PLAYER DASHBOARD CONTROLS */
-.controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:24px;}
-.btn{
-  background:var(--surface);border:1px solid var(--border2);border-radius:8px;
-  color:var(--text);padding:10px 18px;font-size:0.9rem;font-weight:600;
-  cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;
-}
-.btn:hover{background:var(--panel-bg);border-color:var(--text3);}
-.btn.primary{
-  background:var(--accent);color:#fff;border:none;
-  box-shadow:0 4px 12px rgba(79,70,229,0.2);
-}
-.btn.primary:hover{background:var(--accent2);transform:translateY(-1px);}
-.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
-
-/* TIMELINE AND MOBILE-OPTIMIZED THUMB KNOBS */
 .timeline-container{margin-bottom:24px;position:relative;user-select:none;}
 .timeline-track{
   height:44px;background:var(--panel-bg);border:1px solid var(--border);
@@ -90,8 +68,6 @@ audio{background:var(--panel-bg);height:64px;}
   background: repeating-linear-gradient(45deg, rgba(99,102,241,0.15), rgba(99,102,241,0.15) 6px, rgba(99,102,241,0.25) 6px, rgba(99,102,241,0.25) 12px);
   border-top:2px solid var(--accent);border-bottom:2px solid var(--accent);
 }
-
-/* BIGGER FINGER-FRIENDLY MOUNT HANDLE SLIDERS */
 .slider-handle{
   position:absolute;top:-4px;width:24px;height:52px;
   background:var(--accent);border-radius:6px;cursor:ew-resize;
@@ -104,20 +80,14 @@ audio{background:var(--panel-bg);height:64px;}
 }
 .slider-handle.start-handle{transform:translateX(-12px);}
 .slider-handle.end-handle{transform:translateX(-12px);}
+.play-head{position:absolute;top:0;bottom:0;width:2px;background:var(--red);pointer-events:none;z-index:4;}
 
-.play-head{
-  position:absolute;top:0;bottom:0;width:2px;
-  background:var(--red);pointer-events:none;z-index:4;
-}
-
-/* TIME METRIC FOOTERS & INPUTS */
-.time-display-row{
-  display:flex;justify-content:between;align-items:center;
-  font-family:var(--mono);font-size:0.8rem;color:var(--text2);margin-bottom:20px;
-}
+.time-display-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:0.8rem;color:var(--text2);margin-bottom:20px;}
 .time-display-row div{flex:1;}
 
-/* MANUAL FIELD ENTRY LAYOUTS */
+.config-card{background:var(--panel-bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;display:flex;flex-direction:column;gap:12px;}
+.fmt-select, .mode-select{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:11px;font-size:0.9rem;font-weight:600;color:var(--text);outline:none;}
+
 .manual-inputs{
   display:grid;grid-template-columns:1fr 1fr;gap:16px;
   background:var(--panel-bg);padding:16px;border-radius:var(--radius);
@@ -127,30 +97,40 @@ audio{background:var(--panel-bg);height:64px;}
 .input-group label{font-size:0.8rem;font-weight:600;color:var(--text2);}
 .time-field{
   background:var(--surface);border:1px solid var(--border2);border-radius:8px;
-  padding:10px 12px;font-family:var(--mono);font-size:0.95rem;color:var(--text);
-  outline:none;transition:all .15s;
+  padding:10px 12px;font-family:var(--mono);font-size:0.95rem;color:var(--text);outline:none;
 }
 .time-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);}
 
-/* LIST ARRAYS AND META NODES */
-.segment-list{border-top:1px solid var(--border);padding-top:20px;}
-.seg-title{font-size:0.9rem;font-weight:700;text-transform:uppercase;color:var(--text3);letter-spacing:0.05em;margin-bottom:12px;}
+.controls{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:24px;}
+@media(min-width:480px){ .controls{grid-template-columns:1fr 1fr;} }
+
+.btn{
+  background:var(--surface);border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);padding:10px 18px;font-size:0.9rem;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;
+}
+.btn:hover{background:var(--panel-bg);border-color:var(--text3);}
+.btn.primary{background:var(--accent);color:#fff;border:none;box-shadow:0 4px 12px rgba(79,70,229,0.2);}
+.btn.primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn.success{background:var(--green);color:#fff;border:none;}
+.btn.success:hover{opacity:0.9;transform:translateY(-1px);}
+
+.segment-list{border-top:2px dashed var(--border2);padding-top:20px;margin-top:20px;}
+.seg-title{font-size:0.9rem;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:0.05em;margin-bottom:12px;}
 .segment-item{
   background:var(--panel-bg);border:1px solid var(--border);border-radius:8px;
-  padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:between;
+  padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;
 }
 .seg-meta{flex:1;}
 .seg-name{font-weight:600;font-size:0.9rem;}
-.seg-times{font-family:var(--mono);font-size:0.78rem;color:var(--text2);margin-top:2px;}
 
-/* PROGRESS SPINNER LAYER */
 #progress-layer{
-  display:none;position:fixed;inset:0;background:rgba(15,23,42,0.4);
+  display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);
   backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;
 }
 .progress-box{
   background:var(--surface);padding:32px;border-radius:var(--radius);
-  box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);text-align:center;width:280px;
+  box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);text-align:center;width:300px;
 }
 .spinner{
   width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);
@@ -165,22 +145,17 @@ audio{background:var(--panel-bg);height:64px;}
 
 <div class="app">
   <div class="top-bar">
-    <div class="brand">MediaStudio <span>Trimmer</span></div>
-    <button class="shortcut-toggle" type="button" id="zoom-toggle" onclick="toggleZoom()">Zoom: 1x</button>
+    <div class="brand">MediaStudio <span>Precision Trimmer</span></div>
   </div>
 
   <div class="drop-zone" id="drop-zone" onclick="triggerUpload()" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
     <div class="dz-title">Tap to upload video or audio</div>
-    <div class="dz-sub">Processes local data natively inside your browser</div>
+    <div class="dz-sub">Processes streams locally inside your browser</div>
   </div>
   <input type="file" id="media-upload" accept="video/*,audio/*" class="hidden" onchange="handleFileChange(this)">
 
-  <div class="media-container" id="video-wrapper">
-    <video id="video-player" playsinline></video>
-  </div>
-  <div class="media-container" id="audio-wrapper" style="aspect-ratio:unset;">
-    <audio id="audio-player" controls class="hidden"></audio>
-  </div>
+  <div class="media-container" id="video-wrapper"><video id="video-player" playsinline></video></div>
+  <div class="media-container" id="audio-wrapper" style="aspect-ratio:unset;"><audio id="audio-player" controls class="hidden"></audio></div>
 
   <div class="timeline-container hidden" id="timeline-box">
     <div class="timeline-track" id="track-rail">
@@ -190,7 +165,6 @@ audio{background:var(--panel-bg);height:64px;}
       <div class="slider-handle start-handle" id="h-start"></div>
       <div class="slider-handle end-handle" id="h-end"></div>
     </div>
-
     <div class="time-display-row">
       <div id="lbl-curr">Current: 0.000s</div>
       <div style="text-align:center; font-weight:600; color:var(--accent);" id="lbl-sel">Sel: 0.000s</div>
@@ -198,43 +172,65 @@ audio{background:var(--panel-bg);height:64px;}
     </div>
   </div>
 
+  <div class="config-card hidden" id="config-box">
+    <div>
+      <label style="font-size:0.8rem; font-weight:600; color:var(--text2); display:block; margin-bottom:4px;">Export Format Options</label>
+      <select id="export-format" class="fmt-select"></select>
+    </div>
+    <div id="frame-type-box">
+      <label style="font-size:0.8rem; font-weight:600; color:var(--text2); display:block; margin-bottom:4px;">Start / End Input Metric Type</label>
+      <select id="input-metric-type" class="mode-select" onchange="toggleInputMetric()">
+        <option value="seconds">Seconds Mode (e.g. 12.345s)</option>
+        <option value="frames">Video Frame Counter Mode (FPS)</option>
+      </select>
+    </div>
+    <div id="fps-row" class="hidden">
+      <label style="font-size:0.8rem; font-weight:600; color:var(--text2); display:block; margin-bottom:4px;">Target Video FPS Profile</label>
+      <input type="number" id="video-fps" class="time-field" style="width:100%;" value="30" step="1" onchange="toggleInputMetric()">
+    </div>
+  </div>
+
   <div class="manual-inputs hidden" id="input-box">
     <div class="input-group">
-      <label for="inp-start">Start Timestamp (s)</label>
+      <label id="lbl-start-input" for="inp-start">Start Position (s)</label>
       <input type="number" step="0.001" min="0" class="time-field" id="inp-start" onchange="syncManualInputs()">
     </div>
     <div class="input-group">
-      <label for="inp-end">End Timestamp (s)</label>
+      <label id="lbl-end-input" for="inp-end">End Position (s)</label>
       <input type="number" step="0.001" min="0" class="time-field" id="inp-end" onchange="syncManualInputs()">
     </div>
   </div>
 
   <div class="controls hidden" id="control-box">
-    <button class="btn" type="button" onclick="playToggle()" id="btn-play">▶ Play Selection</button>
-    <button class="btn primary" type="button" onclick="commitTrim()">✂ Trim Media</button>
+    <button class="btn" type="button" style="grid-column: span 2;" onclick="playToggle()" id="btn-play">▶ Play Selection</button>
+    <button class="btn success" type="button" onclick="processExtraction(false)">⬇ Download Trimmed Clip</button>
+    <button class="btn primary" type="button" onclick="processExtraction(true)">✂ Add to Merge Queue</button>
   </div>
 
   <div class="segment-list hidden" id="segment-box">
-    <div class="seg-title">Generated Exports</div>
+    <div class="seg-title">Automated Merging Pipeline Queue</div>
     <div id="segments-container"></div>
+    <button class="btn primary" id="btn-merge-action" style="width:100%; margin-top:12px; justify-content:center;" onclick="executePipelineMerge()">⚡ Compile & Merge Queue</button>
   </div>
 </div>
 
 <div id="progress-layer">
   <div class="progress-box">
     <div class="spinner"></div>
-    <div style="font-weight:500; font-size:0.95rem;" id="progress-msg">Parsing media vectors...</div>
+    <div style="font-weight:500; font-size:0.95rem;" id="progress-msg">Initializing processing hooks...</div>
   </div>
 </div>
 
 <script>
 (function(){
+const { createFFmpeg, fetchFile } = FFmpeg;
+let ffmpegInstance = null;
 
 let fileData = null, isVideo = false, duration = 0, audioBuffer = null;
-let startT = 0, endT = 0, currT = 0;
-let isZoomed = false, segCount = 0;
-
+let startT = 0, endT = 0, currT = 0, segCount = 0;
+let queueNodes = [];
 let activeHandle = null;
+
 const trackRail = document.getElementById('track-rail');
 const trimZone = document.getElementById('trim-zone');
 const hStart = document.getElementById('h-start');
@@ -242,7 +238,6 @@ const hEnd = document.getElementById('h-end');
 const scrubHead = document.getElementById('scrub-head');
 const vPlayer = document.getElementById('video-player');
 const aPlayer = document.getElementById('audio-player');
-
 let activePlayer = null;
 
 function triggerUpload(){ document.getElementById('media-upload').click(); }
@@ -250,118 +245,153 @@ window.triggerUpload = triggerUpload;
 function dragOver(e){ e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); }
 function dragLeave(){ document.getElementById('drop-zone').classList.remove('dragover'); }
 window.dragOver = dragOver; window.dragLeave = dragLeave;
-
-function dropFile(e){
-  e.preventDefault(); dragLeave();
-  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-}
+function dropFile(e){ e.preventDefault(); dragLeave(); if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); }
 window.dropFile = dropFile;
 function handleFileChange(input){ if(input.files.length) handleFile(input.files[0]); }
 window.handleFileChange = handleFileChange;
 
+// FIXED: INCLUDED mainName FLAG FOR ST CORE TO WORK SEAMLESSLY ON LOCALHOST
+async function bootFFmpegEngine() {
+  if (ffmpegInstance) return;
+  showLoader("Booting standalone video processing matrix...");
+  try {
+    ffmpegInstance = createFFmpeg({ 
+      log: false,
+      mainName: 'main',
+      corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js' 
+    });
+    await ffmpegInstance.load();
+    hideLoader();
+  } catch(e) {
+    alert("Initialization context failure. Verify CDN endpoints are accessible from your local node network.");
+    hideLoader();
+  }
+}
+
 function handleFile(file){
-  fileData = file;
-  isVideo = file.type.startsWith('video');
-  showLoader('Loading file vectors...');
-  
+  fileData = file; isVideo = file.type.startsWith('video');
+  showLoader('Loading target assets into reader buffer...');
   const url = URL.createObjectURL(file);
   document.getElementById('drop-zone').classList.add('hidden');
   
   if(isVideo){
     document.getElementById('video-wrapper').style.display = 'block';
+    document.getElementById('frame-type-box').classList.remove('hidden');
     vPlayer.src = url; activePlayer = vPlayer;
   } else {
     document.getElementById('audio-wrapper').style.display = 'block';
+    document.getElementById('frame-type-box').classList.add('hidden');
     aPlayer.src = url; activePlayer = aPlayer;
   }
   
   activePlayer.onloadedmetadata = function() {
-    duration = activePlayer.duration;
-    startT = 0; endT = duration;
-    setupTimeline();
-    decodeAudioBuffer();
+    duration = activePlayer.duration; startT = 0; endT = duration;
+    setupTimeline(); populateFormats(); decodeAudio(); bootFFmpegEngine();
   };
-
   activePlayer.ontimeupdate = function() {
     currT = activePlayer.currentTime;
-    // Loop playback inside selection window bounds
     if(currT > endT || currT < startT) activePlayer.currentTime = startT;
     updateScrubHead();
   };
 }
 
-function decodeAudioBuffer() {
-  const reader = new FileReader();
-  reader.onload = function(e) {
+function decodeAudio() {
+  const r = new FileReader();
+  r.onload = function(e) {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    ctx.decodeAudioData(e.target.result).then(buf => {
-      audioBuffer = buf;
-      drawWaveform();
-      hideLoader();
-    }).catch(() => hideLoader());
+    ctx.decodeAudioData(e.target.result).then(buf => { audioBuffer = buf; drawWaveform(); }).catch(() => {});
   };
-  reader.readAsArrayBuffer(fileData);
+  r.readAsArrayBuffer(fileData);
+}
+
+function populateFormats() {
+  const select = document.getElementById('export-format'); select.innerHTML = '';
+  if(isVideo) {
+    select.options.add(new Option('🎥 Original Footprint Lossless Cutting Passthrough (.mp4)', 'copy'));
+    select.options.add(new Option('🎵 Extract Audio Layer Only: MP3 Format (.mp3)', 'mp3'));
+    select.options.add(new Option('🎵 Extract Audio Layer Only: WAV Studio Master (.wav)', 'wav'));
+  } else {
+    select.options.add(new Option('🎵 Audio Clip Lossless Cut Passthrough', 'copy'));
+  }
 }
 
 function setupTimeline() {
   document.getElementById('timeline-box').classList.remove('hidden');
   document.getElementById('control-box').classList.remove('hidden');
   document.getElementById('input-box').classList.remove('hidden');
-  
-  document.getElementById('inp-start').max = duration;
-  document.getElementById('inp-end').max = duration;
-
-  updateUI();
+  document.getElementById('config-box').classList.remove('hidden');
+  toggleInputMetric();
 }
 
+// TOGGLES LABELS AND SCALE FOR SECONDS VS FRAME TYPES
+function toggleInputMetric() {
+  const mode = document.getElementById('input-metric-type').value;
+  const fpsRow = document.getElementById('fps-row');
+  const startLbl = document.getElementById('lbl-start-input');
+  const endLbl = document.getElementById('lbl-end-input');
+  const inpStart = document.getElementById('inp-start');
+  const inpEnd = document.getElementById('inp-end');
+
+  if(mode === 'frames' && isVideo) {
+    fpsRow.classList.remove('hidden');
+    const fps = parseFloat(document.getElementById('video-fps').value) || 30;
+    startLbl.textContent = `Start Frame (Index at ${fps} FPS)`;
+    endLbl.textContent = `End Frame (Index at ${fps} FPS)`;
+    inpStart.step = "1";
+    inpEnd.step = "1";
+    inpStart.max = Math.floor(duration * fps);
+    inpEnd.max = Math.floor(duration * fps);
+  } else {
+    fpsRow.classList.add('hidden');
+    startLbl.textContent = "Start Timestamp (s)";
+    endLbl.textContent = "End Timestamp (s)";
+    inpStart.step = "0.001";
+    inpEnd.step = "0.001";
+    inpStart.max = duration;
+    inpEnd.max = duration;
+  }
+  updateUI();
+}
+window.toggleInputMetric = toggleInputMetric;
+
 function updateUI() {
-  const rWidth = trackRail.clientWidth;
-  const pStart = (startT / duration) * rWidth;
-  const pEnd = (endT / duration) * rWidth;
-
-  trimZone.style.left = pStart + 'px';
-  trimZone.style.width = (pEnd - pStart) + 'px';
-
-  hStart.style.left = pStart + 'px';
-  hEnd.style.left = pEnd + 'px';
-
+  const rWidth = trackRail.clientWidth || 100;
+  const pStart = (startT / duration) * rWidth; const pEnd = (endT / duration) * rWidth;
+  trimZone.style.left = pStart + 'px'; trimZone.style.width = (pEnd - pStart) + 'px';
+  hStart.style.left = pStart + 'px'; hEnd.style.left = pEnd + 'px';
   document.getElementById('lbl-curr').textContent = `Current: ${currT.toFixed(3)}s`;
   document.getElementById('lbl-sel').textContent = `Sel: ${(endT - startT).toFixed(3)}s`;
   document.getElementById('lbl-tot').textContent = `Total: ${duration.toFixed(3)}s`;
 
-  document.getElementById('inp-start').value = parseFloat(startT.toFixed(3));
-  document.getElementById('inp-end').value = parseFloat(endT.toFixed(3));
+  const mode = document.getElementById('input-metric-type').value;
+  if(mode === 'frames' && isVideo) {
+    const fps = parseFloat(document.getElementById('video-fps').value) || 30;
+    document.getElementById('inp-start').value = Math.floor(startT * fps);
+    document.getElementById('inp-end').value = Math.floor(endT * fps);
+  } else {
+    document.getElementById('inp-start').value = parseFloat(startT.toFixed(3));
+    document.getElementById('inp-end').value = parseFloat(endT.toFixed(3));
+  }
   updateScrubHead();
 }
 
 function updateScrubHead() {
-  const rWidth = trackRail.clientWidth;
+  const rWidth = trackRail.clientWidth || 100;
   scrubHead.style.left = ((activePlayer ? activePlayer.currentTime : 0) / duration) * rWidth + 'px';
   document.getElementById('lbl-curr').textContent = `Current: ${(activePlayer ? activePlayer.currentTime : 0).toFixed(3)}s`;
 }
 
-/* TOUCH & MOUSE INTERACTION MECHANICS FOR THUMBS */
 function onPointerDown(e) {
   if(!duration) return;
   const rect = trackRail.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clickX = clientX - rect.left;
-  const targetT = (clickX / rect.width) * duration;
-
-  // Detect closest proximity to handle nodes
+  const clickX = clientX - rect.left; const targetT = (clickX / rect.width) * duration;
   const distStart = Math.abs(clickX - (startT / duration) * rect.width);
   const distEnd = Math.abs(clickX - (endT / duration) * rect.width);
 
-  if(distStart < distEnd && distStart < 30) {
-    activeHandle = 'start';
-  } else if(distEnd < distStart && distEnd < 30) {
-    activeHandle = 'end';
-  } else {
-    activeHandle = 'scrub';
-    if(targetT >= startT && targetT <= endT) {
-      activePlayer.currentTime = targetT;
-    }
-  }
+  if(distStart < distEnd && distStart < 30) activeHandle = 'start';
+  else if(distEnd < distStart && distEnd < 30) activeHandle = 'end';
+  else { activeHandle = 'scrub'; if(targetT >= startT && targetT <= endT) activePlayer.currentTime = targetT; }
   e.preventDefault();
 }
 
@@ -372,151 +402,133 @@ function onPointerMove(e) {
   const moveX = Math.max(0, Math.min(clientX - rect.left, rect.width));
   const calcT = (moveX / rect.width) * duration;
 
-  if(activeHandle === 'start') {
-    startT = Math.min(calcT, endT - 0.05);
-  } else if(activeHandle === 'end') {
-    endT = Math.max(calcT, startT + 0.05);
-  } else if(activeHandle === 'scrub') {
-    if(calcT >= startT && calcT <= endT) activePlayer.currentTime = calcT;
-  }
+  if(activeHandle === 'start') startT = Math.min(calcT, endT - 0.05);
+  else if(activeHandle === 'end') endT = Math.max(calcT, startT + 0.05);
+  else if(activeHandle === 'scrub') { if(calcT >= startT && calcT <= endT) activePlayer.currentTime = calcT; }
   updateUI();
 }
-
-function onPointerUp() { activeHandle = null; }
-
-// Bind both legacy mouse triggers and modern unified touch profiles
 trackRail.addEventListener('mousedown', onPointerDown);
 window.addEventListener('mousemove', onPointerMove);
-window.addEventListener('mouseup', onPointerUp);
-
+window.addEventListener('mouseup', () => activeHandle = null);
 trackRail.addEventListener('touchstart', onPointerDown, {passive: false});
 window.addEventListener('touchmove', onPointerMove, {passive: false});
-window.addEventListener('touchend', onPointerUp);
+window.addEventListener('touchend', () => activeHandle = null);
 
-/* MANUAL TIME FIELD SYNC */
 function syncManualInputs() {
+  const mode = document.getElementById('input-metric-type').value;
   let s = parseFloat(document.getElementById('inp-start').value) || 0;
   let e = parseFloat(document.getElementById('inp-end').value) || duration;
 
-  // Validation boundary bounds rules logic
-  if(s < 0) s = 0;
-  if(e > duration) e = duration;
-  if(s >= e) s = e - 0.05;
+  if(mode === 'frames' && isVideo) {
+    const fps = parseFloat(document.getElementById('video-fps').value) || 30;
+    s = s / fps;
+    e = e / fps;
+  }
 
-  startT = s;
-  endT = e;
-  updateUI();
+  if(s < 0) s = 0; if(e > duration) e = duration; if(s >= e) s = e - 0.05;
+  startT = s; endT = e; updateUI();
 }
 window.syncManualInputs = syncManualInputs;
 
-function toggleZoom() {
-  isZoomed = !isZoomed;
-  document.getElementById('zoom-toggle').textContent = isZoomed ? "Zoom: Active" : "Zoom: 1x";
-  drawWaveform();
-}
-window.toggleZoom = toggleZoom;
-
 function playToggle() {
   if(!activePlayer) return;
-  if(activePlayer.paused) {
-    activePlayer.play();
-    document.getElementById('btn-play').textContent = '⏸ Pause Preview';
-  } else {
-    activePlayer.pause();
-    document.getElementById('btn-play').textContent = '▶ Play Selection';
-  }
+  if(activePlayer.paused) { activePlayer.play(); document.getElementById('btn-play').textContent = '⏸ Pause Preview'; }
+  else { activePlayer.pause(); document.getElementById('btn-play').textContent = '▶ Play Selection'; }
 }
 window.playToggle = playToggle;
 
 function drawWaveform() {
-  const canvas = document.getElementById('wave-canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = trackRail.clientWidth;
-  canvas.height = trackRail.clientHeight;
-  
-  if(!audioBuffer) return;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#cbd5e1';
-
-  const data = audioBuffer.getChannelData(0);
-  const step = Math.ceil(data.length / canvas.width);
-  const amp = canvas.height / 2;
-
+  const canvas = document.getElementById('wave-canvas'); if(!canvas || !audioBuffer) return;
+  const ctx = canvas.getContext('2d'); canvas.width = trackRail.clientWidth; canvas.height = trackRail.clientHeight;
+  ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = '#cbd5e1';
+  const data = audioBuffer.getChannelData(0); const step = Math.ceil(data.length / canvas.width); const amp = canvas.height / 2;
   for(let i=0; i<canvas.width; i++) {
     let min = 1.0, max = -1.0;
-    for(let j=0; j<step; j++) {
-      const dat = data[(i*step)+j];
-      if(dat < min) min = dat;
-      if(dat > max) max = dat;
-    }
+    for(let j=0; j<step; j++) { const d = data[(i*step)+j]; if(d < min) min = d; if(d > max) max = d; }
     ctx.fillRect(i, (1+min)*amp, 1.5, Math.max(1,(max-min)*amp));
   }
 }
 
-/* EXECUTE COMPILATION BLOCK WAVE SAVING MATRIX */
-function commitTrim() {
-  showLoader('Compiling audio segmentation buffers...');
-  setTimeout(() => {
-    const nc = audioBuffer.numberOfChannels;
-    const sr = audioBuffer.sampleRate;
-    const ss = Math.floor(startT * sr);
-    const se = Math.floor(endT * sr);
-    const len = se - ss;
+async function processExtraction(sendToMergeQueue = false) {
+  if(!ffmpegInstance) { await bootFFmpegEngine(); }
+  activePlayer.pause(); document.getElementById('btn-play').textContent = '▶ Play Selection';
 
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const out = ctx.createBuffer(nc, len, sr);
+  const targetMode = document.getElementById('export-format').value;
+  const originalExt = fileData.name.split('.').pop() || (isVideo ? 'mp4' : 'mp3');
+  
+  let outputName = `segment-${Date.now()}`;
+  let outputExt = originalExt;
+  let commandArgs = ['-ss', startT.toString(), '-to', endT.toString(), '-i', `input.${originalExt}`];
 
-    for(let c=0; c<nc; c++) {
-      out.copyToChannel(audioBuffer.getChannelData(c).subarray(ss, se), c);
-    }
-
-    const blob = new Blob([toWAV(out)], {type: 'audio/wav'});
-    const url = URL.createObjectURL(blob);
-    segCount++;
-
-    document.getElementById('segment-box').classList.remove('hidden');
-    const container = document.getElementById('segments-container');
-    
-    const div = document.createElement('div');
-    div.className = 'segment-item';
-    div.innerHTML = `
-      <div class="seg-meta">
-        <div class="seg-name">Clip Segment #${segCount}</div>
-        <div class="seg-times">${startT.toFixed(2)}s - ${endT.toFixed(2)}s (${(endT - startT).toFixed(2)}s)</div>
-      </div>
-      <a href="${url}" download="trim-${segCount}.wav" class="btn primary" style="padding: 6px 12px; font-size: 0.8rem;">⬇ Download</a>
-    `;
-    container.appendChild(div);
-    hideLoader();
-  }, 100);
-}
-window.commitTrim = commitTrim;
-
-function toWAV(buf){
-  const nc=buf.numberOfChannels, sr=buf.sampleRate, len=buf.length;
-  const ab=new ArrayBuffer(44+len*nc*2); const v=new DataView(ab);
-  const s=(o,x)=>{for(let i=0;i<x.length;i++)v.setUint8(o+i,x.charCodeAt(i));};
-  s(0,'RIFF'); v.setUint32(4,36+len*nc*2,true); s(8,'WAVE'); s(12,'fmt ');
-  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,nc,true);
-  v.setUint32(24,sr,true); v.setUint32(28,sr*nc*2,true); v.setUint16(32,nc*2,true); v.setUint16(34,16,true);
-  s(36,'data'); v.setUint32(40,len*nc*2,true);
-  let o=44;
-  for(let i=0;i<len;i++) {
-    for(let c=0;c<nc;c++) {
-      let sample = buf.getChannelData(c)[i];
-      sample = Math.max(-1, Math.min(1, sample));
-      v.setInt16(o, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-      o += 2;
-    }
+  if (targetMode === 'copy') {
+    commandArgs.push('-c', 'copy', `${outputName}.${originalExt}`);
+  } else if (targetMode === 'mp3') {
+    outputExt = 'mp3'; commandArgs.push('-vn', '-q:a', '2', `${outputName}.mp3`);
+  } else if (targetMode === 'wav') {
+    outputExt = 'wav'; commandArgs.push('-vn', `${outputName}.wav`);
   }
-  return ab;
+
+  showLoader("Slicing data blocks container... Please wait a few moments...");
+  ffmpegInstance.FS('writeFile', `input.${originalExt}`, await fetchFile(fileData));
+  await ffmpegInstance.run(...commandArgs);
+  
+  const processedBytes = ffmpegInstance.FS('readFile', `${outputName}.${outputExt}`);
+  const resultsBlob = new Blob([processedBytes.buffer], { type: targetMode.includes('mp') ? 'audio/mp3' : 'video/mp4' });
+  const localUrl = URL.createObjectURL(resultsBlob);
+
+  try { ffmpegInstance.FS('unlink', `input.${originalExt}`); ffmpegInstance.FS('unlink', `${outputName}.${outputExt}`); } catch(e){}
+  hideLoader(); segCount++;
+
+  if (sendToMergeQueue) {
+    document.getElementById('segment-box').classList.remove('hidden');
+    queueNodes.push({ name: `Clip Segment #${segCount}`, url: localUrl, extension: outputExt, bytes: processedBytes });
+    renderQueueList();
+  } else {
+    const hiddenLink = document.createElement('a'); hiddenLink.href = localUrl; hiddenLink.download = `trim-${segCount}.${outputExt}`;
+    document.body.appendChild(hiddenLink); hiddenLink.click(); document.body.removeChild(hiddenLink);
+  }
 }
+window.processExtraction = processExtraction;
+
+function renderQueueList() {
+  const container = document.getElementById('segments-container'); container.innerHTML = '';
+  queueNodes.forEach((node, index) => {
+    const div = document.createElement('div'); div.className = 'segment-item';
+    div.innerHTML = `<div class="seg-meta"><div class="seg-name">${node.name}.${node.extension}</div></div>
+                     <button class="btn" style="color:var(--red); padding:4px 8px;" onclick="removeQueueItem(${index})">✕</button>`;
+    container.appendChild(div);
+  });
+}
+window.removeQueueItem = function(i) {
+  queueNodes.splice(i, 1); renderQueueList();
+  if(queueNodes.length === 0) document.getElementById('segment-box').classList.add('hidden');
+};
+
+async function executePipelineMerge() {
+  if (queueNodes.length === 0) return;
+  showLoader("Stitching tracks together sequentially...");
+  let sharedExt = queueNodes[0].extension; let playlistContent = "";
+  
+  for(let i=0; i<queueNodes.length; i++) {
+    ffmpegInstance.FS('writeFile', `item-${i}.${sharedExt}`, fetchFile(queueNodes[i].bytes));
+    playlistContent += `file item-${i}.${sharedExt}\n`;
+  }
+  
+  ffmpegInstance.FS('writeFile', 'playlist.txt', new TextEncoder().encode(playlistContent));
+  await ffmpegInstance.run('-f', 'concat', '-safe', '0', '-i', 'playlist.txt', '-c', 'copy', `merged-track.${sharedExt}`);
+  
+  const mergedDataBytes = ffmpegInstance.FS('readFile', `merged-track.${sharedExt}`);
+  const downloadUrl = URL.createObjectURL(new Blob([mergedDataBytes.buffer]));
+  
+  const tempDownloadAnchor = document.createElement('a'); tempDownloadAnchor.href = downloadUrl; tempDownloadAnchor.download = `merged-production-output.${sharedExt}`;
+  document.body.appendChild(tempDownloadAnchor); tempDownloadAnchor.click(); document.body.removeChild(tempDownloadAnchor);
+  hideLoader();
+}
+window.executePipelineMerge = executePipelineMerge;
 
 function showLoader(msg){ document.getElementById('progress-msg').textContent=msg; document.getElementById('progress-layer').style.display='flex'; }
 function hideLoader(){ document.getElementById('progress-layer').style.display='none'; }
-
 window.addEventListener('resize', () => { if(audioBuffer) drawWaveform(); updateUI(); });
-
 })();
 </script>
 </body>
