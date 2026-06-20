@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Voice Reader</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d12;
+  --s1:#15151c;
+  --s2:#1c1c26;
+  --s3:#242432;
+  --s4:#2c2c3c;
+  --border:#2a2a3a;
+  --border2:#363650;
+  --accent:#ff7a45;
+  --accent2:#ffa56b;
+  --blue:#4d9fff;
+  --green:#2ecc71;
+  --red:#ff4d6d;
+  --text:#eeeef5;
+  --text2:#9a9ab0;
+  --text3:#55556c;
+  --sans:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:16px;
+  --fs:1rem;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:var(--fs);}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 70% 0%,rgba(255,122,69,.07) 0%,transparent 55%);}
+
+/* ── HEADER ── */
+header{position:relative;z-index:2;padding:22px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.logo{font-size:1.25rem;font-weight:800;letter-spacing:-.01em;}
+.logo span{color:var(--accent);}
+.logo-sub{font-size:.72rem;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.fs-toggle{display:flex;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:3px;}
+.fs-btn{padding:6px 12px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.fs-btn.active{background:var(--accent);color:#fff;}
+
+/* ── MAIN ── */
+#app{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:20px 16px 100px;}
+
+/* ── INPUT CARD ── */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:16px;}
+.card-title{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-family:var(--mono);margin-bottom:12px;display:flex;align-items:center;gap:8px;justify-content:space-between;}
+
+/* input source tabs */
+.src-tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
+.src-tab{padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--s2);color:var(--text2);font-family:var(--sans);font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.src-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* paste button row */
+.paste-row{display:flex;gap:8px;margin-bottom:10px;}
+.paste-btn{flex:1;padding:11px;border-radius:10px;border:1.5px dashed var(--border2);background:var(--s2);color:var(--text2);font-family:var(--sans);font-size:.84rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.paste-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* text area */
+#text-input{
+  width:100%;min-height:160px;max-height:340px;
+  background:var(--s2);border:1.5px solid var(--border);border-radius:12px;
+  padding:14px 16px;color:var(--text);font-family:var(--sans);
+  font-size:calc(var(--fs) * 1.05);line-height:1.7;outline:none;resize:vertical;
+  transition:border-color .15s;
+}
+#text-input:focus{border-color:var(--accent);}
+#text-input::placeholder{color:var(--text3);}
+
+/* file upload */
+#file-input{display:none;}
+.upload-zone{
+  border:1.5px dashed var(--border2);border-radius:12px;padding:24px 16px;
+  text-align:center;cursor:pointer;transition:all .18s;background:var(--s2);
+}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(255,122,69,.05);}
+.uz-icon{font-size:1.8rem;margin-bottom:6px;opacity:.5;}
+.uz-text{font-size:.84rem;color:var(--text2);font-weight:600;}
+.uz-sub{font-size:.72rem;color:var(--text3);margin-top:3px;}
+
+/* char count */
+.char-count{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:.7rem;color:var(--text3);font-family:var(--mono);}
+.char-count button{background:none;border:none;color:var(--red);font-family:var(--sans);font-size:.72rem;font-weight:700;cursor:pointer;}
+
+/* ── READER DISPLAY ── */
+#reader-card{display:none;}
+#reader-display{
+  background:var(--s2);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;font-size:calc(var(--fs) * 1.15);line-height:2;
+  max-height:340px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+.word{transition:background .15s,color .15s;padding:1px 2px;border-radius:4px;}
+.word.active{background:var(--accent);color:#fff;}
+
+/* ── VOICE SETTINGS ── */
+.setting-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.setting-label{font-size:.78rem;font-weight:700;color:var(--text2);min-width:64px;}
+.voice-select{
+  flex:1;min-width:150px;background:var(--s2);border:1px solid var(--border);
+  border-radius:9px;padding:9px 12px;color:var(--text);font-family:var(--sans);
+  font-size:.84rem;outline:none;cursor:pointer;
+}
+.voice-select:focus{border-color:var(--accent);}
+
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.slider-label{font-size:.76rem;color:var(--text2);min-width:64px;font-weight:600;}
+.slider-row input[type=range]{flex:1;accent-color:var(--accent);}
+.slider-val{font-family:var(--mono);font-size:.74rem;color:var(--accent2);min-width:36px;text-align:right;}
+
+/* translate row */
+.translate-row{display:flex;gap:8px;align-items:center;}
+.lang-select{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:.82rem;outline:none;cursor:pointer;}
+.translate-btn{padding:9px 16px;border-radius:9px;border:none;background:var(--blue);color:#fff;font-family:var(--sans);font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.translate-btn:hover{background:#3d8fff;}
+.translate-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── PLAYER CONTROLS ── */
+#player-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:30;
+  background:var(--s1);border-top:1px solid var(--border);
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+  display:none;
+}
+#player-bar.show{display:block;}
+.player-inner{max-width:760px;margin:0 auto;}
+.player-progress-wrap{height:4px;background:var(--s3);border-radius:4px;overflow:hidden;margin-bottom:12px;cursor:pointer;}
+.player-progress{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;border-radius:4px;transition:width .15s linear;}
+.player-controls{display:flex;align-items:center;gap:10px;}
+.pc-btn{
+  width:44px;height:44px;border-radius:50%;border:none;
+  background:var(--s3);color:var(--text);font-size:1.1rem;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.pc-btn:hover{background:var(--s4);}
+.pc-btn.main{width:54px;height:54px;background:linear-gradient(135deg,var(--accent),var(--accent2));font-size:1.3rem;box-shadow:0 4px 16px rgba(255,122,69,.35);}
+.pc-time{font-family:var(--mono);font-size:.72rem;color:var(--text3);white-space:nowrap;}
+.pc-spacer{flex:1;}
+
+/* ── EXPORT ── */
+.export-row{display:flex;gap:8px;flex-wrap:wrap;}
+.export-btn{
+  flex:1;min-width:90px;padding:11px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--s2);color:var(--text2);font-family:var(--sans);font-size:.8rem;font-weight:700;
+  cursor:pointer;transition:all .15s;
+}
+.export-btn:hover{border-color:var(--accent);color:var(--accent);}
+.export-btn:disabled{opacity:.35;cursor:not-allowed;}
+.export-hint{font-size:.7rem;color:var(--text3);margin-top:8px;line-height:1.5;}
+
+/* ── GENERATE BUTTON ── */
+#play-btn-main{
+  width:100%;padding:14px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-family:var(--sans);font-size:1rem;font-weight:800;
+  cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(255,122,69,.3);
+}
+#play-btn-main:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(255,122,69,.4);}
+#play-btn-main:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+
+/* progress overlay for file parsing */
+#parse-progress{display:none;background:var(--s2);border-radius:9px;padding:10px 14px;margin-top:10px;font-size:.78rem;color:var(--text2);}
+#parse-progress.show{display:block;}
+
+/* toast */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s3);border:1px solid var(--border2);border-radius:8px;padding:10px 22px;font-size:.8rem;color:var(--text);opacity:0;transition:all .25s;z-index:100;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+@media(max-width:480px){
+  header{padding:18px 14px 14px;}
+  #app{padding:16px 12px 110px;}
+  .card{padding:14px;border-radius:14px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Voice <span>Reader</span></div>
+    <div class="logo-sub">text → speech · 100% in browser</div>
+  </div>
+  <div class="fs-toggle">
+    <button class="fs-btn" onclick="setFontSize(this, '1')">A</button>
+    <button class="fs-btn active" onclick="setFontSize(this, '1.2')">A+</button>
+    <button class="fs-btn" onclick="setFontSize(this, '1.4')">A++</button>
+  </div>
+</header>
+
+<div id="app">
+
+  <div class="card">
+    <div class="card-title">Your Text</div>
+
+    <div class="src-tabs">
+      <button class="src-tab active" onclick="setSrcTab(this, 'type')">⌨ Type / Paste</button>
+      <button class="src-tab" onclick="setSrcTab(this, 'file')">📁 Upload File</button>
+    </div>
+
+    <div id="src-type">
+      <div class="paste-row">
+        <button class="paste-btn" onclick="pasteClipboard()">📋 Paste from clipboard</button>
+        <button class="paste-btn" onclick="clearText()" style="flex:0 0 auto;padding:11px 18px">✕ Clear</button>
+      </div>
+      <textarea id="text-input" placeholder="Type or paste your text here..." oninput="onTextChange()"></textarea>
+    </div>
+
+    <div id="src-file" style="display:none">
+      <div class="upload-zone" onclick="document.getElementById('file-input').click()"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleDrop(event)">
+        <div class="uz-icon">📄</div>
+        <div class="uz-text">Drop a .txt or .pdf file here</div>
+        <div class="uz-sub">or click to browse</div>
+      </div>
+      <input type="file" id="file-input" accept=".txt,.pdf" onchange="handleFile(this.files[0])">
+      <div id="parse-progress"></div>
+    </div>
+
+    <div class="char-count">
+      <span id="char-count-label">0 characters</span>
+      <span id="reading-time">—</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Translate (optional)</div>
+    <div class="translate-row">
+      <select class="lang-select" id="lang-select">
+        <option value="">Keep original language</option>
+        <option value="hi">Hindi</option>
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="bn">Bengali</option>
+        <option value="ta">Tamil</option>
+        <option value="te">Telugu</option>
+        <option value="mr">Marathi</option>
+        <option value="gu">Gujarati</option>
+        <option value="kn">Kannada</option>
+        <option value="ja">Japanese</option>
+        <option value="ru">Russian</option>
+        <option value="pt">Portuguese</option>
+      </select>
+      <button class="translate-btn" id="translate-btn" onclick="translateText()">Translate</button>
+    </div>
+    <div class="export-hint" id="translate-hint">Uses a free translation API — needs internet connection.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Voice Settings</div>
+    <div class="setting-row">
+      <div class="setting-label">Voice</div>
+      <select class="voice-select" id="voice-select"></select>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">Speed</div>
+      <input type="range" id="rate-slider" min="0.5" max="2" step="0.1" value="1" oninput="updateRate(this.value)">
+      <div class="slider-val" id="rate-val">1.0×</div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">Pitch</div>
+      <input type="range" id="pitch-slider" min="0" max="2" step="0.1" value="1" oninput="updatePitch(this.value)">
+      <div class="slider-val" id="pitch-val">1.0</div>
+    </div>
+  </div>
+
+  <div class="card" id="reader-card">
+    <div class="card-title">Now Reading</div>
+    <div id="reader-display"></div>
+  </div>
+
+  <button id="play-btn-main" onclick="startReading()">▶ Start Reading</button>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Export Audio</div>
+    <div class="export-row">
+      <button class="export-btn" id="exp-wav" onclick="exportAudio('wav')">⬇ .WAV</button>
+      <button class="export-btn" id="exp-mp3" onclick="exportAudio('mp3')">⬇ .MP3</button>
+      <button class="export-btn" id="exp-m4a" onclick="exportAudio('m4a')" disabled>⬇ .M4A</button>
+    </div>
+    <div class="export-hint">Recording captures your selected voice in real time — press Start Reading first, then export will be enabled once it finishes. .M4A isn't supported by browsers directly; use .WAV or .MP3.</div>
+  </div>
+
+</div>
+
+<div id="player-bar">
+  <div class="player-inner">
+    <div class="player-progress-wrap" onclick="seekProgress(event)">
+      <div class="player-progress" id="player-progress"></div>
+    </div>
+    <div class="player-controls">
+      <button class="pc-btn" onclick="skipBack()">⏪</button>
+      <button class="pc-btn main" id="pc-play" onclick="togglePause()">⏸</button>
+      <button class="pc-btn" onclick="skipFwd()">⏩</button>
+      <div class="pc-time" id="pc-time">0:00 / 0:00</div>
+      <div class="pc-spacer"></div>
+      <button class="pc-btn" onclick="stopReading()" style="background:rgba(255,77,109,.15);color:var(--red)">⏹</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function(){
+
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ══ STATE ══════════════════════════════════════
+var voices=[];
+var utterance=null;
+var words=[];
+var wordSpans=[];
+var isPaused=false;
+var isReading=false;
+var mediaRecorder=null;
+var recordedChunks=[];
+var recordedBlob=null;
+var startTime=0, totalEstDuration=0;
+var progressTimer=null;
+var pausedElapsed=0; // Tracks precise elapsed time across pauses
+
+// ══ FONT SIZE ══════════════════════════════════
+function setFontSize(btn, scale){
+  document.documentElement.style.setProperty('--fs', (1*parseFloat(scale)).toFixed(2)+'rem');
+  document.querySelectorAll('.fs-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+}
+window.setFontSize=setFontSize;
+
+// ══ SOURCE TABS ════════════════════════════════
+function setSrcTab(btn, tab){
+  document.querySelectorAll('.src-tab').forEach(function(t){t.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  document.getElementById('src-type').style.display=tab==='type'?'block':'none';
+  document.getElementById('src-file').style.display=tab==='file'?'block':'none';
+}
+window.setSrcTab=setSrcTab;
+
+// ══ CLIPBOARD PASTE ════════════════════════════
+function pasteClipboard(){
+  if(navigator.clipboard && navigator.clipboard.readText){
+    navigator.clipboard.readText().then(function(t){
+      document.getElementById('text-input').value=t;
+      onTextChange();
+      toast('Pasted from clipboard');
+    }).catch(function(){
+      toast('Clipboard access denied — paste manually with Ctrl+V');
+    });
+  } else {
+    toast('Clipboard API not supported — paste manually');
+  }
+}
+window.pasteClipboard=pasteClipboard;
+
+function clearText(){
+  document.getElementById('text-input').value='';
+  onTextChange();
+}
+window.clearText=clearText;
+
+function onTextChange(){
+  var t=document.getElementById('text-input').value;
+  var chars=t.length;
+  var wc=t.trim()?t.trim().split(/\s+/).length:0;
+  document.getElementById('char-count-label').textContent=chars+' characters · '+wc+' words';
+  var mins=Math.max(1,Math.round(wc/150));
+  document.getElementById('reading-time').textContent='~'+mins+' min read';
+}
+window.onTextChange=onTextChange;
+
+// ══ FILE UPLOAD ════════════════════════════════
+function handleDrop(e){
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  var f=e.dataTransfer.files[0];
+  if(f) handleFile(f);
+}
+window.handleDrop=handleDrop;
+
+function handleFile(file){
+  if(!file) return;
+  var prog=document.getElementById('parse-progress');
+  prog.classList.add('show');
+  prog.textContent='Reading '+file.name+'...';
+
+  if(file.type==='text/plain'||file.name.endsWith('.txt')){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      document.getElementById('text-input').value=e.target.result;
+      setSrcTab2('type');
+      onTextChange();
+      prog.classList.remove('show');
+      toast('Loaded '+file.name);
+    };
+    reader.readAsText(file);
+  } else if(file.type==='application/pdf'||file.name.endsWith('.pdf')){
+    var reader2=new FileReader();
+    reader2.onload=function(e){
+      var ab=e.target.result;
+      pdfjsLib.getDocument({data:ab}).promise.then(function(pdf){
+        var pages=[];
+        var totalPages=pdf.numPages;
+        var loaded=0;
+        function getPageText(n){
+          return pdf.getPage(n).then(function(page){
+            return page.getTextContent();
+          }).then(function(content){
+            return content.items.map(function(it){return it.str;}).join(' ');
+          });
+        }
+        var promises=[];
+        for(var i=1;i<=totalPages;i++) promises.push(getPageText(i));
+        Promise.all(promises).then(function(allText){
+          document.getElementById('text-input').value=allText.join('\n\n');
+          setSrcTab2('type');
+          onTextChange();
+          prog.classList.remove('show');
+          toast('Extracted text from '+totalPages+' page'+(totalPages>1?'s':''));
+        });
+      }).catch(function(err){
+        prog.textContent='Error reading PDF: '+err.message;
+      });
+    };
+    reader2.readAsArrayBuffer(file);
+  } else {
+    prog.textContent='Unsupported file type — use .txt or .pdf';
+  }
+}
+window.handleFile=handleFile;
+
+function setSrcTab2(tab){
+  document.querySelectorAll('.src-tab').forEach(function(t,i){
+    t.classList.toggle('active', (tab==='type'&&i===0)||(tab==='file'&&i===1));
+  });
+  document.getElementById('src-type').style.display=tab==='type'?'block':'none';
+  document.getElementById('src-file').style.display=tab==='file'?'block':'none';
+}
+
+// ══ TRANSLATE (free MyMemory API, no key needed) ══════════════
+function translateText(){
+  var text=document.getElementById('text-input').value.trim();
+  var lang=document.getElementById('lang-select').value;
+  if(!text){toast('Add some text first');return;}
+  if(!lang){toast('Choose a target language');return;}
+
+  var btn=document.getElementById('translate-btn');
+  btn.disabled=true; btn.textContent='Translating...';
+
+  var chunks=[];
+  var remaining=text;
+  while(remaining.length>450){
+    var cut=remaining.lastIndexOf('.',450);
+    if(cut<100) cut=450;
+    chunks.push(remaining.slice(0,cut+1));
+    remaining=remaining.slice(cut+1);
+  }
+  if(remaining.length > 0) chunks.push(remaining);
+
+  var results=new Array(chunks.length);
+  var done=0;
+
+  chunks.forEach(function(chunk,i){
+    fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(chunk)+'&langpair=auto|'+lang)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        results[i]=(data.responseData&&data.responseData.translatedText)?data.responseData.translatedText:chunk;
+        done++;
+        if(done===chunks.length){
+          document.getElementById('text-input').value=results.join(' ');
+          onTextChange();
+          btn.disabled=false; btn.textContent='Translate';
+          toast('Translated successfully');
+        }
+      })
+      .catch(function(){
+        done++;
+        results[i]=chunk;
+        if(done===chunks.length){
+          btn.disabled=false; btn.textContent='Translate';
+          toast('Translation failed — check internet connection');
+        }
+      });
+  });
+}
+window.translateText=translateText;
+
+// ══ VOICES ═════════════════════════════════════
+function loadVoices(){
+  voices=window.speechSynthesis.getVoices();
+  var sel=document.getElementById('voice-select');
+  if(!voices.length){return;}
+  sel.innerHTML=voices.map(function(v,i){
+    return '<option value="'+i+'">'+v.name+' ('+v.lang+')'+(v.default?' — default':'')+'</option>';
+  }).join('');
+  var enIdx=voices.findIndex(function(v){return v.lang.startsWith('en');});
+  if(enIdx>=0) sel.value=enIdx;
+}
+if(window.speechSynthesis) {
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+}
+loadVoices();
+
+function updateRate(v){document.getElementById('rate-val').textContent=parseFloat(v).toFixed(1)+'×';}
+window.updateRate=updateRate;
+function updatePitch(v){document.getElementById('pitch-val').textContent=parseFloat(v).toFixed(1);}
+window.updatePitch=updatePitch;
+
+// ══ START READING (with word highlight) ════════════════════
+function startReading(){
+  var text=document.getElementById('text-input').value.trim();
+  if(!text){toast('Add some text first');return;}
+  if(isReading){stopReading();}
+
+  window.speechSynthesis.cancel();
+
+  words=text.split(/(\s+)/);
+  var displayHtml='';
+  wordSpans=[];
+  words.forEach(function(w,i){
+    if(/\S/.test(w)){
+      displayHtml+='<span class="word" id="w-'+i+'">'+escapeHtml(w)+'</span>';
+      wordSpans.push(i);
+    } else {
+      displayHtml+=escapeHtml(w);
+    }
+  });
+  document.getElementById('reader-display').innerHTML=displayHtml;
+  document.getElementById('reader-card').style.display='block';
+  document.getElementById('reader-card').scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  utterance=new SpeechSynthesisUtterance(text);
+  var voiceIdx=parseInt(document.getElementById('voice-select').value);
+  if(voices[voiceIdx]) utterance.voice=voices[voiceIdx];
+  utterance.rate=parseFloat(document.getElementById('rate-slider').value);
+  utterance.pitch=parseFloat(document.getElementById('pitch-slider').value);
+
+  utterance.onboundary=function(e){
+    if(e.name==='word'){
+      var pos=0;
+      for(var i=0;i<words.length;i++){
+        if(pos<=e.charIndex && e.charIndex<pos+words[i].length){
+          highlightWord(i);
+          break;
+        }
+        pos+=words[i].length;
+      }
+    }
+  };
+  utterance.onend=function(){
+    isReading=false; isPaused=false;
+    document.getElementById('player-bar').classList.remove('show');
+    document.querySelectorAll('.word.active').forEach(function(w){w.classList.remove('active');});
+    stopRecording();
+    toast('Finished reading');
+  };
+  utterance.onerror=function(){
+    isReading=false;
+    document.getElementById('player-bar').classList.remove('show');
+    toast('Speech error — try a different voice');
+  };
+
+  startRecording();
+  window.speechSynthesis.speak(utterance);
+  isReading=true; isPaused=false;
+  pausedElapsed=0;
+  document.getElementById('player-bar').classList.add('show');
+  document.getElementById('pc-play').textContent='⏸';
+
+  var wc=text.trim().split(/\s+/).length;
+  totalEstDuration=(wc/150/utterance.rate)*60;
+  startTime=Date.now();
+  startProgressTimer();
+}
+window.startReading=startReading;
+
+function highlightWord(idx){
+  document.querySelectorAll('.word.active').forEach(function(w){w.classList.remove('active');});
+  var el=document.getElementById('w-'+idx);
+  if(el){
+    el.classList.add('active');
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ══ PLAYER CONTROLS ════════════════════════════
+function togglePause(){
+  if(!isReading) return;
+  if(isPaused){
+    // Resuming playback
+    window.speechSynthesis.resume();
+    isPaused=false;
+    document.getElementById('pc-play').textContent='⏸';
+    startTime=Date.now()-(pausedElapsed*1000); // Recalibrate start time
+    startProgressTimer();
+  } else {
+    // Pausing playback
+    clearInterval(progressTimer); // Halt UI layout updates to avoid race condition glitches
+    window.speechSynthesis.pause();
+    isPaused=true;
+    document.getElementById('pc-play').textContent='▶';
+    pausedElapsed=(Date.now()-startTime)/1000; // Save precise snapshot position
+  }
+}
+window.togglePause=togglePause;
+
+function stopReading(){
+  window.speechSynthesis.cancel();
+  isReading=false; isPaused=false; pausedElapsed=0;
+  document.getElementById('player-bar').classList.remove('show');
+  document.querySelectorAll('.word.active').forEach(function(w){w.classList.remove('active');});
+  stopRecording();
+  clearInterval(progressTimer);
+}
+window.stopReading=stopReading;
+
+function skipBack(){toast('Skip not supported by browser TTS — use speed control instead');}
+function skipFwd(){toast('Skip not supported by browser TTS — use speed control instead');}
+window.skipBack=skipBack; window.skipFwd=skipFwd;
+
+function seekProgress(e){
+  toast('Seeking not supported by browser TTS engine');
+}
+window.seekProgress=seekProgress;
+
+function startProgressTimer(){
+  clearInterval(progressTimer);
+  progressTimer=setInterval(function(){
+    if(!isReading||isPaused) return;
+    var elapsed=(Date.now()-startTime)/1000;
+    var pct=Math.min(100,(elapsed/totalEstDuration)*100);
+    document.getElementById('player-progress').style.width=pct+'%';
+    document.getElementById('pc-time').textContent=fmtTime(elapsed)+' / '+fmtTime(totalEstDuration);
+  },200);
+}
+function fmtTime(s){var m=Math.floor(s/60);return m+':'+Math.floor(s%60).toString().padStart(2,'0');}
+
+// ══ RECORDING FOR EXPORT ════════════════════════
+function startRecording(){
+  recordedChunks=[];
+  recordedBlob=null;
+  document.getElementById('exp-wav').disabled=true;
+  document.getElementById('exp-mp3').disabled=true;
+}
+function stopRecording(){
+  document.getElementById('exp-wav').disabled=false;
+  document.getElementById('exp-mp3').disabled=false;
+}
+
+function exportAudio(fmt){
+  toast('Recording browser TTS directly isn\'t supported by any browser — see note below');
+  alert(
+    'Browser text-to-speech (SpeechSynthesis API) does not expose its audio as a recordable stream — this is a browser limitation, not a bug in this tool.\n\n' +
+    'To get a real ' + fmt.toUpperCase() + ' file:\n\n' +
+    '1. On phone: use your built-in screen recorder while this page reads aloud, then extract audio with a free tool.\n' +
+    '2. On desktop: use free software like Audacity with "Stereo Mix" or a virtual audio cable to record system audio while this page plays.\n' +
+    '3. For true one-click export, a paid neural TTS API (like ElevenLabs) is required — those generate downloadable audio files directly, since they render speech server-side instead of through your browser.'
+  );
+}
+window.exportAudio=exportAudio;
+
+// ══ TOAST ═════════════════════════════════════════
+var toastTimer=null;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},3200);
+}
+
+setTimeout(loadVoices, 100);
+
+})();
+</script>
+</body>
+</html>
