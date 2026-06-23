@@ -1138,6 +1138,19 @@ section { animation: hk-sec-in .28s cubic-bezier(0.25,1,0.5,1) both; }
   -->
 
   <div class="video-grid" id="video-grid"></div>
+  <!-- ── SHORT LECTURES ── -->
+<div style="margin-top:36px">
+  <h3 class="sec-heading" ...>🎙 Short Lectures</h3>
+  <p class="sec-sub">...</p>
+  <div class="video-grid" id="lectures-grid"></div>
+</div>
+
+<!-- ── DARSHAN SHORTS ── -->
+<div style="margin-top:36px">
+  <h3 class="sec-heading" ...>🌸 Darshan Shorts</h3>
+  <p class="sec-sub">...</p>
+  <div class="video-grid" id="darshan-grid"></div>
+</div>
 </section>
 
 <!-- ══════════ AUDIO ══════════ -->
@@ -1632,6 +1645,7 @@ const MY_MODELS = [
    { title: "Tv show case model", src: "models/showcase.glb" },
   // { title: "Krishna Murti", src: "models/krishna.obj" },
    { title: "Cat Character", src: "models/character.glb" },
+    { title: "Dressing Table", src: "models/Dressing_Table.glb" },
    { title: "krsna book model", src: "models/krsna_book.glb" },
    { title: "window model", src: "models/window.glb" },
    
@@ -1809,6 +1823,70 @@ document.getElementById('vid-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('vid-modal')) closeVidModal();
 });
 renderVideos();
+
+
+/* ──────────────────────────────────────────────
+   🎙  SHORT LECTURES
+   Add lecture videos here — same format as MY_VIDEOS
+   { title:"Lecture Title", src:"videos/lecture.mp4" }
+   or YouTube: { title:"Title", src:"https://youtu.be/XXXXXXXXX" }
+────────────────────────────────────────────── */
+const MY_LECTURES = [
+  // { title: "The Importance of Chanting", src: "https://youtu.be/XXXXXXXXX" },
+  { title: "What is Gaudia sampraday?", src: "videos/what_is_Gaudia_sampraday.mp4" },
+  { title: "In this one life Time", src: "videos/aindraprabhu.mp4" },
+];
+ 
+/* ──────────────────────────────────────────────
+   🌸  DARSHAN SHORTS
+   Add darshan videos here — same format as MY_VIDEOS
+   { title:"Darshan Title", src:"videos/darshan.mp4" }
+   or YouTube: { title:"Title", src:"https://youtu.be/XXXXXXXXX" }
+────────────────────────────────────────────── */
+const MY_DARSHAN = [
+  // { title: "Radha Shyamsundar Morning Darshan", src: "videos/darshan1.mp4" },
+  // { title: "Govardhan Parikrama", src: "https://youtu.be/XXXXXXXXX" },
+];
+ 
+function renderSection(arr, gridId, label) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  if (!arr.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px 0;font-size:.9rem">No ${label} yet — add paths to the array in the code 🎬</div>`;
+    return;
+  }
+  grid.innerHTML = arr.map((v, i) => {
+    const ytId = getYtId(v.src);
+    const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
+    return `<div class="vid-card">
+      <div class="vid-thumb" onclick="playSectionVideo('${gridId}',${i})">
+        ${thumb ? `<img src="${thumb}" alt="${v.title}">` : '<div style="width:100%;height:100%;background:#2a1a00;display:flex;align-items:center;justify-content:center;font-size:3rem">🎬</div>'}
+        <div class="vid-play-overlay"><div class="play-circle">▶</div></div>
+      </div>
+      <div class="vid-info">
+        <div class="vid-name">${v.title}</div>
+        <div class="vid-meta">${ytId ? 'YouTube' : 'Local file'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+ 
+function playSectionVideo(gridId, i) {
+  const arr = gridId === 'lectures-grid' ? MY_LECTURES : MY_DARSHAN;
+  const v = arr[i];
+  const ytId = getYtId(v.src);
+  const inner = document.getElementById('vid-modal-inner');
+  if (ytId) {
+    inner.innerHTML = `<iframe width="854" height="480" src="https://www.youtube.com/embed/${ytId}?autoplay=1" allow="autoplay;fullscreen" allowfullscreen style="border-radius:14px;max-width:95vw;max-height:78vh;border:none"></iframe>`;
+  } else {
+    inner.innerHTML = `<video src="${v.src}" controls autoplay style="max-width:95vw;max-height:78vh;border-radius:14px;background:#000"></video>`;
+  }
+  document.getElementById('vid-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+ 
+renderSection(MY_LECTURES, 'lectures-grid', 'lectures');
+renderSection(MY_DARSHAN, 'darshan-grid', 'darshan shorts');
 
 // ── AUDIO ENGINE ──
 let audioEl = new Audio();
